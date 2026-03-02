@@ -2,7 +2,7 @@
 import LocalTrips from "@/components/LocalTrips";
 
 export const metadata = {
-  title: "الرحلات | Adi Tourism",
+  title: "الرحلات | Oday Tourism",
   description: "اكتشف أفضل باقات السفر والرحلات الداخلية لأجمل المناطق السياحية في مصر.",
 };
 

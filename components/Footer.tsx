@@ -54,10 +54,10 @@ export default function Footer() {
             <div className="flex items-center gap-2.5 mb-4">
               <img
                 src="/logo.png"
-                alt="Adi Tourism Logo"
+                alt="Oday Tourism Logo"
                 className="h-10 w-auto object-contain"
               />
-              <span className="text-xl font-semibold text-[#111]">Adi Tourism</span>
+              <span className="text-xl font-semibold text-[#111]">Oday Tourism</span>
             </div>
             <p className="text-[#6B7280] text-sm leading-relaxed max-w-[200px]">
               نقدم تجارب سفر مميزة مع مرشدين محليين، لحظات لا تنسى في كل وجهة.
@@ -129,7 +129,7 @@ export default function Footer() {
         {/* Divider + copyright */}
         <div className="border-t border-[#E5E7EB] mt-14 pt-6 text-center">
           <p className="text-sm text-[#9CA3AF]">
-            &copy; {new Date().getFullYear()} Adi Tourism. جميع الحقوق محفوظة.
+            &copy; {new Date().getFullYear()} Oday Tourism. جميع الحقوق محفوظة.
           </p>
         </div>
 

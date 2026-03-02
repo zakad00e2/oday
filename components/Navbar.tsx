@@ -52,7 +52,7 @@ export default function Navbar() {
       <Link href="/" className="flex items-center gap-2 group">
         <img
           src="/logo.png"
-          alt="Adi Tourism Logo"
+          alt="Oday Tourism Logo"
           className="h-15 w-auto object-contain drop-shadow-sm"
         />
       </Link>

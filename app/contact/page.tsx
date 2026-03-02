@@ -2,7 +2,7 @@
 import ContactCTA from "@/components/ContactCTA";
 
 export const metadata = {
-  title: "تواصل معنا | Adi Tourism",
+  title: "تواصل معنا | Oday Tourism",
   description: "تواصل معنا واحجز رحلتك القادمة بسهولة عبر نموذج الحجز أو واتساب.",
 };
 

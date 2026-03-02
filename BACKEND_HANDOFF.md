@@ -1,4 +1,4 @@
-# Backend Handoff — Adi Tourism Website
+﻿# Backend Handoff — Oday Tourism Website
 
 ## نظرة عامة
 موقع سياحي مبني بـ Next.js 14 App Router.
@@ -167,10 +167,10 @@ create table site_settings (
 -- البيانات الافتراضية
 insert into site_settings (key, value) values
 ('company_name_ar', 'عدي للسياحة'),
-('company_name_en', 'Adi Tourism'),
+('company_name_en', 'Oday Tourism'),
 ('phone', '+201032549630'),
 ('whatsapp', '201032549630'),
-('email', 'info@aditourism.com'),
+('email', 'info@odaytourism.com'),
 ('address', 'القاهرة، مصر'),
 ('facebook', ''),
 ('instagram', ''),
@@ -313,7 +313,7 @@ Response : { success: true, data: { url: "https://..." } }
 - صور  : 5MB
 - فيديو: 50MB
 
-Storage: Supabase Storage — bucket اسمه "adi-media"
+Storage: Supabase Storage — bucket اسمه "oday-media"
 ```
 
 ---
@@ -428,7 +428,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-key
 JWT_SECRET=your-jwt-secret
-ADMIN_EMAIL=admin@aditourism.com
+ADMIN_EMAIL=admin@odaytourism.com
 ADMIN_PASSWORD=your-secure-password
 ```
 

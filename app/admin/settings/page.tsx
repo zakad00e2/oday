@@ -21,7 +21,7 @@ interface Settings {
 
 const mockSettings: Settings = {
   companyName: "عدي للسياحة",
-  companyNameEn: "Adi Tourism",
+  companyNameEn: "Oday Tourism",
   whatsappNumber: "201032549630",
   contactEmail: "info@odaytourism.com",
   contactPhone: "+20 103 254 9630",
@@ -32,7 +32,7 @@ const mockSettings: Settings = {
   heroHeading: "اكتشف جمال مصر",
   heroSubtitle: "رحلات سياحية مصممة خصيصاً لك مع أفضل الأسعار والخدمات",
   heroBadge: "✈️ أكثر من ١٠٠٠ عميل سعيد",
-  metaTitle: "Adi Tourism | عدي للسياحة",
+  metaTitle: "Oday Tourism | عدي للسياحة",
   metaDescription: "حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك",
 };
 

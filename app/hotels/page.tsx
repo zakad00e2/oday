@@ -1,7 +1,7 @@
 ﻿import Hotels from "@/components/Hotels";
 
 export const metadata = {
-  title: "الفنادق | Adi Tourism",
+  title: "الفنادق | Oday Tourism",
   description: "أفخم الفنادق بأفضل الأسعار مع عروض حصرية لأجمل الوجهات السياحية المصرية.",
 };
 
