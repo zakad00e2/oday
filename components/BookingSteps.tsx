@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const steps = [
   {
@@ -76,6 +77,7 @@ export default function BookingSteps() {
       ref={sectionRef}
       className="py-20 bg-white"
     >
+      <ScrollReveal>
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -204,6 +206,7 @@ export default function BookingSteps() {
           </a>
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

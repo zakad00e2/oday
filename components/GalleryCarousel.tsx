@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useRef } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const reviews = [
   {
@@ -92,6 +93,7 @@ export default function GalleryCarousel() {
   return (
     <section id="gallery" className="py-20 bg-white overflow-hidden">
       {/* Header */}
+      <ScrollReveal>
       <div className="max-w-2xl mx-auto px-6 text-center mb-16">
         {/* <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6 shadow-sm">
           <span className="text-xs font-medium text-[#111]">ذكريات مُخلَّدة</span>
@@ -113,6 +115,7 @@ export default function GalleryCarousel() {
           محفوظة لك بشكل احترافي.
         </p>
       </div>
+      </ScrollReveal>
 
       {/* Carousel wrapper with side fade masks */}
       <div className="relative">

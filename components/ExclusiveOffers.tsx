@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const offers = [
   {
@@ -79,6 +80,7 @@ export default function ExclusiveOffers() {
 
   return (
     <section id="offers" className="py-20 bg-white">
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
@@ -188,6 +190,7 @@ export default function ExclusiveOffers() {
           ))}
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

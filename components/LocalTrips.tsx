@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const trips = [
   {
@@ -69,6 +70,7 @@ export default function LocalTrips() {
 
   return (
     <section id="local-trips" className="py-20 bg-[#FAFAFA]">
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-14">
@@ -141,6 +143,7 @@ export default function LocalTrips() {
           ))}
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

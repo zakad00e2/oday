@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function ContactCTA() {
   const [form, setForm] = useState({
@@ -34,6 +35,7 @@ export default function ContactCTA() {
 
   return (
     <section id="contact" className="py-16 md:py-24 px-4 md:px-8 bg-white">
+      <ScrollReveal>
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
@@ -171,6 +173,7 @@ export default function ContactCTA() {
           </div>
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

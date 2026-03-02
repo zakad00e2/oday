@@ -1,5 +1,7 @@
 "use client";
 
+import ScrollReveal from "./ScrollReveal";
+
 const featured = {
   title: "استمتع بأفخم الفنادق",
   description: "رحلات مصممة بعناية لكل نوع من المسافرين",
@@ -36,6 +38,7 @@ const packages = [
 export default function Packages() {
   return (
     <section id="packages" className="py-14 bg-white">
+      <ScrollReveal>
       <div className="max-w-5xl mx-auto px-6">
 
         {/* Header */}
@@ -120,6 +123,7 @@ export default function Packages() {
 
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const reviews = [
   {
@@ -123,6 +124,7 @@ export default function Reviews() {
 
   return (
     <section id="reviews" className="py-20 bg-white overflow-hidden">
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-14">
@@ -221,6 +223,7 @@ export default function Reviews() {
           </div>
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import ScrollReveal from "./ScrollReveal";
+
 const categories = [
   "استكشاف",
   "رحلات",
@@ -35,6 +37,7 @@ const steps = [
 export default function HowItWorks() {
   return (
     <section id="how-it-works" className="py-16 bg-white">
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Title */}
         <div className="text-center mb-12">
@@ -121,6 +124,7 @@ export default function HowItWorks() {
           </div>
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

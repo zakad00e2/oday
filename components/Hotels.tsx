@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const hotels = [
   {
@@ -80,6 +81,7 @@ export default function Hotels() {
 
   return (
     <section id="hotels" className="py-20 bg-[#FAFAFA]">
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-14">
@@ -171,8 +173,7 @@ export default function Hotels() {
             </div>
           ))}
         </div>
-      </div>
-
+      </div>      </ScrollReveal>
       {/* Gallery Lightbox */}
       {galleryOpen !== null && (
         <div

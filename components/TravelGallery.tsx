@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const photos = [
   { id: 1, src: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800&q=80", alt: "رحلة شاطئية", category: "company", tall: true },
@@ -50,6 +51,7 @@ export default function TravelGallery() {
       ref={sectionRef}
       className="py-20 bg-[#FAFAFA]"
     >
+      <ScrollReveal>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
@@ -120,6 +122,7 @@ export default function TravelGallery() {
           ))}
         </div>
       </div>
+      </ScrollReveal>
 
       {/* Lightbox */}
       {lightbox !== null && (

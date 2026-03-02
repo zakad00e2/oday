@@ -1,8 +1,10 @@
 ﻿"use client";
 
+import ScrollReveal from "./ScrollReveal";
+
 export default function CTAHeroBanner() {
   return (
-    <section className="px-4 md:px-8 py-10 md:py-16 bg-white">
+    <ScrollReveal as="section" className="px-4 md:px-8 py-10 md:py-16 bg-white">
       <div
         className="relative w-full rounded-[28px] md:rounded-[32px] overflow-hidden flex items-center justify-center py-16 md:py-24"
         style={{
@@ -70,6 +72,6 @@ export default function CTAHeroBanner() {
           </div>
         </div>
       </div>
-    </section>
+    </ScrollReveal>
   );
 }
