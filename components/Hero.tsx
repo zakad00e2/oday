@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -127,7 +127,7 @@ export default function Hero() {
 
         {/* Description */}
         <p className="text-white/80 text-sm leading-relaxed mb-5">
-          سافر عبر أجمل الوجهات واستكشف تجارب لا تُنسى مع فريق Oday Tourism المتخصص.
+          سافر عبر أجمل الوجهات واستكشف تجارب لا تُنسى مع فريق Adi Tourism المتخصص.
         </p>
 
         {/* Book now button */}

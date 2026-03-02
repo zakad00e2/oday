@@ -9,7 +9,7 @@ const cards = [
     alt: "وجهة سياحية",
     caption: {
       title: "وجهات ساحرة",
-      desc: "اكتشف أجمل الوجهات السياحية مع خبراء Oday Tourism.",
+      desc: "اكتشف أجمل الوجهات السياحية مع خبراء Adi Tourism.",
     },
   },
   {

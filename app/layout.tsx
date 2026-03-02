@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata: Metadata = {
-  title: "Oday Tourism | أوداي للسياحة",
+  title: "Adi Tourism | عدي للسياحة",
   description:
-    "حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك — Oday Tourism",
-  keywords: "سياحة, سفر, حجوزات, فنادق, جولات, oday tourism",
+    "حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك — Adi Tourism",
+  keywords: "سياحة, سفر, حجوزات, فنادق, جولات, Adi Tourism",
 };
 
 export default function RootLayout({
@@ -15,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="antialiased font-[var(--font-arabic)]">{children}</body>
+      <body className="antialiased font-[var(--font-arabic)]">
+        <LayoutWrapper>{children}</LayoutWrapper>
+      </body>
     </html>
   );
 }

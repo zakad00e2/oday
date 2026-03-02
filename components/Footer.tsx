@@ -1,11 +1,13 @@
 ﻿"use client";
 import { useState } from "react";
+import Link from "next/link";
 
 const quickLinks = [
-  { label: "الرئيسية", href: "#hero" },
-  { label: "الباقات", href: "#packages" },
-  { label: "المعرض", href: "#gallery" },
-  { label: "كيف نعمل", href: "#how-it-works" },
+  { label: "الرئيسية", href: "/" },
+  { label: "الفنادق", href: "/hotels" },
+  { label: "الرحلات", href: "/trips" },
+  { label: "المعرض", href: "/gallery" },
+  { label: "تواصل معنا", href: "/contact" },
 ];
 
 const contactInfo = [
@@ -52,10 +54,10 @@ export default function Footer() {
             <div className="flex items-center gap-2.5 mb-4">
               <img
                 src="/logo.png"
-                alt="Oday Tourism Logo"
+                alt="Adi Tourism Logo"
                 className="h-10 w-auto object-contain"
               />
-              <span className="text-xl font-semibold text-[#111]">Oday Tourism</span>
+              <span className="text-xl font-semibold text-[#111]">Adi Tourism</span>
             </div>
             <p className="text-[#6B7280] text-sm leading-relaxed max-w-[200px]">
               نقدم تجارب سفر مميزة مع مرشدين محليين، لحظات لا تنسى في كل وجهة.
@@ -68,9 +70,9 @@ export default function Footer() {
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors duration-200">
+                  <Link href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors duration-200">
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -127,7 +129,7 @@ export default function Footer() {
         {/* Divider + copyright */}
         <div className="border-t border-[#E5E7EB] mt-14 pt-6 text-center">
           <p className="text-sm text-[#9CA3AF]">
-            &copy; {new Date().getFullYear()} Oday Tourism. جميع الحقوق محفوظة.
+            &copy; {new Date().getFullYear()} Adi Tourism. جميع الحقوق محفوظة.
           </p>
         </div>
 

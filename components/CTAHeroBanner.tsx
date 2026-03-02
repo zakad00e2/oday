@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export default function CTAHeroBanner() {
   return (
@@ -21,7 +21,7 @@ export default function CTAHeroBanner() {
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
             اصنع ذكرياتك
             <br />
-            مع Oday Tourism
+            مع Adi Tourism
           </h2>
 
           {/* Subtitle */}
