@@ -26,7 +26,7 @@ const mockOffers: Offer[] = [
 const emptyOffer: Omit<Offer, "id"> = {
   destination: "",
   price: "",
-  currency: "جنيه",
+  currency: "$",
   duration: "",
   highlight: false,
   services: [],
@@ -182,7 +182,7 @@ export default function AdminOffers() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1.5">العملة</label>
-                  <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" placeholder="جنيه" />
+                  <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" placeholder="$" />
                 </div>
               </div>
 

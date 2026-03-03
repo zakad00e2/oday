@@ -156,7 +156,9 @@ export default function ExclusiveOffers() {
                 <h3 className="text-xl font-bold text-[#111] mb-1">{offer.destination}</h3>
                 <div className="flex items-baseline gap-1 mb-5">
                   <span className="text-3xl font-bold text-[#0EA5E9]">{offer.price}</span>
-                  <span className="text-sm text-[#6B7280]">{offer.currency} / للشخص</span>
+                                    <span className="text-3xl font-bold text-[#0EA5E9]">$</span>
+
+                  <span className="text-sm text-[#6B7280]">/ للشخص</span>
                 </div>
 
                 {/* Services */}

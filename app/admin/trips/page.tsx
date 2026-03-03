@@ -81,7 +81,7 @@ export default function AdminTrips() {
                   </td>
                   <td className="px-5 py-3 font-medium text-[#111]">{trip.title}</td>
                   <td className="px-5 py-3 text-[#6B7280]">{trip.duration}</td>
-                  <td className="px-5 py-3 text-[#374151] font-medium">{trip.price.toLocaleString()} جنيه</td>
+                  <td className="px-5 py-3 text-[#374151] font-medium">${trip.price.toLocaleString()}</td>
                   <td className="px-5 py-3 text-[#6B7280] max-w-[200px] truncate">{trip.description}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-1">
@@ -126,7 +126,7 @@ export default function AdminTrips() {
                   <input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" placeholder="3 أيام / 2 ليلة" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر (جنيه)</label>
+                  <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر ($)</label>
                   <input type="number" value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" dir="ltr" />
                 </div>
               </div>

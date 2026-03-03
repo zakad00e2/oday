@@ -10,7 +10,7 @@ const stats = [
 ];
 
 const recentActivity = [
-  { action: "تم إضافة عرض جديد", detail: "شرم الشيخ — ٢,٤٩٩ جنيه", time: "منذ ساعتين", type: "add" },
+  { action: "تم إضافة عرض جديد", detail: "شرم الشيخ — $2,499", time: "منذ ساعتين", type: "add" },
   { action: "تم تعديل فندق", detail: "فندق هيلتون الغردقة", time: "منذ 5 ساعات", type: "edit" },
   { action: "تم إضافة مراجعة", detail: "أحمد محمد — ★★★★★", time: "منذ يوم", type: "add" },
   { action: "تم حذف رحلة", detail: "رحلة وادي الحيتان", time: "منذ يومين", type: "delete" },

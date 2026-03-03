@@ -14,25 +14,34 @@ const packages = [
     description: "أفضل الفنادق بأسعار تنافسية في أشهر الوجهات السياحية.",
     image: "/WhatsApp Image 2026-02-27 at 8.28.20 PM.jpeg",
     price: "٢٩٩",
+    href: "/hotels",
+    label: "عرض الفنادق",
   },
   {
-    title: "جولات سياحية مغامرة",
+    title: "رحلات سياحية مغامرة",
     description: "استكشف المسارات الجبلية والطبيعة البرية مع مرشدين محترفين.",
     image: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(2).jpeg",
     price: "٤٩٩",
+    href: "/trips",
+    label: "عرض الرحلات",
   },
-  {
-    title: "رحلات ليلية نجمية",
-    description: "تجربة فريدة من نوعها لمشاهدة النجوم في المناطق النائية.",
-    image: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(3).jpeg",
-    price: "٨٩٩",
-  },
-  {
+    {
     title: "رحلة خاصة مخصصة",
     description: "صمم رحلتك بالكامل وفق رغباتك مع مرافق خاص ووسائل نقل مريحة.",
     image: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(4).jpeg",
     price: "١٢٩٩",
+    href: "/package-builder",
+    label: "صمّم باقتك",
   },
+  {
+    title: "تواصل معنا",
+    description: "فريقنا متاح دائماً للإجابة على استفساراتك وتصميم رحلتك المثالية.",
+    image: "/contact-us.jpg",
+    price: "٨٩٩",
+    href: "/contact",
+    label: "تواصل معنا",
+  },
+
 ];
 
 export default function Packages() {
@@ -78,10 +87,13 @@ export default function Packages() {
 
           {/* 2x2 Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {packages.map((pkg, i) => (
-              <div
+            {packages.map((pkg, i) => {
+              const Wrapper = pkg.href ? "a" : "div";
+              return (
+              <Wrapper
                 key={i}
-                className="group bg-white rounded-[20px] overflow-hidden transition-all duration-300 cursor-pointer flex flex-col"
+                {...(pkg.href ? { href: pkg.href } : {})}
+                className="group bg-white rounded-[20px] overflow-hidden transition-all duration-300 cursor-pointer flex flex-col hover:shadow-sm"
               >
                 {/* Image */}
                 <div className="relative overflow-hidden aspect-[4/3] rounded-b-[16px]">
@@ -100,25 +112,35 @@ export default function Packages() {
                   <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
                     {pkg.description}
                   </p>
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className="text-[#111] font-semibold text-sm">
+                  <div className="flex items-center justify-between mt-auto mr-auto gap-2">
+                    {/* <span className="text-[#111] font-semibold text-sm">
                       {pkg.price} $ <span className="font-normal text-[#6B7280] text-xs">/ شخص</span>
-                    </span>
-                    <a
-                      href="https://wa.me/201032549630"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111] hover:text-[#6B7280] transition-colors"
-                    >
-                      احجز الآن
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-                      </svg>
-                    </a>
+                    </span> */}
+                    {pkg.href ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111]">
+                        {pkg.label}
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <a
+                        href="https://wa.me/201032549630"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111] hover:text-[#6B7280] transition-colors"
+                      >
+                        احجز الآن
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                        </svg>
+                      </a>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              </Wrapper>
+              );
+            })}
           </div>
 
         </div>

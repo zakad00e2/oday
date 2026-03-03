@@ -9,6 +9,7 @@ const hotels = [
     name: "منتجع ريكسوس شرم الشيخ",
     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
     description: "منتجع فاخر على شاطئ البحر الأحمر مع خدمة شاملة وإطلالات ساحرة.",
+    stars: 5,
     features: ["إطلالة بحرية", "سبا وعافية", "مسبح لا متناهي", "مطاعم عالمية"],
     gallery: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
@@ -22,6 +23,7 @@ const hotels = [
     name: "فندق ستيلا دي ماري الغردقة",
     image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
     description: "إقامة راقية مع شاطئ خاص وأنشطة مائية متنوعة للعائلات والأزواج.",
+    stars: 4,
     features: ["شاطئ خاص", "أنشطة مائية", "نادي أطفال", "Wi-Fi مجاني"],
     gallery: [
       "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
@@ -35,6 +37,7 @@ const hotels = [
     name: "فندق موفنبيك العين السخنة",
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
     description: "ملاذ هادئ على ساحل البحر الأحمر مع مرافق عصرية وخدمة متميزة.",
+    stars: 5,
     features: ["حمام سباحة ساخن", "مركز لياقة", "مطعم بوفيه", "موقف سيارات"],
     gallery: [
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
@@ -48,6 +51,7 @@ const hotels = [
     name: "فندق كمبينسكي سوما باي",
     image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
     description: "تجربة فندقية استثنائية تجمع بين الفخامة والطبيعة الخلابة.",
+    stars: 5,
     features: ["غوص وسنوركل", "ملعب غولف", "مسبح خاص", "خدمة غرف 24/7"],
     gallery: [
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
@@ -141,7 +145,23 @@ export default function Hotels() {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-[#111] mb-2">{hotel.name}</h3>
+                <h3 className="text-lg font-semibold text-[#111] mb-1.5">{hotel.name}</h3>
+
+                {/* Star Rating */}
+                <div className="flex items-center gap-0.5 mb-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <svg
+                      key={i}
+                      className={`w-4 h-4 ${i < hotel.stars ? "text-yellow-400" : "text-gray-200"}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                  <span className="text-xs text-[#6B7280] mr-1.5">{hotel.stars} نجوم</span>
+                </div>
+
                 <p className="text-sm text-[#6B7280] leading-relaxed mb-4">{hotel.description}</p>
 
                 {/* Features */}

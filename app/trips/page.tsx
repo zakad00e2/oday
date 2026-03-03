@@ -9,7 +9,7 @@ export const metadata = {
 export default function TripsPage() {
   return (
     <main className="pt-20">
-      <Packages />
+      {/* <Packages /> */}
       <LocalTrips />
     </main>
   );

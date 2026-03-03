@@ -88,10 +88,8 @@ export default function Navbar() {
       </div>
 
       {/* ── CTA Button (left in RTL) ──────────────────── */}
-      <a
-        href="https://wa.me/201032549630"
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href="/package-builder"
         className={`hidden lg:flex items-center gap-2.5 pr-5 pl-2 py-2 rounded-full text-[13.5px] font-semibold transition-all duration-300 hover:scale-105 ${
           useDark
             ? "bg-[#111] text-white shadow-md"
@@ -108,7 +106,7 @@ export default function Navbar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
           </svg>
         </span>
-      </a>
+      </Link>
 
       {/* ── Mobile Hamburger ──────────────────────────── */}
       <button
@@ -147,16 +145,15 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <a
-            href="https://wa.me/201032549630"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/package-builder"
+            onClick={closeMobile}
             className={`mt-4 flex items-center justify-center  gap-2 px-6 py-3 rounded-full text-sm font-bold ${
               useDark ? "bg-[#111] text-white" : "bg-white text-[#111]"
             }`}
           >
             احجز الآن
-          </a>
+          </Link>
         </div>
       )}
     </nav>

@@ -6,6 +6,7 @@ const quickLinks = [
   { label: "الرئيسية", href: "/" },
   { label: "الفنادق", href: "/hotels" },
   { label: "الرحلات", href: "/trips" },
+  { label: "صمّم باقتك", href: "/package-builder" },
   { label: "المعرض", href: "/gallery" },
   { label: "تواصل معنا", href: "/contact" },
 ];
