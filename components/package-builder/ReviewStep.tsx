@@ -75,9 +75,10 @@ export default function ReviewStep() {
                       <p className="text-[10px] text-[#64748B]">{trip.duration}</p>
                     </div>
                   </div>
-                  <div dir="rtl" className="text-xs text-[#0EA5E9] shrink-0 text-left ">
+                  <div dir="rtl" className="text-xs text-[#0EA5E9] shrink-0 text-left  ">
                     <span className="text-[10px] text-[#94A3B8]">{formatPrice(trip.pricePerPerson)} × {totalGuests(selection.guests)} أشخاص</span>
-                    <div className="font-bold pr-5">{formatPrice(trip.pricePerPerson * totalGuests(selection.guests))}</div>
+                   
+                    <div className="font-bold  ">{formatPrice(trip.pricePerPerson * totalGuests(selection.guests))}</div>
                   </div>
                 </div>
               ))}
