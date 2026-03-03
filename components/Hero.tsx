@@ -34,17 +34,16 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto -mt-28">
         <div
-          className={`transition-all duration-1000 ${
-            loaded
+          className={`transition-all duration-1000 ${loaded
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-10"
-          }`}
+            }`}
         >
           {/* Small Badge */}
           <div
             className="inline-flex items-center gap-2 text-white/90 rounded-full px-5 py-2 text-sm font-medium my-8 bg-white/10 backdrop-blur-sm backdrop-saturate-150 border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
           >
-           
+
             <span>شركة سياحة وسفر معتمدة</span>
           </div>
 
@@ -62,37 +61,18 @@ export default function Hero() {
             حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك
           </p>
 
-          {/* CTA Button */}
-          {/* <a
-            href="https://wa.me/201032549630"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 text-white px-8 py-4 rounded-full text-lg font-semibold hover:scale-105 hover:shadow-2xl transition-all duration-300 group"
-            style={{
-              background: "rgba(255,255,255,0.18)",
-              backdropFilter: "blur(3px)",
-              WebkitBackdropFilter: "blur(18px)",
-              border: "1px solid rgba(255,255,255,0.28)",
-              boxShadow: "0 2px 16px rgba(0,0,0,0.12)",
-            }}
+          {/* CTA Button — mobile only */}
+          <a
+            href="/package-builder"
+            className="md:hidden inline-flex items-center gap-2.5 text-white text-[15px] font-semibold pr-6 pl-3 py-3 rounded-full transition-all duration-300 hover:scale-105 border border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
           >
-            احجز رحلتك الآن
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">
-              <svg
-                className="w-4 h-4 rotate-180"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                />
+            احجز الآن
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 text-[#111] shadow-sm">
+              <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
               </svg>
             </span>
-          </a> */}
+          </a>
         </div>
 
         {/* Floating Info Card — old centered card removed */}
@@ -100,9 +80,8 @@ export default function Hero() {
 
       {/* ── Bottom-Left Floating Card (matches screenshot) ── */}
       <div
-        className={`hidden md:block absolute bottom-8 md:bottom-16 left-4 md:left-20 z-20 w-64 md:w-72 rounded-3xl p-5 transition-all duration-1000 delay-700 animate-float bg-white/10 backdrop-blur-sm backdrop-saturate-150 border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
-          loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
+        className={`hidden md:block absolute bottom-8 md:bottom-16 left-4 md:left-20 z-20 w-64 md:w-72 rounded-3xl p-5 transition-all duration-1000 delay-700 animate-float bg-white/10 backdrop-blur-sm backdrop-saturate-150 border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
       >
         {/* Avatars + count + label */}
         <div className="flex items-center gap-3 mb-4">

@@ -22,7 +22,7 @@ function BuilderContent() {
             </svg>
             <span className="text-xs font-bold">صمّم باقتك المثالية</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-[#0F172A] leading-tight mb-3">
+          <h1 className="text-3xl md:text-5xl font-semibold text-[#0F172A] leading-tight mb-3">
             تخصيص رحلتك <span className="text-[#0EA5E9]">لم يكن أسهل من قبل</span>
           </h1>
           <p className="text-[#64748B] text-sm md:text-base max-w-xl mx-auto leading-relaxed">

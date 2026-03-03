@@ -18,11 +18,10 @@ export function totalGuests(guests: GuestInfo): number {
 export function calculateHotelCost(
   basePricePerNight: number,
   numberOfNights: number,
-  guests: GuestInfo
+  _guests: GuestInfo
 ): number {
-  // Pricing: basePricePerNight is per room. We assume 1 room per 2 guests (ceil).
-  const numRooms = Math.ceil(totalGuests(guests) / 2);
-  return basePricePerNight * numberOfNights * Math.max(numRooms, 1);
+  // Pricing: flat rate per night regardless of the number of guests.
+  return basePricePerNight * numberOfNights;
 }
 
 // ─── Trips cost ─────────────────────────────────────────────────────────────
@@ -96,10 +95,10 @@ export function calculatePricingBreakdown(
 ): PricingBreakdown {
   const hotelCost = selection.hotel
     ? calculateHotelCost(
-        selection.hotel.basePricePerNight,
-        selection.numberOfNights,
-        selection.guests
-      )
+      selection.hotel.basePricePerNight,
+      selection.numberOfNights,
+      selection.guests
+    )
     : 0;
 
   const tripsCost = calculateTripsCost(selection.trips, selection.guests);

@@ -10,10 +10,8 @@ export default function Home() {
     <main>
       <Hero />
       <ExclusiveOffers />
-       <Packages />
+      <Packages />
       <ShowcaseGallery />
-            
-
       <HowItWorks />
       <CTAHeroBanner />
     </main>

@@ -81,117 +81,121 @@ export default function ExclusiveOffers() {
   return (
     <section id="offers" className="py-20 bg-white">
       <ScrollReveal>
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border border-[#FDE68A]/40 rounded-full px-4 py-1.5 mb-5 shadow-sm">
-            <svg className="w-4 h-4 text-[#F59E0B]" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-xs font-medium text-[#92400E]">عروض حصرية</span>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
- عروض <span className="font-semibold">لأجمل الوجهات</span>
-          </h2>
-          <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
-            استفد من أقوى العروض على أفضل الوجهات السياحية المصرية بأسعار مميزة تشمل الإقامة والخدمات.
-          </p>
-
-          {/* Filter tabs */}
-          <div className="inline-flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-full p-1">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeTab === "all" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
-              }`}
-            >
-              جميع العروض
-            </button>
-            <button
-              onClick={() => setActiveTab("highlighted")}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeTab === "highlighted" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
-              }`}
-            >
-              الأكثر طلباً
-            </button>
-          </div>
-        </div>
-
-        {/* Offers Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((offer) => (
-            <div
-              key={offer.id}
-              className={`relative group rounded-[24px] overflow-hidden border transition-all duration-500 hover:shadow-xl ${
-                offer.highlight
-                  ? "border-[#0EA5E9]/30 bg-gradient-to-b from-[#F0F9FF] to-white shadow-md"
-                  : "border-[#F3F4F6] bg-white shadow-sm"
-              }`}
-            >
-              {/* Highlight badge */}
-              {offer.highlight && (
-                <div className="absolute top-4 left-4 z-10 bg-[#0EA5E9] text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md">
-                  الأكثر طلباً
-                </div>
-              )}
-
-              {/* Image */}
-              <div className="relative overflow-hidden aspect-[16/9]">
-                <img
-                  src={offer.image}
-                  alt={offer.destination}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <div className="absolute bottom-4 right-4">
-                  <span className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-[#111]">
-                    {offer.duration}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-[#111] mb-1">{offer.destination}</h3>
-                <div className="flex items-baseline gap-1 mb-5">
-                  <span className="text-3xl font-bold text-[#0EA5E9]">{offer.price}</span>
-                                    <span className="text-3xl font-bold text-[#0EA5E9]">$</span>
-
-                  <span className="text-sm text-[#6B7280]">/ للشخص</span>
-                </div>
-
-                {/* Services */}
-                <ul className="space-y-2.5 mb-6">
-                  {offer.services.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[#374151]">
-                      <CheckIcon />
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA */}
-                <a
-                  href="https://wa.me/201032549630"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-full flex items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold transition-all duration-300 active:scale-[0.97] ${
-                    offer.highlight
-                      ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7] shadow-md shadow-[#0EA5E9]/20"
-                      : "bg-[#111] text-white hover:bg-[#333] shadow-sm"
-                  }`}
-                >
-                  احجز الآن
-                  <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-                  </svg>
-                </a>
-              </div>
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border border-[#FDE68A]/40 rounded-full px-4 py-1.5 mb-5 shadow-sm">
+              <svg className="w-4 h-4 text-[#F59E0B]" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-xs font-medium text-[#92400E]">عروض حصرية</span>
             </div>
-          ))}
+            <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+              عروض <span className="font-semibold">لأجمل الوجهات</span>
+            </h2>
+            <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
+              استفد من أقوى العروض على أفضل الوجهات السياحية المصرية بأسعار مميزة تشمل الإقامة والخدمات.
+            </p>
+
+            {/* Filter tabs */}
+            <div className="inline-flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-full p-1">
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === "all" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
+                  }`}
+              >
+                جميع العروض
+              </button>
+              <button
+                onClick={() => setActiveTab("highlighted")}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === "highlighted" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
+                  }`}
+              >
+                الأكثر طلباً
+              </button>
+            </div>
+          </div>
+
+          {/* Offers Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filtered.map((offer) => (
+              <div
+                key={offer.id}
+                className="group relative flex flex-col"
+              >
+                {/* Image Section */}
+                <div className="relative h-56 rounded-3xl overflow-hidden shadow-md">
+                  <img
+                    src={offer.image}
+                    alt={offer.destination}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                  />
+                  {/* Subtle dark gradient overlay at top for badges */}
+                  <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/50 to-transparent" />
+
+                  {/* Badges container */}
+                  <div className="absolute top-4 inset-x-4 flex justify-between items-start">
+                    {offer.highlight ? (
+                      <div className="bg-[#0EA5E9]/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-white/20">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        الأكثر طلباً
+                      </div>
+                    ) : <div />} {/* Empty div to push duration badge to right if no highlight */}
+
+                    <div className="bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/20 shadow-sm">
+                      <span className="text-[11px] font-semibold text-white tracking-wide">{offer.duration}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Overlapping Content Box */}
+                <div className="relative -mt-10 z-10 mx-4 bg-white rounded-2xl p-6 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-[#F1F5F9] transition-transform duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-10px_rgba(14,165,233,0.15)] flex flex-col flex-grow">
+
+                  {/* Header: Destination & Price */}
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <h3 className="text-[19px] font-bold text-[#0F172A] leading-tight group-hover:text-[#0EA5E9] transition-colors">{offer.destination}</h3>
+                    <div className="text-left shrink-0">
+                      <div className="flex items-baseline justify-end gap-1">
+                        <span className="text-2xl font-black text-[#0F172A] truncate max-w-[120px]">{offer.price}</span>
+                        <span className="text-sm font-bold text-[#64748B]">$</span>
+                      </div>
+                      <span className="block text-[10px] text-[#94A3B8] font-medium text-left">للشخص</span>
+                    </div>
+                  </div>
+
+                  {/* Services Summary (Vertical list) */}
+                  <div className="flex flex-col gap-2.5 mb-6 flex-grow">
+                    {offer.services.map((s, i) => (
+                      <div key={i} className="flex items-start gap-2.5">
+                        <div className="mt-[2px] w-4 h-4 rounded-full bg-[#E0F2FE] flex items-center justify-center shrink-0">
+                          <svg className="w-2.5 h-2.5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        </div>
+                        <span className="text-[13px] font-medium text-[#64748B] leading-tight text-right">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA Button */}
+                  <a
+                    href="https://wa.me/201032549630"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-[14px] font-bold transition-all duration-300 active:scale-[0.98] border-2 border-[#E2E8F0] text-[#0F172A] hover:border-[#0EA5E9] hover:bg-[#0EA5E9] hover:text-white"
+                  >
+                    حجز سريع
+                    <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
       </ScrollReveal>
     </section>
   );

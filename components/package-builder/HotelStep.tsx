@@ -76,11 +76,10 @@ export default function HotelStep() {
           <button
             key={loc}
             onClick={() => setFilterCity(loc)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium border transition-all duration-200 ${
-              filterCity === loc
+            className={`rounded-full px-4 py-1.5 text-xs font-medium border transition-all duration-200 ${filterCity === loc
                 ? "bg-[#0EA5E9] text-white border-[#0EA5E9] shadow-sm"
                 : "bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A]"
-            }`}
+              }`}
           >
             {loc === "all" ? "كل المدن" : loc}
           </button>
@@ -106,13 +105,12 @@ export default function HotelStep() {
             <button
               key={hotel.id}
               onClick={() => setHotel(selected ? null : hotel)}
-              className={`group text-right bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col sm:flex-row ${
-                selected
+              className={`group text-right bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${selected
                   ? "border-[#0EA5E9] shadow-md shadow-[#0EA5E9]/10"
                   : "border-transparent shadow-sm hover:border-[#E2E8F0] hover:shadow-md"
-              }`}
+                }`}
             >
-              <div className="relative h-48 sm:h-auto sm:w-40 shrink-0 overflow-hidden">
+              <div className="relative h-48 w-full shrink-0 overflow-hidden">
                 <img
                   src={hotel.images[0]}
                   alt={hotel.name}
@@ -123,13 +121,12 @@ export default function HotelStep() {
                   <span className="text-white text-[10px] font-bold">{hotel.stars}</span>
                 </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col justify-between">
+              <div className="p-4 flex-1 flex flex-col justify-between w-full">
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="text-[15px] font-bold text-[#0F172A] leading-snug">{hotel.name}</h4>
-                    <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${
-                      selected ? "bg-[#0EA5E9] border-[#0EA5E9] text-white" : "border-[#CBD5E1]"
-                    }`}>
+                    <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${selected ? "bg-[#0EA5E9] border-[#0EA5E9] text-white" : "border-[#CBD5E1]"
+                      }`}>
                       {selected && (
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -176,11 +173,10 @@ export default function HotelStep() {
         <button
           onClick={goNext}
           disabled={!selection.hotel}
-          className={`flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 w-full sm:w-auto ${
-            selection.hotel
+          className={`flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 w-full sm:w-auto ${selection.hotel
               ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7] shadow-md hover:shadow-lg shadow-[#0EA5E9]/20"
               : "bg-[#F1F5F9] text-[#94A3B8] cursor-not-allowed"
-          }`}
+            }`}
         >
           التالي: اختر الرحلات
           <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
