@@ -135,18 +135,14 @@ export default function ExclusiveOffers() {
 
                   {/* Badges container */}
                   <div className="absolute top-4 inset-x-4 flex justify-between items-start">
-                    {offer.highlight ? (
+                    {offer.highlight && (
                       <div className="bg-[#0EA5E9]/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-white/20">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                         الأكثر طلباً
                       </div>
-                    ) : <div />} {/* Empty div to push duration badge to right if no highlight */}
-
-                    <div className="bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/20 shadow-sm">
-                      <span className="text-[11px] font-semibold text-white tracking-wide">{offer.duration}</span>
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -155,7 +151,15 @@ export default function ExclusiveOffers() {
 
                   {/* Header: Destination & Price */}
                   <div className="flex justify-between items-start mb-4 gap-2">
-                    <h3 className="text-[19px] font-bold text-[#0F172A] leading-tight group-hover:text-[#0EA5E9] transition-colors">{offer.destination}</h3>
+                    <div>
+                      <h3 className="text-[19px] font-bold text-[#0F172A] leading-tight group-hover:text-[#0EA5E9] transition-colors">{offer.destination}</h3>
+                      <div className="flex items-center gap-1.5 mt-1.5 text-[#64748B]">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-[12px] font-medium">{offer.duration}</span>
+                      </div>
+                    </div>
                     <div className="text-left shrink-0">
                       <div className="flex items-baseline justify-end gap-1">
                         <span className="text-2xl font-black text-[#0F172A] truncate max-w-[120px]">{offer.price}</span>
