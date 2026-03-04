@@ -109,6 +109,7 @@ function HotelCard({ hotel, openGallery }: { hotel: Hotel; openGallery: (id: num
         <img
           src={allImages[currentIdx]}
           alt={hotel.name}
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105"
         />
 

@@ -39,7 +39,7 @@ const reviews = [
     text: "كل لحظة كانت سحرية. وجهة يجب زيارتها!",
     rotation: "rotate-[4deg]",
   },
-   {
+  {
     name: "علياء رحمن",
     rating: 5,
     image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=500&q=80",
@@ -94,8 +94,8 @@ export default function GalleryCarousel() {
     <section id="gallery" className="py-20 bg-white overflow-hidden">
       {/* Header */}
       <ScrollReveal>
-      <div className="max-w-2xl mx-auto px-6 text-center mb-16">
-        {/* <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6 shadow-sm">
+        <div className="max-w-2xl mx-auto px-6 text-center mb-16">
+          {/* <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6 shadow-sm">
           <span className="text-xs font-medium text-[#111]">ذكريات مُخلَّدة</span>
           <span className="w-7 h-7 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] flex items-center justify-center">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -104,17 +104,17 @@ export default function GalleryCarousel() {
           </span>
         </div> */}
 
-        <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-          خلّد رحلتك مع
-          <br />
-          <span className="font-semibold">Oday Tourism إلى الأبد</span>
-        </h2>
+          <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+            خلّد رحلتك مع
+            <br />
+            <span className="font-semibold">Oday Tourism إلى الأبد</span>
+          </h2>
 
-        <p className="text-[#6B7280] text-sm md:text-base leading-relaxed">
-          أعِد عيش كل لحظة من رحلتك — مناظر الشروق، والطبيعة الخلابة،
-          محفوظة لك بشكل احترافي.
-        </p>
-      </div>
+          <p className="text-[#6B7280] text-sm md:text-base leading-relaxed">
+            أعِد عيش كل لحظة من رحلتك — مناظر الشروق، والطبيعة الخلابة،
+            محفوظة لك بشكل احترافي.
+          </p>
+        </div>
       </ScrollReveal>
 
       {/* Carousel wrapper with side fade masks */}
@@ -140,6 +140,7 @@ export default function GalleryCarousel() {
                 <img
                   src={review.image}
                   alt={`صورة من رحلة ${review.name}`}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
@@ -156,7 +157,7 @@ export default function GalleryCarousel() {
 
         {/* Arrows */}
         <div className="flex justify-center gap-3 mt-2 relative z-20">
-        
+
           <button
             onClick={() => scroll("right")}
             className="w-10 h-10 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-sm hover:bg-[#F9FAFB] hover:shadow-md transition-all"
@@ -166,7 +167,7 @@ export default function GalleryCarousel() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
-            <button
+          <button
             onClick={() => scroll("left")}
             className="w-10 h-10 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-sm hover:bg-[#F9FAFB] hover:shadow-md transition-all"
             aria-label="السابق"

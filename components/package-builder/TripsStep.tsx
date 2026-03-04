@@ -43,11 +43,10 @@ export default function TripsStep() {
           <button
             key={city}
             onClick={() => setFilterCity(city)}
-            className={`rounded-full px-5 py-2 text-xs font-semibold border transition-all duration-200 ${
-              filterCity === city
+            className={`rounded-full px-5 py-2 text-xs font-semibold border transition-all duration-200 ${filterCity === city
                 ? "bg-[#0EA5E9] text-white border-[#0EA5E9] shadow-sm"
                 : "bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A]"
-            }`}
+              }`}
           >
             {city === "all" ? "كل المدن" : city}
           </button>
@@ -61,16 +60,16 @@ export default function TripsStep() {
             <button
               key={trip.id}
               onClick={() => toggleTrip(trip)}
-              className={`group w-full text-right rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white flex flex-col ${
-                selected
+              className={`group w-full text-right rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white flex flex-col ${selected
                   ? "border-[#0EA5E9] shadow-md shadow-[#0EA5E9]/10"
                   : "border-[#E2E8F0] hover:border-[#CBD5E1] shadow-sm hover:shadow-md"
-              }`}
+                }`}
             >
               <div className="relative h-44 overflow-hidden shrink-0">
                 <img
                   src={trip.images[0]}
                   alt={trip.title}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 {selected && (
@@ -90,9 +89,8 @@ export default function TripsStep() {
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h4 className="text-[15px] font-bold text-[#0F172A] leading-snug">{trip.title}</h4>
-                    <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${
-                      selected ? "bg-[#0EA5E9] border-[#0EA5E9] text-white" : "border-[#CBD5E1]"
-                    }`}>
+                    <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${selected ? "bg-[#0EA5E9] border-[#0EA5E9] text-white" : "border-[#CBD5E1]"
+                      }`}>
                       {selected && (
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

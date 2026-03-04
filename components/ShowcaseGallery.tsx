@@ -110,7 +110,7 @@ export default function ShowcaseGallery() {
       clearTimeout(timeout);
       window.removeEventListener("resize", updateProgress);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scroll = (direction: "prev" | "next") => {
@@ -147,9 +147,8 @@ export default function ShowcaseGallery() {
 
         {/* ── Header ── */}
         <div
-          className={`text-center mb-12 transition-all duration-700 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`text-center mb-12 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6 ">
             <span className="text-xs font-medium text-[#111]">مغامرة نقية</span>
@@ -159,7 +158,7 @@ export default function ShowcaseGallery() {
             id="showcase-heading"
             className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#111] leading-tight mb-4"
           >
-             لحظات لا تُنسى في
+            لحظات لا تُنسى في
             {/* <br className="hidden sm:block" /> */}
             <span className="font-semibold"> قلب الطبيعة الساحرة</span>
           </h2>
@@ -170,10 +169,9 @@ export default function ShowcaseGallery() {
         </div>
 
         {/* ── Carousel Controls & Container ── */}
-        <div 
-          className={`relative -mx-6 md:mx-0 transition-all duration-1000 delay-200 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-          }`}
+        <div
+          className={`relative -mx-6 md:mx-0 transition-all duration-1000 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+            }`}
         >
           {/* Scrollable Track */}
           <div
@@ -192,6 +190,7 @@ export default function ShowcaseGallery() {
                 <img
                   src={card.src}
                   alt={card.alt}
+                  loading="lazy"
                   className="w-full h-full object-cover transition-all duration-500 group-hover:h-[80%] rounded-b-[20px] group-hover:rounded-b-[20px]"
                 />
 

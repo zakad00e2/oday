@@ -128,6 +128,7 @@ export default function ExclusiveOffers() {
                   <img
                     src={offer.image}
                     alt={offer.destination}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   />
                   {/* Subtle dark gradient overlay at top for badges */}

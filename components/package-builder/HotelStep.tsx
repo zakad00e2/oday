@@ -77,8 +77,8 @@ export default function HotelStep() {
             key={loc}
             onClick={() => setFilterCity(loc)}
             className={`rounded-full px-4 py-1.5 text-xs font-medium border transition-all duration-200 ${filterCity === loc
-                ? "bg-[#0EA5E9] text-white border-[#0EA5E9] shadow-sm"
-                : "bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A]"
+              ? "bg-[#0EA5E9] text-white border-[#0EA5E9] shadow-sm"
+              : "bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A]"
               }`}
           >
             {loc === "all" ? "كل المدن" : loc}
@@ -106,14 +106,15 @@ export default function HotelStep() {
               key={hotel.id}
               onClick={() => setHotel(selected ? null : hotel)}
               className={`group text-right bg-white rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col ${selected
-                  ? "border-[#0EA5E9] shadow-md shadow-[#0EA5E9]/10"
-                  : "border-transparent shadow-sm hover:border-[#E2E8F0] hover:shadow-md"
+                ? "border-[#0EA5E9] shadow-md shadow-[#0EA5E9]/10"
+                : "border-transparent shadow-sm hover:border-[#E2E8F0] hover:shadow-md"
                 }`}
             >
               <div className="relative h-48 w-full shrink-0 overflow-hidden">
                 <img
                   src={hotel.images[0]}
                   alt={hotel.name}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute top-2.5 right-2.5 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 flex items-center gap-1">
@@ -174,8 +175,8 @@ export default function HotelStep() {
           onClick={goNext}
           disabled={!selection.hotel}
           className={`flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 w-full sm:w-auto ${selection.hotel
-              ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7] shadow-md hover:shadow-lg shadow-[#0EA5E9]/20"
-              : "bg-[#F1F5F9] text-[#94A3B8] cursor-not-allowed"
+            ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7] shadow-md hover:shadow-lg shadow-[#0EA5E9]/20"
+            : "bg-[#F1F5F9] text-[#94A3B8] cursor-not-allowed"
             }`}
         >
           التالي: اختر الرحلات

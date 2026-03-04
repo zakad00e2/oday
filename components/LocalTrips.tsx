@@ -104,6 +104,7 @@ export default function LocalTrips() {
                   <img
                     src={trip.image}
                     alt={trip.title}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
