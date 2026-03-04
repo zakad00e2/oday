@@ -17,10 +17,12 @@ import {
 } from "@/lib/whatsapp-message";
 
 /* ─── Types ──────────────────────────────────────────────────── */
+type DocumentType = "palestinian" | "european" | "zeroed" | null;
 type ServiceType = "24h" | "72h" | null;
 type AirlineChoice = "egyptair" | "other";
 
 interface FormErrors {
+    documentType?: string;
     serviceType?: string;
     file?: string;
     country?: string;
@@ -34,6 +36,9 @@ interface FormErrors {
 
 /* ─── Component ──────────────────────────────────────────────── */
 export default function AirportCoordination() {
+    // ── Document type
+    const [documentType, setDocumentType] = useState<DocumentType>(null);
+
     // ── Service type
     const [serviceType, setServiceType] = useState<ServiceType>(null);
 
@@ -120,6 +125,7 @@ export default function AirportCoordination() {
     const validate = useCallback((): boolean => {
         const errs: FormErrors = {};
 
+        if (!documentType) errs.documentType = "يرجى اختيار نوع الجواز أو الوثيقة";
         if (!serviceType) errs.serviceType = "يرجى اختيار نوع الخدمة";
         if (!file) errs.file = "يرجى رفع صورة جواز السفر أو وثيقة اللجوء";
         if (!country.trim()) errs.country = "يرجى إدخال بلد المغادرة";
@@ -138,7 +144,7 @@ export default function AirportCoordination() {
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [serviceType, file, country, airport, airlineChoice, otherAirlineId, customAirlineName, fullName, whatsapp]);
+    }, [documentType, serviceType, file, country, airport, airlineChoice, otherAirlineId, customAirlineName, fullName, whatsapp]);
 
     /* ─── Submit ───────────────────────────────────────────────── */
     const handleSubmit = useCallback(
@@ -149,6 +155,7 @@ export default function AirportCoordination() {
             setLoading(true);
 
             const formData: AirportFormData = {
+                documentType: documentType!,
                 serviceType: serviceType!,
                 basePrice,
                 airlineName: resolvedAirlineName,
@@ -177,7 +184,7 @@ export default function AirportCoordination() {
                 setLoading(false);
             }, 600);
         },
-        [validate, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, city, airport, arrivalDate, arrivalTime, flightNumber, fullName, whatsapp, email, notes]
+        [validate, documentType, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, city, airport, arrivalDate, arrivalTime, flightNumber, fullName, whatsapp, email, notes]
     );
 
     /* ─── Helpers ──────────────────────────────────────────────── */
@@ -194,18 +201,16 @@ export default function AirportCoordination() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 {/* Header */}
                 <div className="text-center mb-12 animate-fade-in-up">
-                    <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-5 shadow-sm">
-                        <svg className="w-4 h-4 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 mb-5 shadow-sm">
+                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span className="text-xs font-medium text-[#111]">تنسيقات المطار</span>
+                        <span className="text-xs font-semibold text-amber-800">لحملة الجنسية الفلسطينية فقط</span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-                        حجز <span className="font-semibold">تنسيقات المطار</span>
-                    </h1>
+                        خدمات الموافقة الأمنية والتأشيرات                                         </h1>
                     <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                        احصل على تأشيرتك بسهولة وسرعة. اختر نوع الخدمة وأكمل البيانات أدناه.
-                    </p>
+                        نرتب لك جميع إجراءات المطار والتأشيرة بسرعة وأمان لتبدأ رحلتك إلى مصر بدون أي تعقيدات.                    </p>
                 </div>
 
                 {/* Layout: Form + Price Card */}
@@ -235,7 +240,9 @@ export default function AirportCoordination() {
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                             </div>
                                         )}
-                                        <svg className="w-6 h-6 text-[#0EA5E9] mb-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                                        <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4.5 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
                                         <h3 className="font-bold text-[#111] text-base mb-1">تأشيرة خلال 24 ساعة</h3>
                                         <p className="text-sm text-[#6B7280]">معالجة سريعة خلال يوم واحد</p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price24}</div>
@@ -255,7 +262,9 @@ export default function AirportCoordination() {
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                             </div>
                                         )}
-                                        <svg className="w-6 h-6 text-[#0EA5E9] mb-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
                                         <h3 className="font-bold text-[#111] text-base mb-1">تأشيرة خلال 72 ساعة</h3>
                                         <p className="text-sm text-[#6B7280]">معالجة خلال ثلاثة أيام عمل</p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price72}</div>
@@ -264,10 +273,55 @@ export default function AirportCoordination() {
                                 {errors.serviceType && <p className={errorClass}>{errors.serviceType}</p>}
                             </div>
 
-                            {/* ─── 2. Upload Document ───────────────────── */}
+                            {/* ─── 2. Document Type ─────────────────────── */}
                             <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">2</span>
+                                    نوع الجواز أو الوثيقة
+                                </h2>
+                                <div className="grid sm:grid-cols-3 gap-4">
+                                    {/* Palestinian */}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDocumentType("palestinian"); setErrors((p) => ({ ...p, documentType: undefined })); }}
+                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "palestinian" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
+                                    >
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug">الجوازات الفلسطينية<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(السلطة)</span></h3>
+                                    </button>
+                                    {/* European */}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDocumentType("european"); setErrors((p) => ({ ...p, documentType: undefined })); }}
+                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "european" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
+                                    >
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug">الوثائق الاوروبية<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(اللاجئين)</span></h3>
+                                    </button>
+                                    {/* Zeroed */}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDocumentType("zeroed"); setErrors((p) => ({ ...p, documentType: undefined })); }}
+                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "zeroed" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
+                                    >
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug flex items-center justify-center h-full">الجوازات المصفرة</h3>
+                                    </button>
+                                </div>
+
+                                {/* Note */}
+                                <div className="mt-4 flex items-center gap-2 text-sm text-amber-600 font-medium">
+                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <p>الجوازات المصفرة متوقفة حالياً بشكل مؤقت.</p>
+                                </div>
+
+                                {errors.documentType && <p className={errorClass}>{errors.documentType}</p>}
+                            </div>
+
+
+                            {/* ─── 3. Upload Document ───────────────────── */}
+                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                                <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">3</span>
                                     رفع المستند
                                 </h2>
                                 <p className="text-sm text-[#6B7280] mb-4">
@@ -311,10 +365,10 @@ export default function AirportCoordination() {
                                 {errors.file && <p className={errorClass}>{errors.file}</p>}
                             </div>
 
-                            {/* ─── 3. Arrival Details ───────────────────── */}
+                            {/* ─── 4. Arrival Details ───────────────────── */}
                             <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">3</span>
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">4</span>
                                     تفاصيل الوصول
                                 </h2>
                                 <div className="grid sm:grid-cols-2 gap-4">
@@ -347,10 +401,10 @@ export default function AirportCoordination() {
                                 </div>
                             </div>
 
-                            {/* ─── 4. Airline ────────────────────────────── */}
+                            {/* ─── 5. Airline ────────────────────────────── */}
                             <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">4</span>
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">5</span>
                                     شركة الطيران
                                 </h2>
 
@@ -424,10 +478,10 @@ export default function AirportCoordination() {
                                 )}
                             </div>
 
-                            {/* ─── 5. Contact Info ──────────────────────── */}
+                            {/* ─── 6. Contact Info ──────────────────────── */}
                             <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">5</span>
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">6</span>
                                     معلومات التواصل
                                 </h2>
                                 <div className="grid sm:grid-cols-2 gap-4">
@@ -452,16 +506,23 @@ export default function AirportCoordination() {
                                 </div>
                             </div>
 
-                            {/* Spacer for fixed mobile bar */}
-                            <div className="lg:hidden h-24" />
                         </div>
 
                         {/* ── Right/Bottom: Price Card ───── */}
                         <div className="w-full lg:w-80 shrink-0">
                             <div className="lg:sticky lg:top-24 bg-white rounded-2xl border border-[#F3F4F6] shadow-md p-6 space-y-5">
                                 <h3 className="text-base font-bold text-[#111] flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                    <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect width="16" height="20" x="4" y="2" rx="2" />
+                                        <line x1="8" x2="16" y1="6" y2="6" />
+                                        <line x1="16" x2="16" y1="14" y2="18" />
+                                        <path d="M16 10h.01" />
+                                        <path d="M12 10h.01" />
+                                        <path d="M8 10h.01" />
+                                        <path d="M12 14h.01" />
+                                        <path d="M8 14h.01" />
+                                        <path d="M12 18h.01" />
+                                        <path d="M8 18h.01" />
                                     </svg>
                                     ملخص الأسعار
                                 </h3>
@@ -475,7 +536,7 @@ export default function AirportCoordination() {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-[#6B7280]">رسوم شركة الطيران</span>
-                                        <span className={`font-bold ${extraFee > 0 ? "text-amber-600" : "text-green-600"}`}>
+                                        <span className={`font-bold ${extraFee > 0 ? "text-[#111]" : "text-green-600"}`}>
                                             {airlineChoice ? (extraFee > 0 ? `+$${extraFee}` : "مجاناً") : "—"}
                                         </span>
                                     </div>

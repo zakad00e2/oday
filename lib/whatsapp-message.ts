@@ -1,6 +1,7 @@
 import { ADMIN_WHATSAPP } from "./airport-config";
 
 export interface AirportFormData {
+    documentType: "palestinian" | "european" | "zeroed";
     serviceType: "24h" | "72h";
     basePrice: number;
     airlineName: string;
@@ -23,14 +24,19 @@ export interface AirportFormData {
  * Build a formatted Arabic WhatsApp message from the form data.
  */
 export function buildWhatsAppMessage(data: AirportFormData): string {
+    const documentLabel =
+        data.documentType === "palestinian" ? "الجوازات الفلسطينية (السلطة)" :
+            data.documentType === "european" ? "الوثائق الاوروبية (اللاجئين)" :
+                "الجوازات المصفرة";
     const serviceLabel =
         data.serviceType === "24h"
             ? "تأشيرة خلال 24 ساعة"
             : "تأشيرة خلال 72 ساعة";
 
     const lines = [
-        `— *حجز تنسيقات المطار* —`,
+        `— *خدمات التأشيرات والموافقات الأمنية* —`,
         ``,
+        `• *نوع الوثيقة:* ${documentLabel}`,
         `• *نوع الخدمة:* ${serviceLabel}`,
         `• *السعر الأساسي:* $${data.basePrice}`,
         `• *شركة الطيران:* ${data.airlineName}`,
