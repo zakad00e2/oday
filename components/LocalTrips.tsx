@@ -9,42 +9,42 @@ const trips = [
     title: "رحلة سفاري الصحراء البيضاء",
     image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80",
     details: "استكشف جمال الصحراء البيضاء مع تخييم تحت النجوم ورحلة جيب مثيرة.",
-    duration: "يومان",
+    duration: "120 دقيقة",
   },
   {
     id: 2,
     title: "جولة في واحة سيوة",
     image: "https://images.unsplash.com/photo-1489493585363-d69421e0edd3?w=800&q=80",
     details: "اكتشف سحر سيوة: عيون المياه، بحيرة الملح، ومعبد آمون الشهير.",
-    duration: "3 أيام",
+    duration: "180 دقيقة",
   },
   {
     id: 3,
     title: "رحلة نيلية الأقصر - أسوان",
     image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800&q=80",
     details: "أبحر في النيل واستمتع بزيارة المعابد الفرعونية والمشاهد الخلابة.",
-    duration: "4 أيام",
+    duration: "240 دقيقة",
   },
   {
     id: 4,
     title: "رحلة الفيوم وبحيرة قارون",
     image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
     details: "زيارة وادي الريان وشلالاته، مع جولة في بحيرة قارون والمناطق المحيطة.",
-    duration: "يوم واحد",
+    duration: "300 دقيقة",
   },
   {
     id: 5,
     title: "رحلة إلى جبل موسى وسانت كاترين",
     image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
     details: "تسلق جبل موسى لمشاهدة شروق الشمس وزيارة دير سانت كاترين التاريخي.",
-    duration: "يومان",
+    duration: "150 دقيقة",
   },
   {
     id: 6,
     title: "جولة الإسكندرية الساحلية",
     image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
     details: "زيارة قلعة قايتباي، مكتبة الإسكندرية، كورنيش البحر والمطاعم البحرية.",
-    duration: "يوم واحد",
+    duration: "90 دقيقة",
   },
 ];
 
@@ -71,78 +71,60 @@ export default function LocalTrips() {
   return (
     <section id="local-trips" className="py-20 bg-[#FAFAFA]">
       <ScrollReveal>
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-5 shadow-sm">
-            <svg className="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-xs font-medium text-[#111]">رحلات داخلية</span>
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-5 shadow-sm">
+              <svg className="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs font-medium text-[#111]">رحلات داخلية</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+              اكتشف جمال مصر <span className="font-semibold">من الداخل</span>
+            </h2>
+            <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              رحلات يومية وأسبوعية لأجمل المناطق السياحية في مصر مع مرشدين محترفين.
+            </p>
           </div>
-          <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-            اكتشف جمال مصر <span className="font-semibold">من الداخل</span>
-          </h2>
-          <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-            رحلات يومية وأسبوعية لأجمل المناطق السياحية في مصر مع مرشدين محترفين.
-          </p>
-        </div>
 
-        {/* Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trips.map((trip, idx) => (
-            <div
-              key={trip.id}
-              ref={(el) => { cardRefs.current[idx] = el; }}
-              data-idx={idx}
-              className={`group bg-white rounded-[24px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-xl transition-all duration-500 ${
-                visibleCards.has(idx) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: `${idx * 100}ms` }}
-            >
-              {/* Image */}
-              <div className="relative overflow-hidden aspect-[4/3]">
-                <img
-                  src={trip.image}
-                  alt={trip.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          {/* Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trips.map((trip, idx) => (
+              <div
+                key={trip.id}
+                ref={(el) => { cardRefs.current[idx] = el; }}
+                data-idx={idx}
+                className={`group bg-white rounded-[24px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-xl transition-all duration-500 ${visibleCards.has(idx) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                  }`}
+                style={{ transitionDelay: `${idx * 100}ms` }}
+              >
+                {/* Image */}
+                <div className="relative overflow-hidden aspect-[4/3]">
+                  <img
+                    src={trip.image}
+                    alt={trip.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                </div>
 
-                {/* Duration badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs font-medium text-[#111] shadow-sm">
-                    <svg className="w-3.5 h-3.5 text-[#6B7280]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-base font-bold text-[#111] mb-1.5 leading-snug">{trip.title}</h3>
+
+                  {/* Duration */}
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280] mb-3">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {trip.duration}
                   </span>
+                  <p className="text-sm text-[#6B7280] leading-relaxed line-clamp-2">{trip.details}</p>
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <h3 className="text-base font-bold text-[#111] mb-2 leading-snug">{trip.title}</h3>
-                <p className="text-sm text-[#6B7280] leading-relaxed mb-4 line-clamp-2">{trip.details}</p>
-
-                <div className="flex items-center justify-between">
-                  <a
-                    href="https://wa.me/201032549630"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-[#111] text-white rounded-full px-5 py-2.5 text-xs font-medium hover:bg-[#333] active:scale-[0.97] transition-all duration-200 shadow-sm"
-                  >
-                    عرض التفاصيل
-                    <svg className="w-3.5 h-3.5 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
       </ScrollReveal>
     </section>
   );

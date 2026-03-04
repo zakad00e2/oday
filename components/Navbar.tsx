@@ -10,6 +10,7 @@ const navLinks = [
   { label: "الرحلات", href: "/trips" },
   { label: "المعرض", href: "/gallery" },
   { label: "آراء العملاء", href: "/reviews" },
+  { label: "تنسيقات المطار", href: "/airport-coordination" },
   { label: "تواصل معنا", href: "/contact" },
 ];
 
@@ -59,8 +60,8 @@ export default function Navbar() {
       {/* ── Center Nav Pill ───────────────────────────── */}
       <div
         className={`hidden lg:flex items-center gap-0.5 rounded-full px-1.5 py-1.5 border transition-all duration-300 ${useDark
-            ? "border-transparent bg-transparent shadow-none"
-            : "border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
+          ? "border-transparent bg-transparent shadow-none"
+          : "border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
           }`}
       >
         {navLinks.map((link) => {
@@ -70,12 +71,12 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               className={`relative px-5 py-2 rounded-full text-[13.5px] font-medium transition-all duration-300 ${isActive
-                  ? useDark
-                    ? "bg-[#111] text-white shadow-sm"
-                    : "bg-white text-[#111] shadow-sm"
-                  : useDark
-                    ? "text-[#555] hover:text-[#111] hover:bg-black/6"
-                    : "text-white/90 hover:text-white hover:bg-white/15"
+                ? useDark
+                  ? "bg-[#111] text-white shadow-sm"
+                  : "bg-white text-[#111] shadow-sm"
+                : useDark
+                  ? "text-[#555] hover:text-[#111] hover:bg-black/6"
+                  : "text-white/90 hover:text-white hover:bg-white/15"
                 }`}
             >
               {link.label}
@@ -88,8 +89,8 @@ export default function Navbar() {
       <Link
         href="/package-builder"
         className={`hidden lg:flex items-center gap-2.5 pr-5 pl-2 py-2 rounded-full text-[13.5px] font-semibold transition-all duration-300 hover:scale-105 ${useDark
-            ? "bg-[#111] text-white shadow-md"
-            : "border border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)] text-white"
+          ? "bg-[#111] text-white shadow-md"
+          : "border border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)] text-white"
           }`}
       >
         احجز الآن
@@ -131,8 +132,8 @@ export default function Navbar() {
                 href={link.href}
                 onClick={closeMobile}
                 className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all ${pathname === link.href
-                    ? useDark ? "bg-[#111] text-white" : "bg-white text-[#111]"
-                    : useDark ? "text-[#555] hover:text-[#111] hover:bg-black/5" : "text-white/80 hover:text-white hover:bg-white/10"
+                  ? useDark ? "bg-[#111] text-white" : "bg-white text-[#111]"
+                  : useDark ? "text-[#555] hover:text-[#111] hover:bg-black/5" : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
               >
                 {link.label}
