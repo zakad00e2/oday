@@ -154,7 +154,7 @@ export default function AboutPage() {
         <main className="pt-20 bg-[#FAFAFA]">
 
             {/* ─── Hero ──────────────────────────────────────── */}
-            <section className="relative overflow-hidden py-12 md:py-16 text-center">
+            <section className="relative overflow-hidden py-12 md:py-16 px-6 md:px-12 text-center">
                 {/* decorative blobs */}
                 <div className="absolute top-[-120px] right-[-80px] w-[340px] h-[340px] rounded-full bg-gradient-to-br from-[#2563EB]/10 to-transparent blur-3xl pointer-events-none" />
                 <div className="absolute bottom-[-80px] left-[-60px] w-[280px] h-[280px] rounded-full bg-gradient-to-tr from-[#111]/5 to-transparent blur-3xl pointer-events-none" />
@@ -171,7 +171,7 @@ export default function AboutPage() {
             </section>
 
             {/* ─── Intro paragraphs ──────────────────────────── */}
-            <section className="pb-12 md:pb-16">
+            <section className="pb-12 md:pb-16 px-6 md:px-12">
                 <div className="max-w-[820px] mx-auto space-y-6">
                     <ScrollReveal>
                         <p className="text-[#444] text-base md:text-lg leading-[1.9]">
@@ -200,7 +200,7 @@ export default function AboutPage() {
             </section>
 
             {/* ─── Vision & Mission ──────────────────────────── */}
-            <section className="py-12 md:py-16 bg-white">
+            <section className="py-12 md:py-16 px-6 md:px-12 bg-white">
                 <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ScrollReveal>
                         <div className="rounded-3xl border border-[#E5E7EB] p-8 md:p-10 h-full hover:border-[#2563EB]/30 hover:shadow-lg transition-all duration-300">
@@ -229,7 +229,7 @@ export default function AboutPage() {
             </section>
 
             {/* ─── Values ────────────────────────────────────── */}
-            <section className="py-12 md:py-16">
+            <section className="py-12 md:py-16 px-6 md:px-12">
                 <ScrollReveal className="text-center mb-14">
                     <p className="text-sm font-semibold tracking-widest text-[#2563EB] uppercase mb-2">ما يميزنا</p>
                     <h2 className="text-3xl md:text-4xl font-bold text-[#111]">قيمنا</h2>
@@ -251,7 +251,7 @@ export default function AboutPage() {
             </section>
 
             {/* ─── Why Choose Us ─────────────────────────────── */}
-            <section className="py-12 md:py-16 bg-white">
+            <section className="py-12 md:py-16 px-6 md:px-12 bg-white">
                 <ScrollReveal className="text-center mb-6">
                     <h2 className="text-3xl md:text-4xl font-bold text-[#111]">
                         لماذا تختار Oday Tourism؟
