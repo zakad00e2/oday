@@ -9,11 +9,8 @@ export interface AirportFormData {
     total: number;
     fileName: string;
     country: string;
-    city: string;
     airport: string;
-    arrivalDate: string;
-    arrivalTime: string;
-    flightNumber: string;
+    travelDate: string;
     fullName: string;
     whatsappNumber: string;
     email: string;
@@ -30,8 +27,8 @@ export function buildWhatsAppMessage(data: AirportFormData): string {
                 "الجوازات المصفرة";
     const serviceLabel =
         data.serviceType === "24h"
-            ? "تأشيرة خلال 24 ساعة"
-            : "تأشيرة خلال 72 ساعة";
+            ? "موافقة أمنية خلال 24 ساعة"
+            : "موافقة أمنية خلال 72 ساعة";
 
     const lines = [
         `— *خدمات التأشيرات والموافقات الأمنية* —`,
@@ -45,18 +42,12 @@ export function buildWhatsAppMessage(data: AirportFormData): string {
         ``,
         `• *المستند:* ${data.fileName} — تم إرفاق الملف (سيتم إرساله في المحادثة)`,
         ``,
-        `• *قادم من:* ${data.country}${data.city ? ` — ${data.city}` : ""}`,
-        `• *مطار الوصول:* ${data.airport}`,
+        `• *بلد المغادرة:* ${data.country}`,
+        `• *مطار المغادرة:* ${data.airport}`,
     ];
 
-    if (data.arrivalDate) {
-        lines.push(`• *تاريخ الوصول:* ${data.arrivalDate}`);
-    }
-    if (data.arrivalTime) {
-        lines.push(`• *وقت الوصول:* ${data.arrivalTime}`);
-    }
-    if (data.flightNumber) {
-        lines.push(`• *رقم الرحلة:* ${data.flightNumber}`);
+    if (data.travelDate) {
+        lines.push(`• *تاريخ السفر:* ${data.travelDate}`);
     }
 
     lines.push(

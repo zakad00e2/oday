@@ -49,11 +49,8 @@ export default function AirportCoordination() {
 
     // ── Arrival details
     const [country, setCountry] = useState("");
-    const [city, setCity] = useState("");
     const [airport, setAirport] = useState("");
-    const [arrivalDate, setArrivalDate] = useState("");
-    const [arrivalTime, setArrivalTime] = useState("");
-    const [flightNumber, setFlightNumber] = useState("");
+    const [travelDate, setTravelDate] = useState("");
 
     // ── Airline
     const [airlineChoice, setAirlineChoice] = useState<AirlineChoice | null>(null);
@@ -129,7 +126,7 @@ export default function AirportCoordination() {
         if (!serviceType) errs.serviceType = "يرجى اختيار نوع الخدمة";
         if (!file) errs.file = "يرجى رفع صورة جواز السفر أو وثيقة اللجوء";
         if (!country.trim()) errs.country = "يرجى إدخال بلد المغادرة";
-        if (!airport.trim()) errs.airport = "يرجى إدخال مطار الوصول";
+        if (!airport.trim()) errs.airport = "يرجى إدخال مطار المغادرة";
 
         if (!airlineChoice) {
             errs.airline = "يرجى اختيار شركة الطيران";
@@ -163,11 +160,8 @@ export default function AirportCoordination() {
                 total,
                 fileName: file?.name || "",
                 country: country.trim(),
-                city: city.trim(),
                 airport: airport.trim(),
-                arrivalDate,
-                arrivalTime,
-                flightNumber: flightNumber.trim(),
+                travelDate,
                 fullName: fullName.trim(),
                 whatsappNumber: whatsapp.trim(),
                 email: email.trim(),
@@ -184,7 +178,7 @@ export default function AirportCoordination() {
                 setLoading(false);
             }, 600);
         },
-        [validate, documentType, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, city, airport, arrivalDate, arrivalTime, flightNumber, fullName, whatsapp, email, notes]
+        [validate, documentType, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, airport, travelDate, fullName, whatsapp, email, notes]
     );
 
     /* ─── Helpers ──────────────────────────────────────────────── */
@@ -208,9 +202,42 @@ export default function AirportCoordination() {
                         <span className="text-xs font-semibold text-amber-800">لحملة الجنسية الفلسطينية فقط</span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-                        خدمات الموافقة الأمنية والتأشيرات                                         </h1>
+                        الموافقات الأمنية وتأشيرات دخول مصر                                        </h1>
                     <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                        نرتب لك جميع إجراءات المطار والتأشيرة بسرعة وأمان لتبدأ رحلتك إلى مصر بدون أي تعقيدات.                    </p>
+                        نوفر خدمة استخراج الموافقات الأمنية لدخول مصر بسرعة وموثوقية، مع متابعة كاملة لجميع الإجراءات حتى صدور الموافقة ودخولك إلى مصر بسهولة وأمان.                 </p>
+                </div>
+
+                {/* Who needs approval note */}
+                <div className="mb-10 bg-[#F0F9FF] border border-[#BAE6FD] rounded-2xl p-6 lg:p-8 shadow-sm text-right">
+                    <h3 className="text-lg font-bold text-[#0369A1] mb-5 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-[#0284C7]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        من يحتاج إلى موافقة أمنية مسبقة لدخول مصر؟
+                    </h3>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
+                            <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
+                                فئة الشباب
+                            </h4>
+                            <p className="text-sm text-[#475569] leading-relaxed">حاملو جواز السفر الفلسطيني (السلطة الفلسطينية) من عمر 16 إلى 40 سنة.</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
+                            <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
+                                حاملو وثائق اللجوء الأوروبية
+                            </h4>
+                            <p className="text-sm text-[#475569] leading-relaxed">جميع حاملي وثائق السفر للاجئين الصادرة من الدول الأوروبية، سواء طفل أو ذكر أو أنثى، بغض النظر عن العمر.</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
+                            <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
+                                حاملو الجوازات المصفرة
+                            </h4>
+                            <p className="text-sm text-[#475569] leading-relaxed">جميع من يحمل جواز سفر مصفراً، سواء ذكر أو أنثى، بغض النظر عن العمر.</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Layout: Form + Price Card */}
@@ -243,8 +270,9 @@ export default function AirportCoordination() {
                                         <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4.5 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <h3 className="font-bold text-[#111] text-base mb-1">تأشيرة خلال 24 ساعة</h3>
-                                        <p className="text-sm text-[#6B7280]">معالجة سريعة خلال يوم واحد</p>
+                                        <h3 className="font-bold text-[#111] text-base mb-1">موافقة أمنية خلال 24 ساعة
+                                        </h3>
+                                        <p className="text-sm text-[#6B7280]">خدمة عاجلة لمعالجة الطلب وإصدار الموافقة الأمنية والتلكس خلال يوم واحد</p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price24}</div>
                                     </button>
 
@@ -265,8 +293,9 @@ export default function AirportCoordination() {
                                         <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                         </svg>
-                                        <h3 className="font-bold text-[#111] text-base mb-1">تأشيرة خلال 72 ساعة</h3>
-                                        <p className="text-sm text-[#6B7280]">معالجة خلال ثلاثة أيام عمل</p>
+                                        <h3 className="font-bold text-[#111] text-base mb-1">موافقة أمنية خلال 72 ساعة
+                                        </h3>
+                                        <p className="text-sm text-[#6B7280]">معالجة الطلب وإصدار الموافقة الأمنية والتلكس خلال 48 ل 72 ساعة</p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price72}</div>
                                     </button>
                                 </div>
@@ -286,7 +315,7 @@ export default function AirportCoordination() {
                                         onClick={() => { setDocumentType("palestinian"); setErrors((p) => ({ ...p, documentType: undefined })); }}
                                         className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "palestinian" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
                                     >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug">الجوازات الفلسطينية<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(السلطة)</span></h3>
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug">جواز السفر الفلسطيني<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(السلطة الفلسطينية)</span></h3>
                                     </button>
                                     {/* European */}
                                     <button
@@ -294,7 +323,7 @@ export default function AirportCoordination() {
                                         onClick={() => { setDocumentType("european"); setErrors((p) => ({ ...p, documentType: undefined })); }}
                                         className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "european" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
                                     >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug">الوثائق الاوروبية<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(اللاجئين)</span></h3>
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug">وثائق السفر الأوروبية<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">(اللاجئين)</span></h3>
                                     </button>
                                     {/* Zeroed */}
                                     <button
@@ -302,7 +331,7 @@ export default function AirportCoordination() {
                                         onClick={() => { setDocumentType("zeroed"); setErrors((p) => ({ ...p, documentType: undefined })); }}
                                         className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "zeroed" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
                                     >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug flex items-center justify-center h-full">الجوازات المصفرة</h3>
+                                        <h3 className="font-bold text-[#111] text-sm leading-snug">جوازات السفر المصفرة<br /><span className="text-xs font-normal text-[#6B7280] mt-1 block">( بدون رقم هوية )</span></h3>
                                     </button>
                                 </div>
 
@@ -311,7 +340,7 @@ export default function AirportCoordination() {
                                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
-                                    <p>الجوازات المصفرة متوقفة حالياً بشكل مؤقت.</p>
+                                    <p>خدمة الموافقات الأمنية للجوازات المصفرة متوقفة حالياً بشكل مؤقت.</p>
                                 </div>
 
                                 {errors.documentType && <p className={errorClass}>{errors.documentType}</p>}
@@ -369,7 +398,7 @@ export default function AirportCoordination() {
                             <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">4</span>
-                                    تفاصيل الوصول
+                                    تفاصيل السفر
                                 </h2>
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     <div>
@@ -378,25 +407,13 @@ export default function AirportCoordination() {
                                         {errors.country && <p className={errorClass}>{errors.country}</p>}
                                     </div>
                                     <div>
-                                        <label className={labelClass}>المدينة <span className="text-[#94A3B8] font-normal">(اختياري)</span></label>
-                                        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} placeholder="مثال: أثينا" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>مطار الوصول *</label>
-                                        <input type="text" value={airport} onChange={(e) => { setAirport(e.target.value); setErrors((p) => ({ ...p, airport: undefined })); }} className={inputClass} placeholder="مثال: مطار القاهرة الدولي" />
+                                        <label className={labelClass}>مطار المغادرة *</label>
+                                        <input type="text" value={airport} onChange={(e) => { setAirport(e.target.value); setErrors((p) => ({ ...p, airport: undefined })); }} className={inputClass} placeholder="مثال: مطار أثينا الدولي" />
                                         {errors.airport && <p className={errorClass}>{errors.airport}</p>}
                                     </div>
                                     <div>
-                                        <label className={labelClass}>تاريخ الوصول <span className="text-[#94A3B8] font-normal">(اختياري)</span></label>
-                                        <input type="date" value={arrivalDate} onChange={(e) => setArrivalDate(e.target.value)} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>وقت الوصول <span className="text-[#94A3B8] font-normal">(اختياري)</span></label>
-                                        <input type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>رقم الرحلة <span className="text-[#94A3B8] font-normal">(اختياري)</span></label>
-                                        <input type="text" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)} className={inputClass} placeholder="مثال: MS 700" />
+                                        <label className={labelClass}>تاريخ السفر <span className="text-[#94A3B8] font-normal">(اختياري)</span></label>
+                                        <input type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className={inputClass} />
                                     </div>
                                 </div>
                             </div>
@@ -476,6 +493,16 @@ export default function AirportCoordination() {
                                         )}
                                     </div>
                                 )}
+
+                                {/* Note */}
+                                <div className="mt-6 flex items-start gap-3 px-5 py-4 rounded-xl bg-[#F0F9FF] border border-[#E0F2FE]">
+                                    <svg className="w-5 h-5 text-[#0EA5E9] shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                    </svg>
+                                    <p className="text-sm text-[#334155] leading-relaxed font-medium">
+                                        يفضّل تأكيد حجز تذكرة الطيران بعد إبلاغكم بصدور الموافقة الأمنية، ثم إرسال التذكرة المؤكدة إلى الموظف المختص الذي يتابع طلبكم.
+                                    </p>
+                                </div>
                             </div>
 
                             {/* ─── 6. Contact Info ──────────────────────── */}
@@ -510,61 +537,91 @@ export default function AirportCoordination() {
 
                         {/* ── Right/Bottom: Price Card ───── */}
                         <div className="w-full lg:w-80 shrink-0">
-                            <div className="lg:sticky lg:top-24 bg-white rounded-2xl border border-[#F3F4F6] shadow-md p-6 space-y-5">
-                                <h3 className="text-base font-bold text-[#111] flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect width="16" height="20" x="4" y="2" rx="2" />
-                                        <line x1="8" x2="16" y1="6" y2="6" />
-                                        <line x1="16" x2="16" y1="14" y2="18" />
-                                        <path d="M16 10h.01" />
-                                        <path d="M12 10h.01" />
-                                        <path d="M8 10h.01" />
-                                        <path d="M12 14h.01" />
-                                        <path d="M8 14h.01" />
-                                        <path d="M12 18h.01" />
-                                        <path d="M8 18h.01" />
-                                    </svg>
-                                    ملخص الأسعار
-                                </h3>
+                            <div className="lg:sticky lg:top-24">
+                                <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-md p-6 space-y-5">
+                                    <h3 className="text-base font-bold text-[#111] flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect width="16" height="20" x="4" y="2" rx="2" />
+                                            <line x1="8" x2="16" y1="6" y2="6" />
+                                            <line x1="16" x2="16" y1="14" y2="18" />
+                                            <path d="M16 10h.01" />
+                                            <path d="M12 10h.01" />
+                                            <path d="M8 10h.01" />
+                                            <path d="M12 14h.01" />
+                                            <path d="M8 14h.01" />
+                                            <path d="M12 18h.01" />
+                                            <path d="M8 18h.01" />
+                                        </svg>
+                                        ملخص الأسعار
+                                    </h3>
 
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[#6B7280]">السعر الأساسي</span>
-                                        <span className="font-bold text-[#111]">
-                                            {serviceType ? `$${basePrice}` : "—"}
-                                        </span>
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[#6B7280]">السعر الأساسي</span>
+                                            <span className="font-bold text-[#111]">
+                                                {serviceType ? `$${basePrice}` : "—"}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[#6B7280]">رسوم شركة الطيران</span>
+                                            <span className={`font-bold ${extraFee > 0 ? "text-[#111]" : "text-green-600"}`}>
+                                                {airlineChoice ? (extraFee > 0 ? `+$${extraFee}` : "مجاناً") : "—"}
+                                            </span>
+                                        </div>
+                                        <div className="h-px bg-[#E2E8F0]" />
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-bold text-[#111] text-base">الإجمالي</span>
+                                            <span className="text-xl font-bold text-[#0EA5E9]">
+                                                {serviceType ? `$${total}` : "—"}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[#6B7280]">رسوم شركة الطيران</span>
-                                        <span className={`font-bold ${extraFee > 0 ? "text-[#111]" : "text-green-600"}`}>
-                                            {airlineChoice ? (extraFee > 0 ? `+$${extraFee}` : "مجاناً") : "—"}
-                                        </span>
-                                    </div>
-                                    <div className="h-px bg-[#E2E8F0]" />
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-[#111] text-base">الإجمالي</span>
-                                        <span className="text-xl font-bold text-[#0EA5E9]">
-                                            {serviceType ? `$${total}` : "—"}
-                                        </span>
-                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white rounded-xl px-6 py-3.5 text-sm font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-200 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? (
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                                        )}
+                                        {loading ? "جاري الإرسال..." : "إرسال عبر واتساب"}
+                                    </button>
+
+                                    <p className="text-[10px] text-[#94A3B8] text-center leading-snug">
+                                        سيتم توجيهك إلى واتساب لإتمام الحجز
+                                    </p>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white rounded-xl px-6 py-3.5 text-sm font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-200 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-                                    )}
-                                    {loading ? "جاري الإرسال..." : "إرسال عبر واتساب"}
-                                </button>
-
-                                <p className="text-[10px] text-[#94A3B8] text-center leading-snug">
-                                    سيتم توجيهك إلى واتساب لإتمام الحجز
-                                </p>
+                                {/* Important Notes */}
+                                <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm text-right">
+                                    <h4 className="font-bold text-amber-700 mb-3 text-sm flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        ملاحظات مهمة
+                                    </h4>
+                                    <ul className="text-xs text-amber-900 space-y-2.5">
+                                        <li className="relative pr-3">
+                                            <span className="absolute right-0 top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            الموافقة الأمنية صالحة للسفر لمرة واحدة فقط خلال مدة أقصاها 3 أشهر من تاريخ إصدارها.
+                                        </li>
+                                        <li className="relative pr-3">
+                                            <span className="absolute right-0 top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            بعد تقديم طلب الموافقة الأمنية وبدء الإجراءات لا يمكن إلغاء الطلب.
+                                        </li>
+                                        <li className="relative pr-3">
+                                            <span className="absolute right-0 top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            في حال رفض الطلب أمنياً يتم خصم 40$ كمصاريف إدارية واسترجاع باقي المبلغ خلال 5 إلى 15 يوم عمل.
+                                        </li>
+                                        <li className="relative pr-3">
+                                            <span className="absolute right-0 top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            أي تعديل بعد صدور الموافقة الأمنية قد يترتب عليه رسوم إضافية.
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>

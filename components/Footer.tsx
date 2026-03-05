@@ -8,6 +8,7 @@ const quickLinks = [
   { label: "الرحلات", href: "/trips" },
   { label: "صمّم باقتك", href: "/package-builder" },
   { label: "المعرض", href: "/gallery" },
+  { label: "من نحن", href: "/about" },
   { label: "تواصل معنا", href: "/contact" },
 ];
 
@@ -48,10 +49,10 @@ export default function Footer() {
       <div className="max-w-[1200px] mx-auto px-6 pt-20 pb-10">
 
         {/* 4-column grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-16 gap-y-10 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10 items-start">
 
           {/* Col 1 — Brand */}
-          <div>
+          <div className="lg:col-span-5">
             <div className="flex items-center gap-2.5 mb-4">
               <img
                 src="/logo.png"
@@ -60,13 +61,13 @@ export default function Footer() {
               />
               <span className="text-xl font-semibold text-[#111]">Oday Tourism</span>
             </div>
-            <p className="text-[#6B7280] text-sm leading-relaxed max-w-[200px]">
-              نقدم تجارب سفر مميزة مع مرشدين محليين، لحظات لا تنسى في كل وجهة.
+            <p className="text-[#6B7280] text-sm leading-relaxed max-w-[400px]">
+              نقدم خدمات سفر وسياحة متكاملة تشمل حجوزات الفنادق والرحلات، ونرافقكم بخبرة وثقة من بداية التخطيط حتى نهاية رحلتكم
             </p>
           </div>
 
           {/* Col 2 — Quick Links */}
-          <div>
+          <div className="lg:col-span-2">
             <h4 className="text-sm font-semibold text-[#111] mb-5">روابط سريعة</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
@@ -80,7 +81,7 @@ export default function Footer() {
           </div>
 
           {/* Col 3 — Contact Info */}
-          <div>
+          <div className="lg:col-span-2">
             <h4 className="text-sm font-semibold text-[#111] mb-5">معلومات التواصل</h4>
             <ul className="space-y-3">
               {contactInfo.map((line, i) => (
@@ -90,7 +91,7 @@ export default function Footer() {
           </div>
 
           {/* Col 4 — Newsletter + Social */}
-          <div className="flex flex-col gap-5">
+          <div className="lg:col-span-3 flex flex-col gap-5">
             {/* Pill input + button */}
             <div className="flex items-center rounded-full border border-[#E5E7EB] bg-white overflow-hidden pl-4 pr-1.5 py-1.5">
               <input
