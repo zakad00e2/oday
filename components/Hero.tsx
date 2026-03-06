@@ -35,8 +35,8 @@ export default function Hero() {
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto -mt-28">
         <div
           className={`transition-all duration-1000 ${loaded
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-10"
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-10"
             }`}
         >
           {/* Small Badge */}
@@ -66,7 +66,7 @@ export default function Hero() {
             href="/package-builder"
             className="md:hidden inline-flex items-center gap-2.5 text-white text-[15px] font-semibold pr-6 pl-3 py-3 rounded-full transition-all duration-300 hover:scale-105 border border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
           >
-            احجز الآن
+            احجز رحلتك الآن
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 text-[#111] shadow-sm">
               <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
