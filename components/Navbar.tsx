@@ -24,8 +24,8 @@ export default function Navbar() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
-  // showBg: show white background only after scrolling, or always on About page
-  const showBg = scrolled || isAbout;
+  // showBg: show white background only after scrolling
+  const showBg = scrolled;
   // useDark: use dark-colored items on non-home pages even before scrolling
   const useDark = scrolled || !isHome;
 

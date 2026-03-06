@@ -223,7 +223,7 @@ export default function AboutPage() {
             {/* ════════════════════════════════════════════════════
                 ██  1. HERO
             ════════════════════════════════════════════════════ */}
-            <section id="hero" className="relative overflow-hidden bg-white pt-40 pb-36 md:pt-48 md:pb-36">
+            <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-36 md:pt-48 md:pb-36">
                 {/* decorative circles */}
                 <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#60A5FA] opacity-5 rounded-full blur-[120px] pointer-events-none" />
                 <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#93C5FD] opacity-5 rounded-full blur-[100px] pointer-events-none" />
@@ -247,7 +247,7 @@ export default function AboutPage() {
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
                             <a
                                 href="/package-builder"
-                                className="flex items-center gap-2 bg-[#2563EB] text-white font-bold px-6 py-3 rounded-full shadow-lg hover:bg-[#1d4ed8] hover:scale-105 transition-all text-sm"
+                                className="flex items-center gap-2 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg  hover:scale-105 transition-all text-sm"
                             >
                                 احجز رحلتك الآن
                                 <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -272,7 +272,7 @@ export default function AboutPage() {
                                 <div key={stat.label} className={`flex flex-col items-center lg:items-start px-4 sm:px-6 md:px-8 ${index !== 2 ? "border-l border-[#e2e8f0]" : ""} ${index === 0 ? "lg:pr-0 pl-4 sm:pl-6 md:pl-8" : ""}`}>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-3xl md:text-4xl font-black text-[#0f172a]">{stat.number.replace('+', '')}</span>
-                                        <span className="text-xl md:text-2xl font-bold text-[#2563EB]">+</span>
+                                        <span className="text-xl md:text-2xl font-bold text-[#0f172a]">+</span>
                                     </div>
                                     <p className="text-xs sm:text-sm font-medium text-[#64748b] mt-1">{stat.label}</p>
                                 </div>
