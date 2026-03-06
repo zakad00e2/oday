@@ -18,12 +18,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = pathname === "/";
+  const isAbout = pathname === "/about";
   const [scrolled, setScrolled] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
-  // showBg: show white background only after scrolling
-  const showBg = scrolled;
+  // showBg: show white background only after scrolling, or always on About page
+  const showBg = scrolled || isAbout;
   // useDark: use dark-colored items on non-home pages even before scrolling
   const useDark = scrolled || !isHome;
 
@@ -31,7 +32,11 @@ export default function Navbar() {
     const onScroll = () => {
       if (isHome) {
         const hero = document.getElementById("hero");
-        if (hero) setScrolled(window.scrollY >= hero.offsetHeight - 80);
+        if (hero) {
+          setScrolled(window.scrollY >= hero.offsetHeight - 80);
+        } else {
+          setScrolled(window.scrollY > 50);
+        }
       } else {
         setScrolled(window.scrollY > 10);
       }
