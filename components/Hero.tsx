@@ -58,7 +58,7 @@ export default function Hero() {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed">
-            حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك
+            حجوزات فنادق • رحلات سياحية • باكيدجات متكاملة
           </p>
 
           {/* CTA Button — mobile only */}
