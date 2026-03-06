@@ -1,5 +1,4 @@
-﻿import BookingSteps from "@/components/BookingSteps";
-import ContactCTA from "@/components/ContactCTA";
+﻿import ContactCTA from "@/components/ContactCTA";
 
 export const metadata = {
   title: "تواصل معنا | Oday Tourism",
@@ -9,7 +8,6 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <main className="pt-20">
-      <BookingSteps />
       <ContactCTA />
     </main>
   );

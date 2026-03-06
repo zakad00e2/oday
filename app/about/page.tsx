@@ -132,6 +132,86 @@ const advantages = [
     },
 ];
 
+/* ── FAQ Accrodion Component ────────────────────────────── */
+function ChevronDownIcon({ className = "" }: { className?: string }) {
+    return (
+        <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+    );
+}
+
+function FAQItem({ question, answer, delay, isOpen, onToggle }: { question: string; answer: string; delay: number; isOpen: boolean; onToggle: () => void }) {
+    return (
+        <ScrollReveal delay={delay}>
+            <div className="border-b border-[#e2e8f0]">
+                <button
+                    onClick={onToggle}
+                    className="w-full text-right py-6 flex items-center justify-between focus:outline-none group"
+                    aria-expanded={isOpen}
+                >
+                    <span className={`text-[18px] md:text-[20px] font-bold transition-colors pl-4 ${isOpen ? "text-[#2563EB]" : "text-[#0f172a] group-hover:text-[#2563EB]"}`}>{question}</span>
+                    <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#2563EB]" : "rotate-0 text-[#64748b]"}`}>
+                        <ChevronDownIcon />
+                    </div>
+                </button>
+                <div
+                    className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        }`}
+                >
+                    <div className="overflow-hidden">
+                        <div className="pb-6 pt-0 text-[#64748b] text-[15px] md:text-[17px] leading-[1.8] pl-8">
+                            {answer}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ScrollReveal>
+    );
+}
+
+const faqsData = [
+    {
+        q: "كيف يمكنني حجز رحلة مع Oday Tourism؟",
+        a: "يمكنك بسهولة حجز رحلتك من خلال صفحة 'احجز رحلتك الآن' وتصميم البرنامج الذي يناسبك، أو عبر التواصل المباشر معنا على الواتساب."
+    },
+    {
+        q: "هل الأسعار تشمل تذاكر الطيران للوصول إلى شرم الشيخ؟",
+        a: "تختلف الباقات، بعض باقاتنا المتكاملة تشمل تذاكر الطيران، وأخرى تعتمد على حجز الفندق والانتقالات والرحلات الداخلية فقط. يرجى مراجعة تفاصيل كل باقة."
+    },
+    {
+        q: "هل توفرون خدمة الاستقبال من المطار؟",
+        a: "نعم! لدينا خدمة الاستقبال والتوديع من وإلى مطار شرم الشيخ الدولي بسيارات حديثة ومجهزة لضمان راحتك منذ اللحظة الأولى."
+    },
+    {
+        q: "هل يمكنني إلغاء الحجز أو تعديل المواعيد؟",
+        a: "بالتأكيد. يمكن تعديل أو إلغاء الحجز وفقاً لسياسة الإلغاء الخاصة بنا والفنادق المتعاقد معها والتي يتم توضيحها عند إتمام عملية الحجز الأولية."
+    },
+    {
+        q: "ما هي الأنشطة المتاحة في رحلاتكم؟",
+        a: "نوفر رحلات بحرية (يخوت، سنوركلينج، غوص)، السفاري والمغامرات في الصحراء، العشاء البدوي، ورحلات لمحمية رأس محمد ودهب ومناطق الجذب الرئيسية."
+    }
+];
+
+function FAQList() {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    return (
+        <div className="border-t border-[#e2e8f0] flex flex-col mt-4">
+            {faqsData.map((faq, index) => (
+                <FAQItem
+                    key={index}
+                    question={faq.q}
+                    answer={faq.a}
+                    delay={index * 100}
+                    isOpen={openIndex === index}
+                    onToggle={() => setOpenIndex(openIndex === index ? null : index)}
+                />
+            ))}
+        </div>
+    );
+}
+
 /* ── Page ─────────────────────────────────────────────── */
 export default function AboutPage() {
     const [loaded, setLoaded] = useState(false);
@@ -143,31 +223,31 @@ export default function AboutPage() {
             {/* ════════════════════════════════════════════════════
                 ██  1. HERO
             ════════════════════════════════════════════════════ */}
-            <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#1d4ed8] pt-40 pb-36 md:pt-48 md:pb-36">
+            <section id="hero" className="relative overflow-hidden bg-white pt-40 pb-36 md:pt-48 md:pb-36">
                 {/* decorative circles */}
-                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#3B82F6] opacity-15 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#60A5FA] opacity-10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#60A5FA] opacity-5 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#93C5FD] opacity-5 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10 max-w-[1100px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
                     {/* ─── Right: Text ─── */}
                     <div className={`space-y-6 order-1 lg:order-2 flex flex-col items-center text-center lg:items-start lg:text-start transition-all duration-1000 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#93C5FD] border border-[#93C5FD]/30 bg-white/5 rounded-full px-4 py-1.5">
+                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563EB] border border-[#2563EB]/20 bg-[#2563EB]/5 rounded-full px-4 py-1.5">
                             من نحن
                         </span>
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight">
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-tight">
                             Oday{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#93C5FD] to-[#60A5FA]">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#2563EB] to-[#60A5FA]">
                                 Tourism
                             </span>
                         </h1>
-                        <p className="text-white/70 text-base md:text-lg leading-relaxed max-w-lg">
+                        <p className="text-[#64748b] text-base md:text-lg leading-relaxed max-w-lg">
                             نصنع لك تجارب سفر لا تُنسى في قلب مصر — من البحر الأحمر إلى الصحراء الذهبية. فريقنا يرافقك من التخطيط حتى العودة.
                         </p>
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
                             <a
                                 href="/package-builder"
-                                className="flex items-center gap-2 bg-white text-[#1E3A8A] font-bold px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-transform text-sm"
+                                className="flex items-center gap-2 bg-[#2563EB] text-white font-bold px-6 py-3 rounded-full shadow-lg hover:bg-[#1d4ed8] hover:scale-105 transition-all text-sm"
                             >
                                 احجز رحلتك الآن
                                 <svg className="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -176,25 +256,25 @@ export default function AboutPage() {
                             </a>
                             <a
                                 href="/contact"
-                                className="flex items-center gap-2 border border-white/30 text-white font-semibold px-6 py-3 rounded-full hover:bg-white/10 transition text-sm"
+                                className="flex items-center gap-2 border border-[#cbd5e1] text-[#0f172a] font-semibold px-6 py-3 rounded-full hover:bg-[#f8fafc] transition text-sm"
                             >
                                 تواصل معنا
                             </a>
                         </div>
 
                         {/* Stats */}
-                        <div className="flex flex-wrap items-center justify-center lg:justify-start pt-8 mt-4 border-t border-white/10 w-full">
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start pt-8 mt-4 border-t border-[#e2e8f0] w-full">
                             {[
                                 { number: "500+", label: "رحلة سياحية" },
                                 { number: "10+", label: "سنوات خبرة" },
                                 { number: "1000+", label: "عميل سعيد" },
                             ].map((stat, index) => (
-                                <div key={stat.label} className={`flex flex-col items-center lg:items-start px-4 sm:px-6 md:px-8 ${index !== 2 ? "border-l border-white/20" : ""} ${index === 0 ? "lg:pr-0 pl-4 sm:pl-6 md:pl-8" : ""}`}>
+                                <div key={stat.label} className={`flex flex-col items-center lg:items-start px-4 sm:px-6 md:px-8 ${index !== 2 ? "border-l border-[#e2e8f0]" : ""} ${index === 0 ? "lg:pr-0 pl-4 sm:pl-6 md:pl-8" : ""}`}>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl md:text-4xl font-black text-white">{stat.number.replace('+', '')}</span>
-                                        <span className="text-xl md:text-2xl font-bold text-[#60A5FA]">+</span>
+                                        <span className="text-3xl md:text-4xl font-black text-[#0f172a]">{stat.number.replace('+', '')}</span>
+                                        <span className="text-xl md:text-2xl font-bold text-[#2563EB]">+</span>
                                     </div>
-                                    <p className="text-xs sm:text-sm font-medium text-white/70 mt-1">{stat.label}</p>
+                                    <p className="text-xs sm:text-sm font-medium text-[#64748b] mt-1">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -375,7 +455,25 @@ export default function AboutPage() {
 
 
             {/* ════════════════════════════════════════════════════
-                ██  5. EXPERIENCE SECTION
+                ██  5. FAQ SECTION
+            ════════════════════════════════════════════════════ */}
+            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
+                <div className="max-w-[700px] mx-auto">
+                    <ScrollReveal className="text-center mb-8">
+                        <h2 className="text-4xl md:text-[42px] font-black text-[#0f172a] mb-5">
+                            الأسئلة الشائعة
+                        </h2>
+                        <p className="text-[17px] md:text-[19px] text-[#64748b] font-medium">
+                            إجابات على الأسئلة الشائعة حول Oday Tourism
+                        </p>
+                    </ScrollReveal>
+
+                    <FAQList />
+                </div>
+            </section>
+
+            {/* ════════════════════════════════════════════════════
+                ██  6. EXPERIENCE SECTION
             ════════════════════════════════════════════════════ */}
             <section className="relative overflow-hidden">
                 <img

@@ -9,8 +9,9 @@ const navLinks = [
   { label: "الفنادق", href: "/hotels" },
   { label: "الرحلات", href: "/trips" },
   { label: "الموافقات الامنية", href: "/airport-coordination" },
-  { label: "المعرض والاراء", href: "/gallery" },
   { label: "من نحن", href: "/about" },
+
+  { label: "المعرض والاراء", href: "/gallery" },
   { label: "تواصل معنا", href: "/contact" },
 ];
 
