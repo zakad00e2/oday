@@ -13,7 +13,7 @@ export default function TripsHero() {
 
     return (
         <section className="w-full px-3 md:px-5 pt-20 pb-10">
-            <div className="relative overflow-hidden rounded-[2rem] h-[60vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
 
                 {/* Background image */}
                 <img
