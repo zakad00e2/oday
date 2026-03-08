@@ -57,16 +57,16 @@ export default function TripsHero() {
                         </p>
                     </ScrollReveal>
 
+
                     {/* CTA */}
                     <ScrollReveal delay={300}>
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <a
                                 href="#trips"
-                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0C5B94] to-[#1D74B3] text-white text-sm sm:text-base font-semibold shadow-md hover:scale-105 transition-all duration-300"
+                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0C5B94] via-[#1a7cc4] to-[#2186d4] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(29,116,179,0.6)] hover:shadow-[0_0_24px_rgba(29,116,179,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20"
                             >
-
                                 استكشف الرحلات
-                                <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#111] shadow-sm">
+                                <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#0C5B94] shadow-md">
                                     <svg className="w-3.5 h-3.5 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                                     </svg>

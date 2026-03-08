@@ -86,11 +86,11 @@ export default function TripDetailPage() {
             <TripDetailHero trip={trip} onBookNow={scrollToBooking} />
 
             <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12">
-                {/* Overview */}
-                <TripOverview description={trip.descriptionAr} />
-
-                {/* Schedule */}
-                <TripSchedule schedule={trip.schedule} />
+                {/* Overview + Schedule side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 py-10 md:py-14 border-b border-[#e2e8f0]">
+                    <TripOverview description={trip.descriptionAr} />
+                    <TripSchedule schedule={trip.schedule} />
+                </div>
 
                 {/* Includes & Essentials side by side on large */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-10">
