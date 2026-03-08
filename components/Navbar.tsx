@@ -19,15 +19,15 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = pathname === "/";
-  const isAbout = pathname === "/about";
+  const isDarkHero = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   // showBg: show white background only after scrolling
   const showBg = scrolled;
-  // useDark: use dark-colored items on non-home pages even before scrolling
-  const useDark = scrolled || !isHome;
+  // useDark: use dark-colored items on non-dark-hero pages even before scrolling
+  const useDark = scrolled || !isDarkHero;
 
   useEffect(() => {
     const onScroll = () => {
@@ -46,7 +46,7 @@ export default function Navbar() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isHome]);
+  }, [isHome, pathname]);
 
   return (
     <nav
