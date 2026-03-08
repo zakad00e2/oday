@@ -13,7 +13,7 @@ export default function TripsHero() {
 
     return (
         <section className="w-full px-3 md:px-5 pt-20 pb-10">
-            <div className="relative overflow-hidden rounded-[2rem] h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] h-[60vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
 
                 {/* Background image */}
                 <img
@@ -62,7 +62,7 @@ export default function TripsHero() {
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <a
                                 href="#trips"
-                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-[#0653d8] text-white text-sm sm:text-base font-semibold shadow-md hover:scale-105 transition-all duration-300"
+                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0C5B94] to-[#1D74B3] text-white text-sm sm:text-base font-semibold shadow-md hover:scale-105 transition-all duration-300"
                             >
 
                                 استكشف الرحلات
