@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ScrollReveal from "../ScrollReveal";
 
-export default function TripGallery({ images, tripTitle }: { images: string[]; tripTitle: string }) {
+export default function TripGallery({ images, tripTitle, youtubeUrl }: { images: string[]; tripTitle: string; youtubeUrl?: string }) {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
     return (
@@ -15,33 +15,105 @@ export default function TripGallery({ images, tripTitle }: { images: string[]; t
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">معرض الصور</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">لحظات من الرحلة</h2>
                 </div>
             </ScrollReveal>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                {images.map((img, i) => (
-                    <ScrollReveal key={i} delay={i * 60}>
-                        <button
-                            onClick={() => setLightboxIdx(i)}
-                            className={`relative overflow-hidden rounded-2xl group cursor-pointer ${i === 0 ? "col-span-2 md:col-span-2 row-span-2 aspect-[4/3]" : "aspect-square"
-                                }`}
-                        >
-                            <img
-                                src={img}
-                                alt={`${tripTitle} - صورة ${i + 1}`}
-                                loading="lazy"
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            {youtubeUrl ? (
+                /* Video + Images layout */
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    {/* Video - takes full height on mobile, 2 rows on desktop */}
+                    <ScrollReveal delay={0} className="md:row-span-2 w-full h-full">
+                        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#f0f0f0] w-full h-full min-h-[300px] aspect-[9/16] md:aspect-auto">
+                            <iframe
+                                src={youtubeUrl}
+                                title="فيديو الرحلة"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-full absolute inset-0"
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
-                            </div>
-                        </button>
+                        </div>
                     </ScrollReveal>
-                ))}
-            </div>
+
+                    {/* Images beside video (مربعة) */}
+                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                        {images.slice(0, 4).map((img, i) => (
+                            <ScrollReveal key={i} delay={(i + 1) * 60} className="w-full h-full">
+                                <button
+                                    onClick={() => setLightboxIdx(i)}
+                                    className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
+                                >
+                                    <img
+                                        src={img}
+                                        alt={`${tripTitle} - صورة ${i + 1}`}
+                                        loading="lazy"
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </ScrollReveal>
+                        ))}
+                    </div>
+
+                    {/* Images below video (نفس قياس الفيديو) */}
+                    {images.length > 4 && (
+                        <div className="col-span-full grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-3">
+                            {images.slice(4).map((img, i) => (
+                                <ScrollReveal key={i + 4} delay={(i + 5) * 60} className="w-full h-full">
+                                    <button
+                                        onClick={() => setLightboxIdx(i + 4)}
+                                        className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
+                                    >
+                                        <img
+                                            src={img}
+                                            alt={`${tripTitle} - صورة ${i + 5}`}
+                                            loading="lazy"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                </ScrollReveal>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                /* Images only grid */
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                    {images.map((img, i) => (
+                        <ScrollReveal
+                            key={i}
+                            delay={i * 60}
+                            className={i === 0 ? "col-span-2 md:col-span-2 row-span-2 w-full h-full" : "w-full h-full"}
+                        >
+                            <button
+                                onClick={() => setLightboxIdx(i)}
+                                className={`relative w-full h-full overflow-hidden rounded-2xl group cursor-pointer aspect-square`}
+                            >
+                                <img
+                                    src={img}
+                                    alt={`${tripTitle} - صورة ${i + 1}`}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                    </svg>
+                                </div>
+                            </button>
+                        </ScrollReveal>
+                    ))}
+                </div>
+            )}
 
             {/* Lightbox */}
             {lightboxIdx !== null && (

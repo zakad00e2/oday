@@ -23,7 +23,7 @@ export default function TripAddOns({ addOns, selectedIds, onToggle }: TripAddOns
                 </div>
             </ScrollReveal>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-4">
                 {addOns.map((addOn, i) => {
                     const isSelected = selectedIds.has(addOn.id);
                     return (
@@ -48,7 +48,6 @@ export default function TripAddOns({ addOns, selectedIds, onToggle }: TripAddOns
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                {addOn.icon && <span className="text-lg">{addOn.icon}</span>}
                                                 <h3 className="font-bold text-[#0f172a]">{addOn.nameAr}</h3>
                                             </div>
                                             <p className="text-xs text-[#94a3b8] mb-1">{addOn.nameEn}</p>

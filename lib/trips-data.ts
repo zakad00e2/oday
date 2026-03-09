@@ -20,7 +20,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=80",
             "https://images.unsplash.com/photo-1437719417032-8799fe6344c2?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "07:00 AM",
             endTime: "05:00 PM",
@@ -98,7 +98,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1542401886-65d6c61db217?w=800&q=80",
             "https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "02:00 PM",
             endTime: "09:00 PM",
@@ -189,7 +189,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
             "https://images.unsplash.com/photo-1437719417032-8799fe6344c2?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "10:00 AM",
             endTime: "04:00 PM",
@@ -272,7 +272,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80",
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "04:30 PM",
             endTime: "09:00 PM",
@@ -328,7 +328,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "حسب الموعد المختار",
             endTime: "—",
@@ -366,7 +366,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
             "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "03:00 PM",
             endTime: "05:00 PM",
@@ -413,7 +413,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1530053969600-caed2596d242?w=800&q=80",
             "https://images.unsplash.com/photo-1437719417032-8799fe6344c2?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "10:00 AM",
             endTime: "05:00 PM",
@@ -463,7 +463,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1582967788606-a171c7FA6c79?w=800&q=80",
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "09:00 AM",
             endTime: "01:00 PM",
@@ -512,7 +512,7 @@ export const allTrips: TripDetail[] = [
             "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
             "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800&q=80",
         ],
-        youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
         schedule: {
             startTime: "10:00 AM",
             endTime: "06:00 PM",

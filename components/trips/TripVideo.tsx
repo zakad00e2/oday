@@ -18,14 +18,16 @@ export default function TripVideo({ url }: { url: string }) {
             </ScrollReveal>
 
             <ScrollReveal delay={100}>
-                <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#f0f0f0] aspect-video">
-                    <iframe
-                        src={url}
-                        title="فيديو الرحلة"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                    />
+                <div className="flex justify-center">
+                    <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#f0f0f0] aspect-[9/16] w-full max-w-[360px]">
+                        <iframe
+                            src={url}
+                            title="فيديو الرحلة"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full"
+                        />
+                    </div>
                 </div>
             </ScrollReveal>
         </section>

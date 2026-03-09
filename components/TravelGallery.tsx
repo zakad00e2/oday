@@ -4,18 +4,18 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import ScrollReveal from "./ScrollReveal";
 
 const photos = [
-  { id: 1, src: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800&q=80", alt: "رحلة شاطئية", category: "company", tall: true },
-  { id: 2, src: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80", alt: "غروب على البحر", category: "company", tall: false },
-  { id: 3, src: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80", alt: "مناظر طبيعية", category: "customers", tall: false },
-  { id: 4, src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", alt: "جبال خلابة", category: "company", tall: true },
-  { id: 5, src: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800&q=80", alt: "رحلة نيلية", category: "customers", tall: false },
-  { id: 6, src: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80", alt: "فندق فاخر", category: "company", tall: false },
-  { id: 7, src: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80", alt: "غرفة فندقية", category: "customers", tall: true },
-  { id: 8, src: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80", alt: "مسبح فندق", category: "company", tall: false },
-  { id: 9, src: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80", alt: "قمة الجبل", category: "customers", tall: true },
-  { id: 10, src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80", alt: "شاطئ رملي", category: "company", tall: false },
-  { id: 11, src: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80", alt: "لوبي فندق", category: "customers", tall: false },
-  { id: 12, src: "https://images.unsplash.com/photo-1476900164809-ff19b8ae5968?w=800&q=80", alt: "مغامرة بحرية", category: "company", tall: true },
+  { id: 1, src: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800&q=80", alt: "رحلة شاطئية", category: "company" },
+  { id: 2, src: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80", alt: "غروب على البحر", category: "company" },
+  { id: 3, src: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80", alt: "مناظر طبيعية", category: "customers" },
+  { id: 4, src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", alt: "جبال خلابة", category: "company" },
+  { id: 5, src: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800&q=80", alt: "رحلة نيلية", category: "customers" },
+  { id: 6, src: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80", alt: "فندق فاخر", category: "company" },
+  { id: 7, src: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80", alt: "غرفة فندقية", category: "customers" },
+  { id: 8, src: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80", alt: "مسبح فندق", category: "company" },
+  { id: 9, src: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80", alt: "قمة الجبل", category: "customers" },
+  { id: 10, src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80", alt: "شاطئ رملي", category: "company" },
+  { id: 11, src: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80", alt: "لوبي فندق", category: "customers" },
+  { id: 12, src: "https://images.unsplash.com/photo-1476900164809-ff19b8ae5968?w=800&q=80", alt: "مغامرة بحرية", category: "company" },
 ];
 
 export default function TravelGallery() {
@@ -96,25 +96,26 @@ export default function TravelGallery() {
             </div>
           </div>
 
-          {/* Masonry Grid */}
+          {/* Uniform grid */}
           <div
-            className={`columns-2 md:columns-3 gap-4 space-y-4 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
           >
             {filtered.map((photo, idx) => (
               <div
                 key={photo.id}
-                className="break-inside-avoid group cursor-pointer relative rounded-[16px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500"
+                className="group cursor-pointer relative rounded-[16px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500"
                 style={{ animationDelay: `${idx * 60}ms` }}
                 onClick={() => { setImgLoaded(false); setLightbox(photo.id); }}
               >
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  loading="lazy"
-                  className={`w-full object-cover transition-transform duration-700 group-hover:scale-110 ${photo.tall ? "h-72 md:h-96" : "h-48 md:h-64"
-                    }`}
-                />
+                <div className="aspect-[3/4]">
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                </div>
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-500 flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-500">

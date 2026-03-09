@@ -8,9 +8,8 @@ import TripDetailHero from "@/components/trips/TripDetailHero";
 import TripOverview from "@/components/trips/TripOverview";
 import TripSchedule from "@/components/trips/TripSchedule";
 import TripIncludes from "@/components/trips/TripIncludes";
-import TripEssentials from "@/components/trips/TripEssentials";
+
 import TripGallery from "@/components/trips/TripGallery";
-import TripVideo from "@/components/trips/TripVideo";
 import TripOptions from "@/components/trips/TripOptions";
 import TripAddOns from "@/components/trips/TripAddOns";
 import TripPriceSummary from "@/components/trips/TripPriceSummary";
@@ -92,52 +91,38 @@ export default function TripDetailPage() {
                     <TripSchedule schedule={trip.schedule} />
                 </div>
 
-                {/* Includes & Essentials side by side on large */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-10">
-                    <TripIncludes items={trip.includes} />
-                    <TripEssentials items={trip.essentials} />
-                </div>
+                {/* Includes */}
+                <TripIncludes items={trip.includes} />
 
-                {/* Gallery */}
-                {trip.galleryImages.length > 0 && (
-                    <TripGallery images={trip.galleryImages} tripTitle={trip.titleAr} />
+                {/* Gallery & Video */}
+                {(trip.galleryImages.length > 0 || trip.youtubeUrl) && (
+                    <TripGallery images={trip.galleryImages} tripTitle={trip.titleAr} youtubeUrl={trip.youtubeUrl} />
                 )}
 
-                {/* Video */}
-                {trip.youtubeUrl && <TripVideo url={trip.youtubeUrl} />}
-
-                {/* Options */}
-                {trip.options.length > 0 && (
-                    <TripOptions
-                        options={trip.options}
-                        selectedOptionId={selectedOptionId}
-                        onSelectOption={setSelectedOptionId}
-                        quantities={optionQuantities}
-                        onUpdateQuantity={updateQuantity}
-                    />
+                {/* Options + Add-ons side by side */}
+                {(trip.options.length > 0 || trip.addOns.length > 0) && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {trip.options.length > 0 && (
+                            <TripOptions
+                                options={trip.options}
+                                selectedOptionId={selectedOptionId}
+                                onSelectOption={setSelectedOptionId}
+                                quantities={optionQuantities}
+                                onUpdateQuantity={updateQuantity}
+                            />
+                        )}
+                        {trip.addOns.length > 0 && (
+                            <TripAddOns
+                                addOns={trip.addOns}
+                                selectedIds={selectedAddOnIds}
+                                onToggle={toggleAddOn}
+                            />
+                        )}
+                    </div>
                 )}
 
-                {/* Add-ons */}
-                {trip.addOns.length > 0 && (
-                    <TripAddOns
-                        addOns={trip.addOns}
-                        selectedIds={selectedAddOnIds}
-                        onToggle={toggleAddOn}
-                    />
-                )}
-
-                {/* Price Summary */}
-                {(trip.options.length > 0 || trip.addOns.length > 0) && totalPrice > 0 && (
-                    <TripPriceSummary
-                        selectedOption={selectedOption || null}
-                        quantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 0}
-                        addOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
-                        total={totalPrice}
-                    />
-                )}
-
-                {/* Booking Form */}
-                <div ref={bookingRef}>
+                {/* Price Summary + Booking Form side by side */}
+                <div ref={bookingRef} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
                     <TripBookingForm
                         trip={trip}
                         selectedOptionId={selectedOptionId}
@@ -147,7 +132,20 @@ export default function TripDetailPage() {
                         onGuestCountChange={setGuestCount}
                         onChildrenCountChange={setChildrenCount}
                         totalPrice={totalPrice}
+                        selectedOption={selectedOption || null}
+                        selectedAddOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
+                        optionQuantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 1}
                     />
+                    {(trip.options.length > 0 || trip.addOns.length > 0) && totalPrice > 0 && (
+                        <div className="hidden lg:block">
+                            <TripPriceSummary
+                                selectedOption={selectedOption || null}
+                                quantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 0}
+                                addOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
+                                total={totalPrice}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

@@ -31,7 +31,7 @@ export default function TripOptions({
                 </div>
             </ScrollReveal>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-4">
                 {options.map((option, i) => {
                     const isSelected = selectedOptionId === option.id;
                     const qty = quantities[option.id] || 1;

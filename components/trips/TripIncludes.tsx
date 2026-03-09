@@ -6,13 +6,13 @@ export default function TripIncludes({ items }: { items: string[] }) {
     return (
         <div>
             <ScrollReveal>
-                <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-[#f4f5f7] flex items-center justify-center">
-                        <svg className="w-5 h-5 text-[#6b7280]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <div className="flex items-center gap-3 my-5 ">
+                    <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#0F2854]">ماذا تشمل الرحلة؟</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">ماذا تشمل الرحلة؟</h2>
                 </div>
             </ScrollReveal>
 

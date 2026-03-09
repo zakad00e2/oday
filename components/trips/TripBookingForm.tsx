@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TripDetail } from "@/lib/trips-types";
+import { TripDetail, TripOption, TripAddOn } from "@/lib/trips-types";
 import ScrollReveal from "../ScrollReveal";
 
 interface TripBookingFormProps {
@@ -13,6 +13,9 @@ interface TripBookingFormProps {
     onGuestCountChange: (n: number) => void;
     onChildrenCountChange: (n: number) => void;
     totalPrice: number;
+    selectedOption?: TripOption | null;
+    selectedAddOns?: TripAddOn[];
+    optionQuantity?: number;
 }
 
 export default function TripBookingForm({
@@ -24,6 +27,9 @@ export default function TripBookingForm({
     onGuestCountChange,
     onChildrenCountChange,
     totalPrice,
+    selectedOption,
+    selectedAddOns = [],
+    optionQuantity = 1,
 }: TripBookingFormProps) {
     const [name, setName] = useState("");
     const [hotel, setHotel] = useState("");
@@ -232,18 +238,46 @@ export default function TripBookingForm({
                         )}
                     </div>
 
-                    {/* Summary bar */}
+                    {/* Mobile-only price summary (hidden on lg) */}
                     {totalPrice > 0 && (
-                        <div className="mt-6 bg-[#f0f9ff] rounded-2xl p-4 flex items-center justify-between">
-                            <span className="text-sm font-medium text-[#0f172a]">الإجمالي المقدّر</span>
-                            <span className="text-xl font-black text-[#2563EB]">${totalPrice}</span>
+                        <div className="mt-6 lg:hidden bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#e2e8f0]">
+                                <span className="text-base font-bold text-[#0f172a]">ملخص السعر</span>
+                            </div>
+                            <div className="px-5 py-4 space-y-3">
+                                {selectedOption && (
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-[#0f172a]">{selectedOption.nameAr}</p>
+                                            {optionQuantity > 1 && (
+                                                <p className="text-xs text-[#94a3b8]">{optionQuantity} × ${selectedOption.price}</p>
+                                            )}
+                                        </div>
+                                        <span className="font-bold text-[#0f172a]">
+                                            {selectedOption.price > 0 ? `$${selectedOption.price * optionQuantity}` : "—"}
+                                        </span>
+                                    </div>
+                                )}
+                                {selectedAddOns.map((addOn) => (
+                                    <div key={addOn.id} className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-[#0f172a]">{addOn.nameAr}</p>
+                                        <span className="font-bold text-[#0f172a]">
+                                            {addOn.price > 0 ? `$${addOn.price}` : "—"}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-5 py-3 flex items-center justify-between">
+                                <span className="text-sm font-bold text-[#0f172a]">الإجمالي</span>
+                                <span className="text-xl font-black text-[#2563EB]">${totalPrice}</span>
+                            </div>
                         </div>
                     )}
 
                     {/* Submit */}
                     <button
                         type="submit"
-                        className="mt-6 w-full flex items-center justify-center gap-2 bg-[#2563EB] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1d4ed8] hover:scale-[1.02] transition-all text-base"
+                        className="mt-6 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1ebe57] hover:scale-[1.02] transition-all text-base"
                     >
                         احجز الآن عبر واتساب
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
