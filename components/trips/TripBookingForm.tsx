@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TripDetail, TripOption, TripAddOn } from "@/lib/trips-types";
 import ScrollReveal from "../ScrollReveal";
+import { useCart } from "@/lib/cart-context";
 
 interface TripBookingFormProps {
     trip: TripDetail;
@@ -38,6 +39,22 @@ export default function TripBookingForm({
     const [notes, setNotes] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const { addTrip, removeTrip, cart, openCart } = useCart();
+    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
+
+    const handleCartAction = () => {
+        if (isInCart) {
+            removeTrip(trip.slug);
+        } else {
+            addTrip({
+                slug: trip.slug,
+                titleAr: trip.titleAr,
+                heroImage: trip.heroImage,
+                startingPrice: trip.startingPrice,
+            });
+            openCart();
+        }
+    };
 
     const fields = trip.bookingFields;
 
@@ -275,16 +292,52 @@ export default function TripBookingForm({
                     )}
 
                     {/* Submit */}
-                    <button
-                        type="submit"
-                        className="mt-6 w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1ebe57] hover:scale-[1.02] transition-all text-base"
-                    >
-                        احجز الآن عبر واتساب
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.527 5.862L.06 23.854l6.143-1.438C7.869 23.456 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.93 0-3.76-.514-5.352-1.442l-.384-.228-3.644.854.893-3.546-.252-.399A9.773 9.773 0 012.18 12c0-5.423 4.397-9.82 9.82-9.82 5.423 0 9.82 4.397 9.82 9.82 0 5.423-4.397 9.82-9.82 9.82z" />
-                        </svg>
-                    </button>
+                    <div className="mt-6 flex flex-col gap-3">
+                        {/* Add to Cart */}
+                        <button
+                            type="button"
+                            onClick={handleCartAction}
+                            className={`w-full flex items-center justify-center gap-2 font-bold px-8 py-3.5 rounded-2xl border transition-all text-sm ${
+                                isInCart
+                                    ? "bg-[#0EA5E9] text-white border-[#0EA5E9] hover:bg-[#0284C7]"
+                                    : "bg-[#F0F9FF] text-[#0EA5E9] border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
+                            }`}
+                        >
+                            {isInCart ? (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    تم الإضافة لسلة الحجوزات
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                    أضف لسلة الحجوزات
+                                </>
+                            )}
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 h-px bg-[#e2e8f0]" />
+                            <span className="text-xs text-[#94a3b8] font-medium">أو احجز مباشرة</span>
+                            <div className="flex-1 h-px bg-[#e2e8f0]" />
+                        </div>
+
+                        {/* WhatsApp Submit */}
+                        <button
+                            type="submit"
+                            className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1ebe57] hover:scale-[1.02] transition-all text-base"
+                        >
+                            احجز الآن عبر واتساب
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.527 5.862L.06 23.854l6.143-1.438C7.869 23.456 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.93 0-3.76-.514-5.352-1.442l-.384-.228-3.644.854.893-3.546-.252-.399A9.773 9.773 0 012.18 12c0-5.423 4.397-9.82 9.82-9.82 5.423 0 9.82 4.397 9.82 9.82 0 5.423-4.397 9.82-9.82 9.82z" />
+                            </svg>
+                        </button>
+                    </div>
                 </form>
             </ScrollReveal>
         </section>

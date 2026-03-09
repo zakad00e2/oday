@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
+import { useCart } from "@/lib/cart-context";
 
 const hotels = [
   {
@@ -87,6 +88,8 @@ type Hotel = typeof hotels[0];
 
 function HotelCard({ hotel, openGallery }: { hotel: Hotel; openGallery: (id: number) => void }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const { setHotel, cart, openCart } = useCart();
+  const isInCart = cart.hotel?.id === hotel.id;
 
   // Combine the main image and gallery images, but avoid duplicates if main image is already in gallery.
   // Assuming main image is not in gallery, or they are different.
@@ -189,27 +192,51 @@ function HotelCard({ hotel, openGallery }: { hotel: Hotel; openGallery: (id: num
         </div>
 
         {/* CTA and Price */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#F3F4F6] mt-5">
-          <div className="flex flex-col">
-            <span className="text-[11px] text-[#64748B] font-medium leading-none mb-1">يبدأ من</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl md:text-3xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString() || "---"}</span>
-              <span className="text-2xl md:text-3xl font-semibold text-[#0EA5E9]">$</span>
-              <span className="text-[15px] text-[#94A3B8] mr-1">/ ليلة</span>
+        <div className="pt-4 border-t border-[#F3F4F6] mt-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col">
+              <span className="text-[11px] text-[#64748B] font-medium leading-none mb-1">يبدأ من</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl md:text-3xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString() || "---"}</span>
+                <span className="text-2xl md:text-3xl font-semibold text-[#0EA5E9]">$</span>
+                <span className="text-[15px] text-[#94A3B8] mr-1">/ ليلة</span>
+              </div>
             </div>
+
+            <a
+              href="https://wa.me/201032549630"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-[#111] text-white rounded-full px-6 py-2.5 text-[15px] font-medium hover:bg-[#333] active:scale-[0.97] transition-all duration-200 shadow-sm"
+            >
+              احجز الآن
+              <svg className="w-4.5 h-4.5 scale-x-[-1]" style={{ width: '1.125rem', height: '1.125rem' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+              </svg>
+            </a>
           </div>
 
-          <a
-            href="https://wa.me/201032549630"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 bg-[#111] text-white rounded-full px-6 py-2.5 text-[15px] font-medium hover:bg-[#333] active:scale-[0.97] transition-all duration-200 shadow-sm"
+          {/* Add to cart */}
+          <button
+            onClick={() => {
+              setHotel({
+                id: hotel.id,
+                name: hotel.name,
+                city: hotel.city,
+                image: hotel.image,
+                pricePerNight: hotel.price,
+                stars: hotel.stars,
+              });
+              openCart();
+            }}
+            className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border ${
+              isInCart
+                ? "bg-[#0EA5E9] text-white border-[#0EA5E9]"
+                : "bg-[#F0F9FF] text-[#0EA5E9] border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
+            }`}
           >
-            احجز الآن
-            <svg className="w-4.5 h-4.5 scale-x-[-1]" style={{ width: '1.125rem', height: '1.125rem' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-            </svg>
-          </a>
+            {isInCart ? "✓ تم الإضافة للسلة" : "🛒 أضف للسلة"}
+          </button>
         </div>
       </div>
     </div>

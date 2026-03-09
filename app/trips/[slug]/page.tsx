@@ -143,6 +143,7 @@ export default function TripDetailPage() {
                                 quantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 0}
                                 addOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
                                 total={totalPrice}
+                                trip={{ slug: trip.slug, titleAr: trip.titleAr, heroImage: trip.heroImage, startingPrice: trip.startingPrice }}
                             />
                         </div>
                     )}

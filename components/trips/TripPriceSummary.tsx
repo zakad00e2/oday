@@ -2,15 +2,34 @@
 
 import { TripOption, TripAddOn } from "@/lib/trips-types";
 import ScrollReveal from "../ScrollReveal";
+import { useCart } from "@/lib/cart-context";
 
 interface TripPriceSummaryProps {
     selectedOption: TripOption | null;
     quantity: number;
     addOns: TripAddOn[];
     total: number;
+    trip: { slug: string; titleAr: string; heroImage: string; startingPrice: number };
 }
 
-export default function TripPriceSummary({ selectedOption, quantity, addOns, total }: TripPriceSummaryProps) {
+export default function TripPriceSummary({ selectedOption, quantity, addOns, total, trip }: TripPriceSummaryProps) {
+    const { addTrip, removeTrip, cart, openCart } = useCart();
+    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
+
+    const handleCartAction = () => {
+        if (isInCart) {
+            removeTrip(trip.slug);
+        } else {
+            addTrip({
+                slug: trip.slug,
+                titleAr: trip.titleAr,
+                heroImage: trip.heroImage,
+                startingPrice: trip.startingPrice,
+            });
+            openCart();
+        }
+    };
+
     return (
         <section className="py-10 md:py-38 border-b border-[#e2e8f0]">
             <ScrollReveal delay={100}>
@@ -55,6 +74,34 @@ export default function TripPriceSummary({ selectedOption, quantity, addOns, tot
                         <span className="text-2xl font-black text-[#2563EB]">
                             {total > 0 ? `$${total}` : "اسأل عن السعر"}
                         </span>
+                    </div>
+
+                    {/* Add to Cart */}
+                    <div className="px-6 pb-6 pt-3">
+                        <button
+                            onClick={handleCartAction}
+                            className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+                                isInCart
+                                    ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7]"
+                                    : "bg-[#F0F9FF] text-[#0EA5E9] border border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
+                            }`}
+                        >
+                            {isInCart ? (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    تم الإضافة للسلة
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                    أضف لسلة الحجوزات
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
             </ScrollReveal>
