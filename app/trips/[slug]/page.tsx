@@ -16,10 +16,7 @@ export default function TripDetailPage() {
     const slug = params?.slug as string;
     const trip = getTripBySlug(slug);
 
-    const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() => {
-        if (trip && trip.options.length > 0) return trip.options[0].id;
-        return null;
-    });
+    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
     const [personCounts, setPersonCounts] = useState<Record<string, number>>(() => {
         if (!trip) return {};
         const p: Record<string, number> = {};
@@ -53,17 +50,24 @@ export default function TripDetailPage() {
     }
 
     // --- Price computation ---
-    const selectedOption = trip.options.find((o) => o.id === selectedOptionId) || null;
-    const selectedPersons = selectedOption ? (personCounts[selectedOption.id] || 1) : 1;
+    const selectedOptions = trip.options.filter((o) => selectedOptionIds.has(o.id));
+    const optionsTotal = selectedOptions.reduce((sum, o) => sum + o.price * (personCounts[o.id] || 1), 0);
     const addOnsTotal = trip.addOns
         .filter((a) => selectedAddOnIds.has(a.id))
         .reduce((sum, a) => sum + a.price * (addOnPersonCounts[a.id] || 1), 0);
-    const totalPriceGroup = selectedOption
-        ? selectedOption.price * selectedPersons + addOnsTotal
-        : 0;
+    const totalPriceGroup = optionsTotal + addOnsTotal;
 
     const toggleAddOn = (id: string) => {
         setSelectedAddOnIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleOptionId = (id: string) => {
+        setSelectedOptionIds((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
@@ -88,9 +92,8 @@ export default function TripDetailPage() {
             titleAr: trip.titleAr,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
-            persons: selectedPersons,
-            selectedOption: selectedOption
-                ? { nameAr: selectedOption.nameAr, price: selectedOption.price }
+            selectedOptions: selectedOptions.length > 0
+                ? selectedOptions.map((o) => ({ nameAr: o.nameAr, price: o.price, persons: personCounts[o.id] || 1 }))
                 : undefined,
             selectedAddOns: selectedAddOns.length > 0
                 ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
@@ -153,14 +156,15 @@ export default function TripDetailPage() {
                                         </div>
                                         <div className="flex flex-col gap-3">
                                             {trip.options.map((option) => {
-                                                const isSelected = selectedOptionId === option.id;
+                                                const isSelected = selectedOptionIds.has(option.id);
                                                 return (
                                                     <div
                                                         key={option.id}
-                                                        role="button"
+                                                        role="checkbox"
+                                                        aria-checked={isSelected}
                                                         tabIndex={0}
-                                                        onClick={() => setSelectedOptionId(option.id)}
-                                                        onKeyDown={(e) => e.key === "Enter" && setSelectedOptionId(option.id)}
+                                                        onClick={() => toggleOptionId(option.id)}
+                                                        onKeyDown={(e) => e.key === "Enter" && toggleOptionId(option.id)}
                                                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                                                             isSelected
                                                                 ? "border-[#2563EB] bg-[#2563EB]/5"
@@ -169,10 +173,14 @@ export default function TripDetailPage() {
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="flex items-start gap-2.5 flex-1">
-                                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                                                                    isSelected ? "border-[#2563EB]" : "border-[#cbd5e1]"
+                                                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                                                                    isSelected ? "border-[#2563EB] bg-[#2563EB]" : "border-[#cbd5e1]"
                                                                 }`}>
-                                                                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />}
+                                                                    {isSelected && (
+                                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <p className="font-bold text-[#0f172a] text-sm leading-tight">{option.nameAr}</p>
@@ -197,9 +205,9 @@ export default function TripDetailPage() {
                                                                 </svg>
                                                                 <span className="text-xs text-[#64748b]">عدد الأشخاص:</span>
                                                                 <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
-                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: Math.max(1, (prev[option.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">−</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: Math.max(1, (prev[option.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">−</button>
                                                                     <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-[28px] text-center">{personCounts[option.id] || 1}</span>
-                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: (prev[option.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">+</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: (prev[option.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">+</button>
                                                                 </div>
                                                                 {option.price > 0 && (personCounts[option.id] || 1) > 1 && (
                                                                     <span className="text-xs font-bold text-[#2563EB]">= ${option.price * (personCounts[option.id] || 1)}</span>
@@ -268,9 +276,9 @@ export default function TripDetailPage() {
                                                                 </svg>
                                                                 <span className="text-xs text-[#64748b]">عدد الأشخاص:</span>
                                                                 <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
-                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: Math.max(1, (prev[addOn.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">−</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: Math.max(1, (prev[addOn.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">−</button>
                                                                     <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-7 text-center">{addOnPersonCounts[addOn.id] || 1}</span>
-                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: (prev[addOn.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">+</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: (prev[addOn.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">+</button>
                                                                 </div>
                                                                 {addOn.price > 0 && (addOnPersonCounts[addOn.id] || 1) > 1 && (
                                                                     <span className="text-xs font-bold text-[#F59E0B]">= ${addOn.price * (addOnPersonCounts[addOn.id] || 1)}</span>
@@ -288,9 +296,9 @@ export default function TripDetailPage() {
                             {/* Price Summary + CTA */}
                             <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div>
-                                    {selectedOption && (
+                                    {selectedOptions.length > 0 && (
                                         <p className="text-xs text-[#64748b] mb-1 leading-relaxed">
-                                            {selectedOption.nameAr}
+                                            {selectedOptions.map((o) => o.nameAr).join(" + ")}
                                             {selectedAddOns.length > 0 && (
                                                 <> + {selectedAddOns.map((a) => a.nameAr).join("، ")}</>
                                             )}
@@ -305,36 +313,42 @@ export default function TripDetailPage() {
                                                     ? `يبدأ من $${trip.startingPrice}`
                                                     : "عند الطلب"}
                                         </span>
-                                        {totalPriceGroup > 0 && selectedPersons > 1 && (
-                                            <span className="text-xs text-[#94a3b8]">لـ {selectedPersons} أشخاص</span>
-                                        )}
-                                        {totalPriceGroup > 0 && selectedPersons === 1 && (
-                                            <span className="text-xs text-[#94a3b8]">/ شخص</span>
+                                        {totalPriceGroup > 0 && (
+                                            <span className="text-xs text-[#94a3b8]">الإجمالي المحسوب</span>
                                         )}
                                     </div>
                                 </div>
                                 {isInCart ? (
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                         <button
                                             onClick={() => removeTrip(trip.slug)}
-                                            className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors"
+                                            className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
                                         >
                                             إزالة
                                         </button>
                                         <button
+                                            onClick={handleAddToCart}
+                                            className="py-3 px-5 rounded-2xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-[0.98] cursor-pointer"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            تحديث الخيارات
+                                        </button>
+                                        <button
                                             onClick={openCart}
-                                            className="py-3 px-6 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold flex items-center gap-2 transition-colors"
+                                            className="py-3 px-5 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
-                                            في برنامجك · عرض السلة
+                                            عرض السلة
                                         </button>
                                     </div>
                                 ) : (
                                     <button
                                         onClick={handleAddToCart}
-                                        className="shrink-0 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold py-3.5 px-8 rounded-2xl flex items-center gap-2 text-sm transition-all active:scale-[0.98] shadow-sm"
+                                        className="shrink-0 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold py-3.5 px-8 rounded-2xl flex items-center gap-2 text-sm transition-all active:scale-[0.98] shadow-sm cursor-pointer"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

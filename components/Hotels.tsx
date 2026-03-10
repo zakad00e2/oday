@@ -203,40 +203,27 @@ function HotelCard({ hotel, openGallery }: { hotel: Hotel; openGallery: (id: num
               </div>
             </div>
 
-            <a
-              href="https://wa.me/201032549630"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-[#111] text-white rounded-full px-6 py-2.5 text-[15px] font-medium hover:bg-[#333] active:scale-[0.97] transition-all duration-200 shadow-sm"
+            <button
+              onClick={() => {
+                setHotel({
+                  id: hotel.id,
+                  name: hotel.name,
+                  city: hotel.city,
+                  image: hotel.image,
+                  pricePerNight: hotel.price,
+                  stars: hotel.stars,
+                });
+                openCart();
+              }}
+              className={`inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 text-[15px] font-medium active:scale-[0.97] transition-all duration-200 shadow-sm ${
+                isInCart
+                  ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7]"
+                  : "bg-[#111] text-white hover:bg-[#333]"
+              }`}
             >
-              احجز الآن
-              <svg className="w-4.5 h-4.5 scale-x-[-1]" style={{ width: '1.125rem', height: '1.125rem' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-              </svg>
-            </a>
+              {isInCart ? "✓ في السلة" : "أضف للسلة"}
+            </button>
           </div>
-
-          {/* Add to cart */}
-          <button
-            onClick={() => {
-              setHotel({
-                id: hotel.id,
-                name: hotel.name,
-                city: hotel.city,
-                image: hotel.image,
-                pricePerNight: hotel.price,
-                stars: hotel.stars,
-              });
-              openCart();
-            }}
-            className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border ${
-              isInCart
-                ? "bg-[#0EA5E9] text-white border-[#0EA5E9]"
-                : "bg-[#F0F9FF] text-[#0EA5E9] border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
-            }`}
-          >
-            {isInCart ? "✓ تم الإضافة للسلة" : "🛒 أضف للسلة"}
-          </button>
         </div>
       </div>
     </div>

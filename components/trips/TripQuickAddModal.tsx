@@ -13,10 +13,17 @@ interface TripQuickAddModalProps {
 export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalProps) {
     const { addTrip, openCart } = useCart();
 
-    const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
-        trip.options.length > 0 ? trip.options[0].id : null
-    );
+    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
+
+    const toggleOptionId = (id: string) => {
+        setSelectedOptionIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -41,16 +48,19 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
         });
     };
 
-    const selectedOption = trip.options.find(o => o.id === selectedOptionId) ?? null;
+    const selectedOptions = trip.options.filter(o => selectedOptionIds.has(o.id));
     const selectedAddOns = trip.addOns.filter(a => selectedAddOnIds.has(a.id));
-    const totalPrice = (selectedOption?.price ?? 0) + selectedAddOns.reduce((s, a) => s + a.price, 0);
+    const totalPrice = selectedOptions.reduce((s, o) => s + o.price, 0) + selectedAddOns.reduce((s, a) => s + a.price, 0);
 
     const handleAddToCart = () => {
         addTrip({
             slug: trip.slug,
             titleAr: trip.titleAr,
             heroImage: trip.heroImage,
-            startingPrice: selectedOption?.price ?? trip.startingPrice,
+            startingPrice: trip.startingPrice,
+            selectedOptions: selectedOptions.length > 0
+                ? selectedOptions.map(o => ({ nameAr: o.nameAr, price: o.price }))
+                : undefined,
         });
         onClose();
         openCart();
@@ -79,7 +89,7 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
                     </h3>
                     <button
                         onClick={onClose}
-                        className="mr-3 w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors shrink-0"
+                        className="mr-3 w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors shrink-0 cursor-pointer"
                         aria-label="إغلاق"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -99,12 +109,12 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
                             </p>
                             <div className="space-y-2">
                                 {trip.options.map((opt) => {
-                                    const active = selectedOptionId === opt.id;
+                                    const active = selectedOptionIds.has(opt.id);
                                     return (
                                         <button
                                             key={opt.id}
-                                            onClick={() => setSelectedOptionId(opt.id)}
-                                            className={`w-full text-right px-4 py-3.5 rounded-2xl border-2 transition-all duration-150 flex items-center justify-between gap-3 ${
+                                            onClick={() => toggleOptionId(opt.id)}
+                                            className={`w-full text-right px-4 py-3.5 rounded-2xl border-2 transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer ${
                                                 active
                                                     ? "border-[#0EA5E9] bg-[#F0F9FF]"
                                                     : "border-[#E2E8F0] bg-white hover:border-[#BAE6FD]"
@@ -122,7 +132,7 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
                                                 <span className={`text-sm font-black ${active ? "text-[#0EA5E9]" : "text-[#0F172A]"}`}>
                                                     {opt.price > 0 ? `$${opt.price}` : "عند الطلب"}
                                                 </span>
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                                                     active ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#CBD5E1]"
                                                 }`}>
                                                     {active && (
@@ -152,7 +162,7 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
                                         <button
                                             key={addon.id}
                                             onClick={() => toggleAddOn(addon.id)}
-                                            className={`w-full text-right px-4 py-3.5 rounded-2xl border-2 transition-all duration-150 flex items-center justify-between gap-3 ${
+                                            className={`w-full text-right px-4 py-3.5 rounded-2xl border-2 transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer ${
                                                 active
                                                     ? "border-[#10B981] bg-[#F0FDF4]"
                                                     : "border-[#E2E8F0] bg-white hover:border-[#A7F3D0]"
@@ -210,7 +220,7 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
                     </div>
                     <button
                         onClick={handleAddToCart}
-                        className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] active:scale-[0.98] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all text-sm shadow-sm"
+                        className="w-full bg-[#0EA5E9] hover:bg-[#0284C7] active:scale-[0.98] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all text-sm shadow-sm cursor-pointer"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

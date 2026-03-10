@@ -30,7 +30,7 @@ export default function TripAddOns({ addOns, selectedIds, onToggle }: TripAddOns
                         <ScrollReveal key={addOn.id} delay={i * 80}>
                             <button
                                 onClick={() => onToggle(addOn.id)}
-                                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 ${isSelected
+                                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${isSelected
                                         ? "border-[#F59E0B] bg-[#F59E0B]/5 shadow-lg"
                                         : "border-[#e2e8f0] bg-white hover:border-[#F59E0B]/30 hover:shadow-md"
                                     }`}

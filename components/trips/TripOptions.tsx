@@ -87,7 +87,7 @@ export default function TripOptions({
                                         <div className="flex items-center bg-white rounded-full border border-[#e2e8f0] overflow-hidden">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onUpdateQuantity(option.id, qty - 1); }}
-                                                className="px-3 py-1.5 text-[#64748b] hover:bg-[#f8fafc] transition font-bold"
+                                                className="px-3 py-1.5 text-[#64748b] hover:bg-[#f8fafc] transition font-bold cursor-pointer"
                                                 disabled={qty <= 1}
                                             >
                                                 −
@@ -95,7 +95,7 @@ export default function TripOptions({
                                             <span className="px-4 py-1.5 text-sm font-bold text-[#0f172a] min-w-[40px] text-center">{qty}</span>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onUpdateQuantity(option.id, qty + 1); }}
-                                                className="px-3 py-1.5 text-[#64748b] hover:bg-[#f8fafc] transition font-bold"
+                                                className="px-3 py-1.5 text-[#64748b] hover:bg-[#f8fafc] transition font-bold cursor-pointer"
                                                 disabled={qty >= (option.maxQuantity || 99)}
                                             >
                                                 +

@@ -122,7 +122,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                     onClick={() => setLightboxIdx(null)}
                 >
                     <button
-                        className="absolute top-6 left-6 text-white/80 hover:text-white transition z-10"
+                        className="absolute top-6 left-6 text-white/80 hover:text-white transition z-10 cursor-pointer"
                         onClick={() => setLightboxIdx(null)}
                     >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -132,7 +132,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
 
                     {/* Prev */}
                     <button
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
                         onClick={(e) => {
                             e.stopPropagation();
                             setLightboxIdx((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1));
@@ -145,7 +145,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
 
                     {/* Next */}
                     <button
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
                         onClick={(e) => {
                             e.stopPropagation();
                             setLightboxIdx((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0));

@@ -107,7 +107,7 @@ export default function TripBookingForm({
                     <p className="text-[#64748b] mb-6">سيتم التواصل معك عبر الواتساب لتأكيد الحجز.</p>
                     <button
                         onClick={() => setSubmitted(false)}
-                        className="text-[#2563EB] font-bold text-sm hover:underline"
+                        className="text-[#2563EB] font-bold text-sm hover:underline cursor-pointer"
                     >
                         إرسال حجز آخر
                     </button>
@@ -158,7 +158,7 @@ export default function TripBookingForm({
                                     <button
                                         type="button"
                                         onClick={() => onGuestCountChange(Math.max(1, guestCount - 1))}
-                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold"
+                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold cursor-pointer"
                                     >
                                         −
                                     </button>
@@ -166,7 +166,7 @@ export default function TripBookingForm({
                                     <button
                                         type="button"
                                         onClick={() => onGuestCountChange(guestCount + 1)}
-                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold"
+                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold cursor-pointer"
                                     >
                                         +
                                     </button>
@@ -182,7 +182,7 @@ export default function TripBookingForm({
                                     <button
                                         type="button"
                                         onClick={() => onChildrenCountChange(Math.max(0, childrenCount - 1))}
-                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold"
+                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold cursor-pointer"
                                     >
                                         −
                                     </button>
@@ -190,7 +190,7 @@ export default function TripBookingForm({
                                     <button
                                         type="button"
                                         onClick={() => onChildrenCountChange(childrenCount + 1)}
-                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold"
+                                        className="px-4 py-3.5 text-[#64748b] hover:bg-[#e2e8f0] transition font-bold cursor-pointer"
                                     >
                                         +
                                     </button>
@@ -297,7 +297,7 @@ export default function TripBookingForm({
                         <button
                             type="button"
                             onClick={handleCartAction}
-                            className={`w-full flex items-center justify-center gap-2 font-bold px-8 py-3.5 rounded-2xl border transition-all text-sm ${
+                            className={`w-full flex items-center justify-center gap-2 font-bold px-8 py-3.5 rounded-2xl border transition-all text-sm cursor-pointer ${
                                 isInCart
                                     ? "bg-[#0EA5E9] text-white border-[#0EA5E9] hover:bg-[#0284C7]"
                                     : "bg-[#F0F9FF] text-[#0EA5E9] border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
@@ -329,7 +329,7 @@ export default function TripBookingForm({
                         {/* WhatsApp Submit */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1ebe57] hover:scale-[1.02] transition-all text-base"
+                            className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:bg-[#1ebe57] hover:scale-[1.02] transition-all text-base cursor-pointer"
                         >
                             احجز الآن عبر واتساب
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

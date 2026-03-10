@@ -46,7 +46,7 @@ export default function TripDetailHero({ trip, onBookNow }: { trip: TripDetail; 
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={onBookNow}
-                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0C5B94] via-[#1a7cc4] to-[#2186d4] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(29,116,179,0.6)] hover:shadow-[0_0_24px_rgba(29,116,179,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20"
+                                className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0C5B94] via-[#1a7cc4] to-[#2186d4] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(29,116,179,0.6)] hover:shadow-[0_0_24px_rgba(29,116,179,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20 cursor-pointer"
                             >
                                 ابدأ الحجز
                                 <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#0C5B94] shadow-md shrink-0">
