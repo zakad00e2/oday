@@ -7,7 +7,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
     return (
-        <section id="gallery" className="py-10 md:py-14 border-b border-[#e2e8f0]">
+        <section id="gallery" className="py-10 md:py-14 border-b border-[#e2e8f0] scroll-mt-24">
             <ScrollReveal>
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">

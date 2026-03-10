@@ -25,6 +25,8 @@ export interface CartTrip {
   titleAr: string;
   heroImage: string;
   startingPrice: number; // per person, 0 = TBD
+  selectedOption?: { nameAr: string; price: number };
+  selectedAddOns?: { nameAr: string; price: number }[];
 }
 
 export interface CartGuests {
@@ -108,7 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart((prev) => ({
       ...prev,
       trips: prev.trips.find((t) => t.slug === trip.slug)
-        ? prev.trips
+        ? prev.trips.map((t) => (t.slug === trip.slug ? trip : t))
         : [...prev.trips, trip],
     }));
   }, []);
@@ -149,10 +151,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
   const hotelCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights : 0;
-  const tripsCost = cart.trips.reduce(
-    (sum, t) => sum + (t.startingPrice > 0 ? t.startingPrice * guestsTotal : 0),
-    0
-  );
+  const tripsCost = cart.trips.reduce((sum, t) => {
+    if (t.selectedOption) {
+      const optPrice = t.selectedOption.price;
+      const addOnsPrice = (t.selectedAddOns || []).reduce((s, a) => s + a.price, 0);
+      return sum + (optPrice + addOnsPrice) * guestsTotal;
+    }
+    return sum + (t.startingPrice > 0 ? t.startingPrice * guestsTotal : 0);
+  }, 0);
   const totalPrice = hotelCost + tripsCost;
   const totalItems = (cart.hotel ? 1 : 0) + cart.trips.length;
 

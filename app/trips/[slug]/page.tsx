@@ -1,43 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { getTripBySlug } from "@/lib/trips-data";
-import { TripDetail } from "@/lib/trips-types";
 import TripDetailHero from "@/components/trips/TripDetailHero";
 import TripOverview from "@/components/trips/TripOverview";
 import TripSchedule from "@/components/trips/TripSchedule";
 import TripIncludes from "@/components/trips/TripIncludes";
-
 import TripGallery from "@/components/trips/TripGallery";
-import TripOptions from "@/components/trips/TripOptions";
-import TripAddOns from "@/components/trips/TripAddOns";
-import TripPriceSummary from "@/components/trips/TripPriceSummary";
-import TripBookingForm from "@/components/trips/TripBookingForm";
+import { useCart } from "@/lib/cart-context";
 
 export default function TripDetailPage() {
     const params = useParams();
     const slug = params?.slug as string;
     const trip = getTripBySlug(slug);
 
-    // --- State for selections ---
-    const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-    const [optionQuantities, setOptionQuantities] = useState<Record<string, number>>({});
+    const [selectedOptionId, setSelectedOptionId] = useState<string | null>(() => {
+        if (trip && trip.options.length > 0) return trip.options[0].id;
+        return null;
+    });
+    const [optionQuantities, setOptionQuantities] = useState<Record<string, number>>(() => {
+        if (!trip) return {};
+        const q: Record<string, number> = {};
+        trip.options.forEach((o) => { q[o.id] = 1; });
+        return q;
+    });
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
-    const [guestCount, setGuestCount] = useState(1);
-    const [childrenCount, setChildrenCount] = useState(0);
 
-    const bookingRef = useRef<HTMLDivElement>(null);
+    const optionsRef = useRef<HTMLDivElement>(null);
 
-    // Initialize first option as selected
-    useEffect(() => {
-        if (trip && trip.options.length > 0 && !selectedOptionId) {
-            setSelectedOptionId(trip.options[0].id);
-            const initialQty: Record<string, number> = {};
-            trip.options.forEach((o) => { initialQty[o.id] = 1; });
-            setOptionQuantities(initialQty);
-        }
-    }, [trip, selectedOptionId]);
+    const { addTrip, removeTrip, cart, openCart } = useCart();
 
     if (!trip) {
         return (
@@ -45,16 +38,16 @@ export default function TripDetailPage() {
                 <div className="text-center">
                     <h1 className="text-4xl font-bold text-[#0f172a] mb-4">404</h1>
                     <p className="text-[#64748b] text-lg">الرحلة غير موجودة</p>
-                    <a href="/trips" className="inline-block mt-6 bg-[#2563EB] text-white px-6 py-3 rounded-full font-bold hover:bg-[#1d4ed8] transition">
+                    <Link href="/trips" className="inline-block mt-6 bg-[#2563EB] text-white px-6 py-3 rounded-full font-bold hover:bg-[#1d4ed8] transition">
                         العودة للرحلات
-                    </a>
+                    </Link>
                 </div>
             </main>
         );
     }
 
     // --- Price computation ---
-    const selectedOption = trip.options.find((o) => o.id === selectedOptionId);
+    const selectedOption = trip.options.find((o) => o.id === selectedOptionId) || null;
     const optionPrice = selectedOption
         ? selectedOption.price * (optionQuantities[selectedOption.id] || 1)
         : 0;
@@ -76,79 +69,263 @@ export default function TripDetailPage() {
         setOptionQuantities((prev) => ({ ...prev, [optionId]: Math.max(1, qty) }));
     };
 
-    const scrollToBooking = () => {
-        bookingRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToOptions = () => {
+        const target = optionsRef.current;
+        if (!target) return;
+        const offset = 90;
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: "smooth" });
+    };
+
+    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
+    const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
+
+    const handleAddToCart = () => {
+        addTrip({
+            slug: trip.slug,
+            titleAr: trip.titleAr,
+            heroImage: trip.heroImage,
+            startingPrice: trip.startingPrice,
+            selectedOption: selectedOption
+                ? { nameAr: selectedOption.nameAr, price: selectedOption.price }
+                : undefined,
+            selectedAddOns: selectedAddOns.length > 0
+                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price }))
+                : undefined,
+        });
+        openCart();
     };
 
     return (
         <main className="bg-[#FAFAFA]">
-            <TripDetailHero trip={trip} onBookNow={scrollToBooking} />
+            <TripDetailHero trip={trip} onBookNow={scrollToOptions} />
 
             <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12">
-                {/* Overview + Schedule side by side */}
+                {/* Overview + Schedule (full width) */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 py-10 md:py-14 border-b border-[#e2e8f0]">
                     <TripOverview description={trip.descriptionAr} />
                     <TripSchedule schedule={trip.schedule} />
                 </div>
 
                 {/* Includes */}
-                <TripIncludes items={trip.includes} />
+                <div className="py-10 md:py-14 border-b border-[#e2e8f0]">
+                    <TripIncludes items={trip.includes} />
+                </div>
 
-                {/* Gallery & Video */}
-                {(trip.galleryImages.length > 0 || trip.youtubeUrl) && (
-                    <TripGallery images={trip.galleryImages} tripTitle={trip.titleAr} youtubeUrl={trip.youtubeUrl} />
-                )}
-
-                {/* Options + Add-ons side by side */}
+                {/* ── Combined Booking Section ── */}
                 {(trip.options.length > 0 || trip.addOns.length > 0) && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {trip.options.length > 0 && (
-                            <TripOptions
-                                options={trip.options}
-                                selectedOptionId={selectedOptionId}
-                                onSelectOption={setSelectedOptionId}
-                                quantities={optionQuantities}
-                                onUpdateQuantity={updateQuantity}
-                            />
-                        )}
-                        {trip.addOns.length > 0 && (
-                            <TripAddOns
-                                addOns={trip.addOns}
-                                selectedIds={selectedAddOnIds}
-                                onToggle={toggleAddOn}
-                            />
-                        )}
+                    <div ref={optionsRef} className="py-10 md:py-14" dir="rtl">
+                        <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+
+                            {/* Header */}
+                            <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
+                                <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-[#2563EB]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-[#0f172a]">خصّص رحلتك واحجز</h2>
+                                    <p className="text-xs text-[#64748b] mt-0.5">اختر الخيار المناسب وأضف ما تريد</p>
+                                </div>
+                            </div>
+
+                            {/* Options + AddOns Grid */}
+                            <div className={`px-6 md:px-8 py-7 border-b border-[#e2e8f0] ${
+                                trip.options.length > 0 && trip.addOns.length > 0
+                                    ? "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10"
+                                    : ""
+                            }`}>
+
+                                {/* Options */}
+                                {trip.options.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-7 h-7 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
+                                                <svg className="w-3.5 h-3.5 text-[#2563EB]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                                </svg>
+                                            </div>
+                                            <h3 className="font-bold text-[#0f172a]">خيارات الرحلة</h3>
+                                        </div>
+                                        <div className="flex flex-col gap-3">
+                                            {trip.options.map((option) => {
+                                                const isSelected = selectedOptionId === option.id;
+                                                const qty = optionQuantities[option.id] || 1;
+                                                return (
+                                                    <div
+                                                        key={option.id}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={() => setSelectedOptionId(option.id)}
+                                                        onKeyDown={(e) => e.key === "Enter" && setSelectedOptionId(option.id)}
+                                                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                                                            isSelected
+                                                                ? "border-[#2563EB] bg-[#2563EB]/5"
+                                                                : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#2563EB]/40"
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="flex items-start gap-2.5 flex-1">
+                                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                                                                    isSelected ? "border-[#2563EB]" : "border-[#cbd5e1]"
+                                                                }`}>
+                                                                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{option.nameAr}</p>
+                                                                    {option.descriptionAr && <p className="text-xs text-[#64748b] mt-0.5">{option.descriptionAr}</p>}
+                                                                    {option.capacityLabel && (
+                                                                        <span className="inline-block mt-1.5 text-xs bg-[#f0f9ff] text-[#2563EB] font-medium rounded-full px-2.5 py-0.5">
+                                                                            {option.capacityLabel}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <span className={`font-black shrink-0 ${
+                                                                isSelected ? "text-[#2563EB]" : "text-[#0f172a]"
+                                                            }`}>
+                                                                {option.price > 0 ? `$${option.price}` : "—"}
+                                                            </span>
+                                                        </div>
+                                                        {isSelected && option.maxQuantity && option.maxQuantity > 1 && (
+                                                            <div className="mt-3 mr-7 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                                <span className="text-xs text-[#64748b]">الكمية:</span>
+                                                                <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
+                                                                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(option.id, qty - 1); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition" disabled={qty <= 1}>−</button>
+                                                                    <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-[32px] text-center">{qty}</span>
+                                                                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(option.id, qty + 1); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition" disabled={qty >= (option.maxQuantity || 99)}>+</button>
+                                                                </div>
+                                                                {option.price > 0 && qty > 1 && (
+                                                                    <span className="text-xs font-bold text-[#2563EB]">= ${option.price * qty}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* AddOns */}
+                                {trip.addOns.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-7 h-7 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center shrink-0">
+                                                <svg className="w-3.5 h-3.5 text-[#F59E0B]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                </svg>
+                                            </div>
+                                            <h3 className="font-bold text-[#0f172a]">الإضافات الاختيارية</h3>
+                                        </div>
+                                        <div className="flex flex-col gap-3">
+                                            {trip.addOns.map((addOn) => {
+                                                const isAddonSelected = selectedAddOnIds.has(addOn.id);
+                                                return (
+                                                    <button
+                                                        key={addOn.id}
+                                                        onClick={() => toggleAddOn(addOn.id)}
+                                                        className={`w-full text-right p-4 rounded-2xl border-2 transition-all ${
+                                                            isAddonSelected
+                                                                ? "border-[#F59E0B] bg-[#F59E0B]/5"
+                                                                : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="flex items-start gap-2.5 flex-1">
+                                                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                                                                    isAddonSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1]"
+                                                                }`}>
+                                                                    {isAddonSelected && (
+                                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{addOn.nameAr}</p>
+                                                                    {addOn.descriptionAr && <p className="text-xs text-[#64748b] mt-0.5">{addOn.descriptionAr}</p>}
+                                                                </div>
+                                                            </div>
+                                                            <span className={`font-black shrink-0 ${
+                                                                isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"
+                                                            }`}>
+                                                                {addOn.price > 0 ? `$${addOn.price}` : "—"}
+                                                            </span>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Price Summary + CTA */}
+                            <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div>
+                                    {selectedOption && (
+                                        <p className="text-xs text-[#64748b] mb-1 leading-relaxed">
+                                            {selectedOption.nameAr}
+                                            {selectedAddOns.length > 0 && (
+                                                <> + {selectedAddOns.map((a) => a.nameAr).join("، ")}</>
+                                            )}
+                                        </p>
+                                    )}
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-xs text-[#94a3b8]">الإجمالي</span>
+                                        <span className="text-2xl font-black text-[#2563EB]">
+                                            {totalPrice > 0
+                                                ? `$${totalPrice}`
+                                                : trip.startingPrice > 0
+                                                    ? `يبدأ من $${trip.startingPrice}`
+                                                    : "عند الطلب"}
+                                        </span>
+                                        <span className="text-xs text-[#94a3b8]">/ شخص</span>
+                                    </div>
+                                </div>
+                                {isInCart ? (
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                            onClick={() => removeTrip(trip.slug)}
+                                            className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors"
+                                        >
+                                            إزالة
+                                        </button>
+                                        <button
+                                            onClick={openCart}
+                                            className="py-3 px-6 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold flex items-center gap-2 transition-colors"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            في برنامجك · عرض السلة
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleAddToCart}
+                                        className="shrink-0 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold py-3.5 px-8 rounded-2xl flex items-center gap-2 text-sm transition-all active:scale-[0.98] shadow-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        أضف لبرنامجك
+                                    </button>
+                                )}
+                            </div>
+
+                        </div>
                     </div>
                 )}
 
-                {/* Price Summary + Booking Form side by side */}
-                <div ref={bookingRef} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-                    <TripBookingForm
-                        trip={trip}
-                        selectedOptionId={selectedOptionId}
-                        selectedAddOnIds={selectedAddOnIds}
-                        guestCount={guestCount}
-                        childrenCount={childrenCount}
-                        onGuestCountChange={setGuestCount}
-                        onChildrenCountChange={setChildrenCount}
-                        totalPrice={totalPrice}
-                        selectedOption={selectedOption || null}
-                        selectedAddOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
-                        optionQuantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 1}
-                    />
-                    {(trip.options.length > 0 || trip.addOns.length > 0) && totalPrice > 0 && (
-                        <div className="hidden lg:block">
-                            <TripPriceSummary
-                                selectedOption={selectedOption || null}
-                                quantity={selectedOption ? (optionQuantities[selectedOption.id] || 1) : 0}
-                                addOns={trip.addOns.filter((a) => selectedAddOnIds.has(a.id))}
-                                total={totalPrice}
-                                trip={{ slug: trip.slug, titleAr: trip.titleAr, heroImage: trip.heroImage, startingPrice: trip.startingPrice }}
-                            />
-                        </div>
-                    )}
-                </div>
+                {/* Gallery */}
+                {(trip.galleryImages.length > 0 || trip.youtubeUrl) && (
+                    <TripGallery images={trip.galleryImages} tripTitle={trip.titleAr} youtubeUrl={trip.youtubeUrl} />
+                )}
             </div>
+
         </main>
     );
 }

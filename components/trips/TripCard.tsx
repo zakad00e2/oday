@@ -1,50 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { TripDetail } from "@/lib/trips-types";
 import { ChevronLeft } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
-import TripQuickAddModal from "./TripQuickAddModal";
 
 export default function TripCard({ trip, index, featured = false }: { trip: TripDetail; index: number; featured?: boolean }) {
-    const { removeTrip, cart } = useCart();
-    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
-    const [showModal, setShowModal] = useState(false);
 
     return (
         <div className={`group relative block overflow-hidden rounded-3xl ${
                 featured ? "aspect-[4/5] md:aspect-[21/9]" : "aspect-[4/5]"
             }`}
         >
-            {/* Add to cart button */}
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (isInCart) {
-                        removeTrip(trip.slug);
-                    } else {
-                        setShowModal(true);
-                    }
-                }}
-                aria-label={isInCart ? "إزالة من السلة" : "إضافة للسلة"}
-                className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg shadow-md transition-all duration-200 ${
-                    isInCart
-                        ? "bg-[#0EA5E9] text-white scale-110"
-                        : "bg-white/90 text-[#0F172A] hover:bg-[#0EA5E9] hover:text-white"
-                }`}
-            >
-                {isInCart ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                )}
-            </button>
-
             <Link
                 href={`/trips/${trip.slug}`}
                 className="absolute inset-0"
@@ -82,19 +48,11 @@ export default function TripCard({ trip, index, featured = false }: { trip: Trip
 
                 {/* CTA */}
                 <span className="inline-flex items-center gap-2 text-sm font-bold text-white/90 group-hover:text-white group-hover:gap-3 transition-all duration-300">
-                    عرض التفاصيل
+                    عرض التفاصيل والحجز
                     <ChevronLeft className="w-4 h-4" />
                 </span>
             </div>
             </Link>
-
-            {/* Quick Add Modal */}
-            {showModal && (
-                <TripQuickAddModal
-                    trip={trip}
-                    onClose={() => setShowModal(false)}
-                />
-            )}
         </div>
     );
 }
