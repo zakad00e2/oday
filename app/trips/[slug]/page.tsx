@@ -20,13 +20,19 @@ export default function TripDetailPage() {
         if (trip && trip.options.length > 0) return trip.options[0].id;
         return null;
     });
-    const [optionQuantities, setOptionQuantities] = useState<Record<string, number>>(() => {
+    const [personCounts, setPersonCounts] = useState<Record<string, number>>(() => {
         if (!trip) return {};
-        const q: Record<string, number> = {};
-        trip.options.forEach((o) => { q[o.id] = 1; });
-        return q;
+        const p: Record<string, number> = {};
+        trip.options.forEach((o) => { p[o.id] = 1; });
+        return p;
     });
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
+    const [addOnPersonCounts, setAddOnPersonCounts] = useState<Record<string, number>>(() => {
+        if (!trip) return {};
+        const p: Record<string, number> = {};
+        trip.addOns.forEach((a) => { p[a.id] = 1; });
+        return p;
+    });
 
     const optionsRef = useRef<HTMLDivElement>(null);
 
@@ -48,13 +54,13 @@ export default function TripDetailPage() {
 
     // --- Price computation ---
     const selectedOption = trip.options.find((o) => o.id === selectedOptionId) || null;
-    const optionPrice = selectedOption
-        ? selectedOption.price * (optionQuantities[selectedOption.id] || 1)
-        : 0;
+    const selectedPersons = selectedOption ? (personCounts[selectedOption.id] || 1) : 1;
     const addOnsTotal = trip.addOns
         .filter((a) => selectedAddOnIds.has(a.id))
-        .reduce((sum, a) => sum + a.price, 0);
-    const totalPrice = optionPrice + addOnsTotal;
+        .reduce((sum, a) => sum + a.price * (addOnPersonCounts[a.id] || 1), 0);
+    const totalPriceGroup = selectedOption
+        ? selectedOption.price * selectedPersons + addOnsTotal
+        : 0;
 
     const toggleAddOn = (id: string) => {
         setSelectedAddOnIds((prev) => {
@@ -63,10 +69,6 @@ export default function TripDetailPage() {
             else next.add(id);
             return next;
         });
-    };
-
-    const updateQuantity = (optionId: string, qty: number) => {
-        setOptionQuantities((prev) => ({ ...prev, [optionId]: Math.max(1, qty) }));
     };
 
     const scrollToOptions = () => {
@@ -86,11 +88,12 @@ export default function TripDetailPage() {
             titleAr: trip.titleAr,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
+            persons: selectedPersons,
             selectedOption: selectedOption
                 ? { nameAr: selectedOption.nameAr, price: selectedOption.price }
                 : undefined,
             selectedAddOns: selectedAddOns.length > 0
-                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price }))
+                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
                 : undefined,
         });
         openCart();
@@ -151,7 +154,6 @@ export default function TripDetailPage() {
                                         <div className="flex flex-col gap-3">
                                             {trip.options.map((option) => {
                                                 const isSelected = selectedOptionId === option.id;
-                                                const qty = optionQuantities[option.id] || 1;
                                                 return (
                                                     <div
                                                         key={option.id}
@@ -188,16 +190,19 @@ export default function TripDetailPage() {
                                                                 {option.price > 0 ? `$${option.price}` : "—"}
                                                             </span>
                                                         </div>
-                                                        {isSelected && option.maxQuantity && option.maxQuantity > 1 && (
+                                                        {isSelected && (
                                                             <div className="mt-3 mr-7 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                                                <span className="text-xs text-[#64748b]">الكمية:</span>
+                                                                <svg className="w-4 h-4 text-[#64748b] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                <span className="text-xs text-[#64748b]">عدد الأشخاص:</span>
                                                                 <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
-                                                                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(option.id, qty - 1); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition" disabled={qty <= 1}>−</button>
-                                                                    <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-[32px] text-center">{qty}</span>
-                                                                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(option.id, qty + 1); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition" disabled={qty >= (option.maxQuantity || 99)}>+</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: Math.max(1, (prev[option.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">−</button>
+                                                                    <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-[28px] text-center">{personCounts[option.id] || 1}</span>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: (prev[option.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">+</button>
                                                                 </div>
-                                                                {option.price > 0 && qty > 1 && (
-                                                                    <span className="text-xs font-bold text-[#2563EB]">= ${option.price * qty}</span>
+                                                                {option.price > 0 && (personCounts[option.id] || 1) > 1 && (
+                                                                    <span className="text-xs font-bold text-[#2563EB]">= ${option.price * (personCounts[option.id] || 1)}</span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -223,10 +228,14 @@ export default function TripDetailPage() {
                                             {trip.addOns.map((addOn) => {
                                                 const isAddonSelected = selectedAddOnIds.has(addOn.id);
                                                 return (
-                                                    <button
+                                                    <div
                                                         key={addOn.id}
+                                                        role="checkbox"
+                                                        aria-checked={isAddonSelected}
+                                                        tabIndex={0}
                                                         onClick={() => toggleAddOn(addOn.id)}
-                                                        className={`w-full text-right p-4 rounded-2xl border-2 transition-all ${
+                                                        onKeyDown={(e) => e.key === "Enter" && toggleAddOn(addOn.id)}
+                                                        className={`w-full text-right p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                                                             isAddonSelected
                                                                 ? "border-[#F59E0B] bg-[#F59E0B]/5"
                                                                 : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"
@@ -248,13 +257,27 @@ export default function TripDetailPage() {
                                                                     {addOn.descriptionAr && <p className="text-xs text-[#64748b] mt-0.5">{addOn.descriptionAr}</p>}
                                                                 </div>
                                                             </div>
-                                                            <span className={`font-black shrink-0 ${
-                                                                isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"
-                                                            }`}>
+                                                            <span className={`font-black shrink-0 ${isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
                                                                 {addOn.price > 0 ? `$${addOn.price}` : "—"}
                                                             </span>
                                                         </div>
-                                                    </button>
+                                                        {isAddonSelected && (
+                                                            <div className="mt-3 mr-7 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                                <svg className="w-4 h-4 text-[#64748b] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                <span className="text-xs text-[#64748b]">عدد الأشخاص:</span>
+                                                                <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
+                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: Math.max(1, (prev[addOn.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">−</button>
+                                                                    <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-7 text-center">{addOnPersonCounts[addOn.id] || 1}</span>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: (prev[addOn.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition">+</button>
+                                                                </div>
+                                                                {addOn.price > 0 && (addOnPersonCounts[addOn.id] || 1) > 1 && (
+                                                                    <span className="text-xs font-bold text-[#F59E0B]">= ${addOn.price * (addOnPersonCounts[addOn.id] || 1)}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 );
                                             })}
                                         </div>
@@ -276,13 +299,18 @@ export default function TripDetailPage() {
                                     <div className="flex items-baseline gap-1.5">
                                         <span className="text-xs text-[#94a3b8]">الإجمالي</span>
                                         <span className="text-2xl font-black text-[#2563EB]">
-                                            {totalPrice > 0
-                                                ? `$${totalPrice}`
+                                            {totalPriceGroup > 0
+                                                ? `$${totalPriceGroup}`
                                                 : trip.startingPrice > 0
                                                     ? `يبدأ من $${trip.startingPrice}`
                                                     : "عند الطلب"}
                                         </span>
-                                        <span className="text-xs text-[#94a3b8]">/ شخص</span>
+                                        {totalPriceGroup > 0 && selectedPersons > 1 && (
+                                            <span className="text-xs text-[#94a3b8]">لـ {selectedPersons} أشخاص</span>
+                                        )}
+                                        {totalPriceGroup > 0 && selectedPersons === 1 && (
+                                            <span className="text-xs text-[#94a3b8]">/ شخص</span>
+                                        )}
                                     </div>
                                 </div>
                                 {isInCart ? (
