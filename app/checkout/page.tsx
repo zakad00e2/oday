@@ -51,9 +51,11 @@ export default function CheckoutPage() {
             msg += `🗺️ *الرحلات:*\n`;
             cart.trips.forEach((t) => {
                 msg += `  • ${t.titleAr}`;
-                if (t.selectedOption) {
-                    msg += ` — ${t.selectedOption.nameAr}`;
-                    if (t.selectedOption.price > 0) msg += ` ($${t.selectedOption.price}/شخص)`;
+                if (t.selectedOptions && t.selectedOptions.length > 0) {
+                    t.selectedOptions.forEach((opt) => {
+                        msg += ` — ${opt.nameAr}`;
+                        if (opt.price > 0) msg += ` ($${opt.price}/شخص)`;
+                    });
                 }
                 msg += "\n";
                 if (t.selectedAddOns && t.selectedAddOns.length > 0) {
