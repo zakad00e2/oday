@@ -1,6 +1,7 @@
 "use client";
 
 import { TripDetail } from "@/lib/trips-types";
+import Image from "next/image";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripDetailHero({ trip, onBookNow }: { trip: TripDetail; onBookNow: () => void }) {
@@ -11,11 +12,13 @@ export default function TripDetailHero({ trip, onBookNow }: { trip: TripDetail; 
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col justify-end mx-auto max-w-[1600px] shadow-2xl">
 
                 {/* Background image */}
-                <img
+                <Image
                     src={trip.heroImage}
                     alt={trip.titleAr}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="eager"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
 
                 {/* Overlay */}

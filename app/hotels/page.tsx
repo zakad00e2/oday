@@ -1,4 +1,5 @@
 ﻿import Hotels from "@/components/Hotels";
+import HotelsHero from "@/components/HotelsHero";
 
 export const metadata = {
   title: "الفنادق | Oday Tourism",
@@ -7,8 +8,11 @@ export const metadata = {
 
 export default function HotelsPage() {
   return (
-    <main className="pt-20">
-      <Hotels />
+    <main>
+      <HotelsHero />
+      <div id="hotels">
+        <Hotels />
+      </div>
     </main>
   );
 }

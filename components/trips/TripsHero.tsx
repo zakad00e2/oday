@@ -1,6 +1,7 @@
 "use client";
 
 import ScrollReveal from "../ScrollReveal";
+import Image from "next/image";
 
 export default function TripsHero() {
     const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent("مرحباً، أريد الاستفسار عن الرحلات المتاحة")}`;
@@ -16,11 +17,13 @@ export default function TripsHero() {
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
 
                 {/* Background image */}
-                <img
+                <Image
                     src="/clear.png"
                     alt="رحلات سياحية فاخرة"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="eager"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
 
                 {/* Overlay */}

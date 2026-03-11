@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { TripDetail } from "@/lib/trips-types";
 import { ChevronLeft } from "lucide-react";
 
@@ -17,11 +18,13 @@ export default function TripCard({ trip, index, featured = false }: { trip: Trip
                 aria-label={trip.titleAr}
             >
             {/* Background Image */}
-            <img
+            <Image
                 src={trip.heroImage}
                 alt={trip.titleAr}
-                loading={index === 0 ? "eager" : "lazy"}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority={index === 0}
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
 
             {/* Gradient Overlay */}

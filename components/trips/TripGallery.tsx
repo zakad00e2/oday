@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripGallery({ images, tripTitle, youtubeUrl }: { images: string[]; tripTitle: string; youtubeUrl?: string }) {
@@ -43,11 +44,12 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                                     onClick={() => setLightboxIdx(i)}
                                     className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
                                 >
-                                    <img
+                                    <Image
                                         src={img}
                                         alt={`${tripTitle} - صورة ${i + 1}`}
-                                        loading="lazy"
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        fill
+                                        sizes="(max-width: 768px) 50vw, 33vw"
+                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                                         <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -68,11 +70,12 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                                         onClick={() => setLightboxIdx(i + 4)}
                                         className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
                                     >
-                                        <img
+                                        <Image
                                             src={img}
                                             alt={`${tripTitle} - صورة ${i + 5}`}
-                                            loading="lazy"
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            fill
+                                            sizes="(max-width: 768px) 50vw, 33vw"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                                             <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -98,11 +101,12 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                                 onClick={() => setLightboxIdx(i)}
                                 className={`relative w-full h-full overflow-hidden rounded-2xl group cursor-pointer aspect-square`}
                             >
-                                <img
+                                <Image
                                     src={img}
                                     alt={`${tripTitle} - صورة ${i + 1}`}
-                                    loading="lazy"
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, 33vw"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                                     <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
