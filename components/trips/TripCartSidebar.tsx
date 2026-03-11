@@ -28,8 +28,8 @@ export default function TripCartSidebar({
             titleAr: trip.titleAr,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
-            selectedOption: selectedOption
-                ? { nameAr: selectedOption.nameAr, price: selectedOption.price }
+            selectedOptions: selectedOption
+                ? [{ nameAr: selectedOption.nameAr, price: selectedOption.price }]
                 : undefined,
             selectedAddOns: selectedAddOns.length > 0
                 ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price }))

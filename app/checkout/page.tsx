@@ -238,8 +238,8 @@ export default function CheckoutPage() {
 
                             {/* Trips */}
                             {cart.trips.map((trip) => {
-                                const tripCost = trip.selectedOption
-                                    ? (trip.selectedOption.price + (trip.selectedAddOns || []).reduce((s, a) => s + a.price, 0)) * guestsTotal
+                                const tripCost = trip.selectedOptions && trip.selectedOptions.length > 0
+                                    ? (trip.selectedOptions[0].price + (trip.selectedAddOns || []).reduce((s, a) => s + a.price, 0)) * guestsTotal
                                     : trip.startingPrice > 0 ? trip.startingPrice * guestsTotal : 0;
                                 return (
                                     <div key={trip.slug} className="flex gap-3 pb-4 border-b border-[#f1f5f9] last:border-0 last:pb-0">
@@ -247,8 +247,8 @@ export default function CheckoutPage() {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs text-[#0EA5E9] font-semibold">رحلة</p>
                                             <p className="text-sm font-bold text-[#0f172a] line-clamp-1">{trip.titleAr}</p>
-                                            {trip.selectedOption && (
-                                                <p className="text-xs text-[#64748b]">{trip.selectedOption.nameAr}</p>
+                                            {trip.selectedOptions && trip.selectedOptions.length > 0 && (
+                                                <p className="text-xs text-[#64748b]">{trip.selectedOptions.map(o => o.nameAr).join("، ")}</p>
                                             )}
                                             {trip.selectedAddOns && trip.selectedAddOns.length > 0 && (
                                                 <p className="text-xs text-[#94a3b8]">
