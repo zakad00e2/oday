@@ -35,6 +35,7 @@ export default function TripDetailPage() {
 
     const { addTrip, removeTrip, cart, openCart } = useCart();
     const [wasUpdated, setWasUpdated] = useState(false);
+    const [justAdded, setJustAdded] = useState(false);
 
     // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)
     useEffect(() => {
@@ -119,12 +120,20 @@ export default function TripDetailPage() {
     const isInCart = cart.trips.some((t) => t.slug === trip.slug);
     const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
 
-    // Reset wasUpdated when user changes options or add-ons
+    // Reset wasUpdated when user changes options or add-ons (but not immediately after adding)
     useEffect(() => {
-        if (isInCart) {
+        if (isInCart && !justAdded) {
             setWasUpdated(false);
         }
-    }, [selectedOptionIds.size, selectedAddOnIds.size, JSON.stringify(personCounts), JSON.stringify(addOnPersonCounts), isInCart]);
+    }, [selectedOptionIds.size, selectedAddOnIds.size, JSON.stringify(personCounts), JSON.stringify(addOnPersonCounts), isInCart, justAdded]);
+
+    // Reset justAdded flag after a short delay
+    useEffect(() => {
+        if (justAdded) {
+            const timeout = setTimeout(() => setJustAdded(false), 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [justAdded]);
 
     const toggleAddOn = (id: string) => {
         setSelectedAddOnIds((prev) => {
@@ -153,6 +162,7 @@ export default function TripDetailPage() {
     };
 
     const handleAddToCart = () => {
+        const wasInCartBefore = isInCart;
         addTrip({
             slug: trip.slug,
             titleAr: trip.titleAr,
@@ -165,10 +175,10 @@ export default function TripDetailPage() {
                 ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
                 : undefined,
         });
-        if (isInCart) {
-            setWasUpdated(true);
-        } else {
-            openCart();
+        // Always show "View Cart" button after adding/updating
+        setWasUpdated(true);
+        if (!wasInCartBefore) {
+            setJustAdded(true);
         }
     };
 
@@ -198,7 +208,7 @@ export default function TripDetailPage() {
 
                 {/* ── Combined Booking Section ── */}
                 {(trip.options.length > 0 || trip.addOns.length > 0) && (
-                    <div ref={optionsRef} className="py-10 md:py-14" dir="rtl">
+                    <div id="booking" ref={optionsRef} className="py-10 md:py-14" dir="rtl">
                         <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
 
                             {/* Header */}
@@ -402,6 +412,7 @@ export default function TripDetailPage() {
                                             onClick={() => {
                                                 removeTrip(trip.slug);
                                                 setWasUpdated(false);
+                                                setJustAdded(false);
                                             }}
                                             className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
                                         >
