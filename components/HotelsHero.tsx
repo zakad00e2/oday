@@ -35,11 +35,7 @@ export default function HotelsHero() {
                     {/* Heading */}
                     <ScrollReveal delay={100}>
                         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
-                            اختر إقامتك في أفخم
-                            <br />
-                            <span className="inline-block text-transparent bg-clip-text bg-gradient-to-l from-[#93C5FD] to-white pb-2">
-                                فنادق شرم الشيخ
-                            </span>
+                         اختر اقامتك بارقى الوجهات السياحية
                         </h1>
                     </ScrollReveal>
 

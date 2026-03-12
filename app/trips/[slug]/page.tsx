@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getTripBySlug } from "@/lib/trips-data";
@@ -34,6 +34,65 @@ export default function TripDetailPage() {
     const optionsRef = useRef<HTMLDivElement>(null);
 
     const { addTrip, removeTrip, cart, openCart } = useCart();
+    const [wasUpdated, setWasUpdated] = useState(false);
+
+    // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)
+    useEffect(() => {
+        if (!trip) return;
+        
+        const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
+        if (!cartTrip) return;
+
+        // Load selected options
+        if (cartTrip.selectedOptions && cartTrip.selectedOptions.length > 0) {
+            const optionIds = new Set<string>();
+            const newPersonCounts: Record<string, number> = {};
+            
+            // Initialize all options to 1 first
+            trip.options.forEach((o) => { newPersonCounts[o.id] = 1; });
+            
+            cartTrip.selectedOptions.forEach((selectedOption) => {
+                // Find matching option by name (since we only store nameAr in cart)
+                const matchingOption = trip.options.find((o) => o.nameAr === selectedOption.nameAr);
+                if (matchingOption) {
+                    optionIds.add(matchingOption.id);
+                    newPersonCounts[matchingOption.id] = selectedOption.persons || 1;
+                }
+            });
+            
+            setSelectedOptionIds(optionIds);
+            setPersonCounts(newPersonCounts);
+        }
+
+        // Load selected add-ons
+        if (cartTrip.selectedAddOns && cartTrip.selectedAddOns.length > 0) {
+            const addOnIds = new Set<string>();
+            const newAddOnPersonCounts: Record<string, number> = {};
+            
+            // Initialize all add-ons to 1 first
+            trip.addOns.forEach((a) => { newAddOnPersonCounts[a.id] = 1; });
+            
+            cartTrip.selectedAddOns.forEach((selectedAddOn) => {
+                // Find matching add-on by name (since we only store nameAr in cart)
+                const matchingAddOn = trip.addOns.find((a) => a.nameAr === selectedAddOn.nameAr);
+                if (matchingAddOn) {
+                    addOnIds.add(matchingAddOn.id);
+                    newAddOnPersonCounts[matchingAddOn.id] = selectedAddOn.persons || 1;
+                }
+            });
+            
+            setSelectedAddOnIds(addOnIds);
+            setAddOnPersonCounts(newAddOnPersonCounts);
+        }
+    }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);  // Re-run when this trip's cart data changes
+
+    // Reset wasUpdated when trip is removed from cart or when selections change
+    useEffect(() => {
+        const tripInCart = cart.trips.some((t) => t.slug === trip?.slug);
+        if (!tripInCart) {
+            setWasUpdated(false);
+        }
+    }, [cart.trips.length, trip?.slug]);
 
     if (!trip) {
         return (
@@ -56,6 +115,16 @@ export default function TripDetailPage() {
         .filter((a) => selectedAddOnIds.has(a.id))
         .reduce((sum, a) => sum + a.price * (addOnPersonCounts[a.id] || 1), 0);
     const totalPriceGroup = optionsTotal + addOnsTotal;
+
+    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
+    const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
+
+    // Reset wasUpdated when user changes options or add-ons
+    useEffect(() => {
+        if (isInCart) {
+            setWasUpdated(false);
+        }
+    }, [selectedOptionIds.size, selectedAddOnIds.size, JSON.stringify(personCounts), JSON.stringify(addOnPersonCounts), isInCart]);
 
     const toggleAddOn = (id: string) => {
         setSelectedAddOnIds((prev) => {
@@ -83,9 +152,6 @@ export default function TripDetailPage() {
         window.scrollTo({ top, behavior: "smooth" });
     };
 
-    const isInCart = cart.trips.some((t) => t.slug === trip.slug);
-    const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
-
     const handleAddToCart = () => {
         addTrip({
             slug: trip.slug,
@@ -99,7 +165,19 @@ export default function TripDetailPage() {
                 ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
                 : undefined,
         });
-        openCart();
+        if (isInCart) {
+            setWasUpdated(true);
+        } else {
+            openCart();
+        }
+    };
+
+    const handleUpdateOrViewCart = () => {
+        if (wasUpdated) {
+            openCart();
+        } else {
+            handleAddToCart();
+        }
     };
 
     return (
@@ -321,28 +399,35 @@ export default function TripDetailPage() {
                                 {isInCart ? (
                                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                         <button
-                                            onClick={() => removeTrip(trip.slug)}
+                                            onClick={() => {
+                                                removeTrip(trip.slug);
+                                                setWasUpdated(false);
+                                            }}
                                             className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
                                         >
                                             إزالة
                                         </button>
                                         <button
-                                            onClick={handleAddToCart}
-                                            className="py-3 px-5 rounded-2xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-[0.98] cursor-pointer"
+                                            onClick={handleUpdateOrViewCart}
+                                            className={`py-3 px-5 rounded-2xl text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-[0.98] cursor-pointer ${
+                                                wasUpdated ? 'bg-[#10B981] hover:bg-[#059669]' : 'bg-[#2563EB] hover:bg-[#1d4ed8]'
+                                            }`}
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                            تحديث الخيارات
-                                        </button>
-                                        <button
-                                            onClick={openCart}
-                                            className="py-3 px-5 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            عرض السلة
+                                            {wasUpdated ? (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    عرض السلة
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    تعديل الحجز
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 ) : (
