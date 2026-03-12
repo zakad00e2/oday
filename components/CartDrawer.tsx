@@ -25,7 +25,6 @@ export default function CartDrawer() {
     closeCart,
     removeTrip,
     setHotel,
-    setNights,
     totalPrice,
     totalItems,
     clearCart,
@@ -189,20 +188,32 @@ export default function CartDrawer() {
                   </div>
                   {/* Hotel controls */}
                   <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <svg className="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                        <span className="text-xs text-[#64748B]">الليالي</span>
-                      </div>
-                      <Counter
-                        value={cart.nights}
-                        onDec={() => setNights(cart.nights - 1)}
-                        onInc={() => setNights(cart.nights + 1)}
-                      />
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                      <span className="text-xs text-[#64748B]">{cart.nights} ليالي</span>
+                      <span className="text-base font-extrabold text-[#0F172A] mr-1">${hotelCost}</span>
                     </div>
-                    <div className="text-left">
-                      <span className="text-base font-extrabold text-[#0F172A]">${hotelCost}</span>
+                    <div className="flex items-center gap-2">
+                      {/* Edit button */}
+                      <Link
+                        href={`/hotels/${cart.hotel.slug}#booking`}
+                        onClick={closeCart}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFF6FF] text-[#2563EB] text-xs font-bold hover:bg-[#DBEAFE] transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        تعديل
+                      </Link>
+                      {/* Delete button */}
+                      <button
+                        onClick={() => setHotel(null)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FEF2F2] text-[#EF4444] text-xs font-bold hover:bg-[#FEE2E2] transition-colors"
+                        aria-label="إزالة الفندق"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      
+                      </button>
                     </div>
+                    
                   </div>
                 </div>
               )}

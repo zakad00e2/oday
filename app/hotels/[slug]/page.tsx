@@ -116,7 +116,7 @@ function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHot
 }
 
 /* ─── Gallery ───────────────────────────────────────────────── */
-function HotelGallery({ images, name }: { images: string[]; name: string }) {
+function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: string; youtubeUrl?: string }) {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     return (
         <section id="gallery" className="py-10 md:py-14 border-b border-[#e2e8f0] scroll-mt-24">
@@ -130,44 +130,157 @@ function HotelGallery({ images, name }: { images: string[]; name: string }) {
                     <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">صور الفندق</h2>
                 </div>
             </ScrollReveal>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                {images.map((img, i) => (
-                    <ScrollReveal key={i} delay={i * 60}>
-                        <button
-                            onClick={() => setLightboxIdx(i)}
-                            className={`relative overflow-hidden rounded-2xl group cursor-pointer block w-full ${i === 0 ? "aspect-video md:col-span-2 md:row-span-2" : "aspect-square"}`}
-                        >
-                            <Image src={img} alt={`${name} - ${i + 1}`} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
-                            </div>
-                        </button>
-                    </ScrollReveal>
-                ))}
-            </div>
-            {/* Lightbox */}
-            {lightboxIdx !== null && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxIdx(null)}>
-                    <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => setLightboxIdx(null)} className="absolute -top-12 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                        <img src={images[lightboxIdx]} alt={name} className="w-full rounded-2xl object-cover max-h-[75vh]" />
-                        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-3">
-                            <button onClick={() => setLightboxIdx((p) => ((p ?? 0) + 1) % images.length)} className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                            </button>
-                            <button onClick={() => setLightboxIdx((p) => ((p ?? 0) - 1 + images.length) % images.length)} className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                            </button>
+
+            {youtubeUrl ? (
+                /* Video + Images layout */
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    {/* Video - takes full height on mobile, 2 rows on desktop */}
+                    <ScrollReveal delay={0} className="md:row-span-2 w-full h-full">
+                        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#f0f0f0] w-full h-full min-h-[300px] aspect-[9/16] md:aspect-auto">
+                            <iframe
+                                src={youtubeUrl}
+                                title="فيديو الفندق"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-full absolute inset-0"
+                            />
                         </div>
-                        <div className="flex justify-center gap-2 mt-4">
-                            {images.map((_, i) => (
-                                <button key={i} onClick={() => setLightboxIdx(i)} className={`h-2.5 rounded-full transition-all ${i === lightboxIdx ? "bg-white w-6" : "bg-white/40 w-2.5"}`} />
+                    </ScrollReveal>
+
+                    {/* Images beside video */}
+                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                        {images.slice(0, 4).map((img, i) => (
+                            <ScrollReveal key={i} delay={(i + 1) * 60} className="w-full h-full">
+                                <button
+                                    onClick={() => setLightboxIdx(i)}
+                                    className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
+                                >
+                                    <Image
+                                        src={img}
+                                        alt={`${name} - صورة ${i + 1}`}
+                                        fill
+                                        sizes="(max-width: 768px) 50vw, 33vw"
+                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </ScrollReveal>
+                        ))}
+                    </div>
+
+                    {/* Extra images below */}
+                    {images.length > 4 && (
+                        <div className="col-span-full grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-3">
+                            {images.slice(4).map((img, i) => (
+                                <ScrollReveal key={i + 4} delay={(i + 5) * 60} className="w-full h-full">
+                                    <button
+                                        onClick={() => setLightboxIdx(i + 4)}
+                                        className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
+                                    >
+                                        <Image
+                                            src={img}
+                                            alt={`${name} - صورة ${i + 5}`}
+                                            fill
+                                            sizes="(max-width: 768px) 50vw, 33vw"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                </ScrollReveal>
                             ))}
                         </div>
+                    )}
+                </div>
+            ) : (
+                /* Images only grid */
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                    {images.map((img, i) => (
+                        <ScrollReveal
+                            key={i}
+                            delay={i * 60}
+                            className={i === 0 ? "col-span-2 md:col-span-2 row-span-2 w-full h-full" : "w-full h-full"}
+                        >
+                            <button
+                                onClick={() => setLightboxIdx(i)}
+                                className="relative w-full h-full overflow-hidden rounded-2xl group cursor-pointer aspect-square block"
+                            >
+                                <Image
+                                    src={img}
+                                    alt={`${name} - صورة ${i + 1}`}
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, 33vw"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                    </svg>
+                                </div>
+                            </button>
+                        </ScrollReveal>
+                    ))}
+                </div>
+            )}
+
+            {/* Lightbox */}
+            {lightboxIdx !== null && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+                    onClick={() => setLightboxIdx(null)}
+                >
+                    <button
+                        className="absolute top-6 left-6 text-white/80 hover:text-white transition z-10 cursor-pointer"
+                        onClick={() => setLightboxIdx(null)}
+                    >
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Prev */}
+                    <button
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setLightboxIdx((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1));
+                        }}
+                    >
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    {/* Next */}
+                    <button
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setLightboxIdx((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0));
+                        }}
+                    >
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+
+                    <img
+                        src={images[lightboxIdx]}
+                        alt={`${name} - صورة ${lightboxIdx + 1}`}
+                        className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+
+                    {/* Counter */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+                        {lightboxIdx + 1} / {images.length}
                     </div>
                 </div>
             )}
@@ -179,7 +292,7 @@ export default function HotelDetailPage() {
     const params = useParams();
     const slug = params?.slug as string;
     const hotel = getHotelBySlug(slug);
-    const { setHotel, cart, openCart } = useCart();
+    const { setHotel, cart, openCart, setNights } = useCart();
     const isInCart = cart.hotel?.id === hotel?.id;
 
     const [selectedRoom, setSelectedRoom] = useState(0);
@@ -187,6 +300,15 @@ export default function HotelDetailPage() {
     const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
+    const [savedRoom, setSavedRoom] = useState<number | null>(null);
+    const [savedCheckIn, setSavedCheckIn] = useState<string | null>(null);
+    const [savedCheckOut, setSavedCheckOut] = useState<string | null>(null);
+
+    const hasChanges = isInCart && savedRoom !== null && (
+        selectedRoom !== savedRoom ||
+        checkIn !== savedCheckIn ||
+        checkOut !== savedCheckOut
+    );
 
     const nights = Math.max(1, Math.round(
         (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000
@@ -288,11 +410,6 @@ export default function HotelDetailPage() {
                             {/* Room selector */}
                             <div>
                                 <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                                        </svg>
-                                    </div>
                                     <h3 className="font-bold text-[#0f172a]">نوع الغرفة</h3>
                                 </div>
                                 <div className="flex flex-col gap-3">
@@ -311,7 +428,11 @@ export default function HotelDetailPage() {
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex items-start gap-2.5 flex-1">
                                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1]"}`}>
-                                                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                                                            {isSelected && (
+                                                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-[#0f172a] text-sm leading-tight">{r.name}</p>
@@ -331,11 +452,6 @@ export default function HotelDetailPage() {
                             {/* Dates */}
                             <div className="flex flex-col gap-5">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
                                     <h3 className="font-bold text-[#0f172a]">تواريخ الإقامة</h3>
                                 </div>
 
@@ -398,21 +514,35 @@ export default function HotelDetailPage() {
                                     onClick={() => {
                                         setHotel({
                                             id: hotel.id,
+                                            slug: hotel.slug,
                                             name: hotel.name,
                                             city: hotel.city,
                                             image: hotel.image,
                                             pricePerNight: room.price,
                                             stars: hotel.stars,
                                         });
+                                        setNights(nights);
+                                        setSavedRoom(selectedRoom);
+                                        setSavedCheckIn(checkIn);
+                                        setSavedCheckOut(checkOut);
                                         openCart();
                                     }}
                                     className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-2xl font-bold text-base transition-all duration-300 active:scale-[0.97] ${
-                                        isInCart
+                                        hasChanges
+                                            ? "bg-[#0284C7] text-white hover:bg-[#0369A1]"
+                                            : isInCart
                                             ? "bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]"
-                                            : "bg-gradient-to-l from-[#0369A1] via-[#0284C7] to-[#0EA5E9] text-white shadow-[0_4px_20px_rgba(14,165,233,0.4)] hover:shadow-[0_4px_24px_rgba(14,165,233,0.55)] hover:brightness-110"
+                                            : "bg-[#0284C7] text-white hover:bg-[#0369A1]"
                                     }`}
                                 >
-                                    {isInCart ? (
+                                    {hasChanges ? (
+                                        <>
+                                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            تعديل الحجز
+                                        </>
+                                    ) : isInCart ? (
                                         <>
                                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -435,7 +565,7 @@ export default function HotelDetailPage() {
                 </div>
 
                 {/* ── Gallery ── */}
-                <HotelGallery images={hotel.gallery} name={hotel.name} />
+                <HotelGallery images={hotel.gallery} name={hotel.name} youtubeUrl={hotel.youtubeUrl} />
 
             </div>
         </main>

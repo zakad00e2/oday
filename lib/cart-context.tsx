@@ -13,6 +13,7 @@ import {
 
 export interface CartHotel {
   id: number;
+  slug: string;
   name: string;
   city: string;
   image: string;
@@ -84,6 +85,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem("oday-cart");
       if (saved) {
         const parsed = JSON.parse(saved) as CartState;
+        // Drop hotel if missing slug (old data format)
+        if (parsed.hotel && !parsed.hotel.slug) {
+          parsed.hotel = null;
+        }
         setCart(parsed);
       }
     } catch {

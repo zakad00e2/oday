@@ -9,6 +9,7 @@ export interface HotelDetail {
   description: string;
   features: string[];
   gallery: string[];
+  youtubeUrl?: string;
   includes: string[];
   essentials: string[];
   amenities: { icon: string; label: string }[];
@@ -33,6 +34,7 @@ export const allHotels: HotelDetail[] = [
       "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1920&q=80",
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=80",
     ],
+    youtubeUrl: "https://www.youtube.com/embed/oQziT2AN8nE",
     includes: [
       "إقامة في غرفة مزدوجة فاخرة",
       "خدمة شاملة All Inclusive",

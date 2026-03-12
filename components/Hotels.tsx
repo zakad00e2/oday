@@ -205,11 +205,11 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
           </div>
           <Link
             href={`/hotels/${hotel.slug}`}
-            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold active:scale-[0.97] transition-all duration-200 shadow-sm bg-[#0F172A] text-white hover:bg-[#1E293B]"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#0f172a] hover:text-[#0EA5E9] hover:gap-3 transition-all duration-300"
           >
             التفاصيل والحجز
-            <svg className="w-3.5 h-3.5 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
         </div>
