@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { getHotelBySlug } from "@/lib/hotels-data";
 import { useCart } from "@/lib/cart-context";
@@ -12,6 +12,12 @@ import ScrollReveal from "@/components/ScrollReveal";
 function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHotelBySlug> & object; onBookNow: () => void }) {
     const images = hotel.gallery ?? [];
     const [idx, setIdx] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const timer = setInterval(() => setIdx((i) => (i + 1) % images.length), 4000);
+        return () => clearInterval(timer);
+    }, [images.length]);
 
     return (
         <section className="w-full px-3 md:px-5 pt-20 pb-10">
