@@ -126,7 +126,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
             <button
               onClick={prev}
               aria-label="الصورة السابقة"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -135,7 +135,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
             <button
               onClick={next}
               aria-label="الصورة التالية"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -207,7 +207,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
             href={`/hotels/${hotel.slug}`}
             className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold active:scale-[0.97] transition-all duration-200 shadow-sm bg-[#0F172A] text-white hover:bg-[#1E293B]"
           >
-            عرض التفاصيل
+            التفاصيل والحجز
             <svg className="w-3.5 h-3.5 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
             </svg>
