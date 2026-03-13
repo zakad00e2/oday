@@ -462,37 +462,40 @@ export default function HotelDetailPage() {
                                 </div>
 
 
-                                {/* Check-in */}
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-[#64748b]">تاريخ الوصول</label>
-                                    <div className="relative">
-                                        <input
-                                            type="date"
-                                            value={checkIn}
-                                            min={today}
-                                            onChange={(e) => {
-                                                setCheckIn(e.target.value);
-                                                if (e.target.value >= checkOut) {
-                                                    const d = new Date(e.target.value); d.setDate(d.getDate() + 1); const next = d.toISOString().split("T")[0];
-                                                    setCheckOut(next);
-                                                }
-                                            }}
-                                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
-                                        />
+                                {/* Dates Grid */}
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                    {/* Check-in */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">تاريخ الوصول</label>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={checkIn}
+                                                min={today}
+                                                onChange={(e) => {
+                                                    setCheckIn(e.target.value);
+                                                    if (e.target.value >= checkOut) {
+                                                        const d = new Date(e.target.value); d.setDate(d.getDate() + 1); const next = d.toISOString().split("T")[0];
+                                                        setCheckOut(next);
+                                                    }
+                                                }}
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Check-out */}
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-[#64748b]">تاريخ المغادرة</label>
-                                    <div className="relative">
-                                        <input
-                                            type="date"
-                                            value={checkOut}
-                                            min={(() => { const d = new Date(checkIn); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
-                                            onChange={(e) => setCheckOut(e.target.value)}
-                                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
-                                        />
+                                    {/* Check-out */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">تاريخ المغادرة</label>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={checkOut}
+                                                min={(() => { const d = new Date(checkIn); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
+                                                onChange={(e) => setCheckOut(e.target.value)}
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
