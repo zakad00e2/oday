@@ -34,7 +34,6 @@ export default function TripDetailPage() {
     const optionsRef = useRef<HTMLDivElement>(null);
 
     const { addTrip, removeTrip, cart, openCart } = useCart();
-    const [wasUpdated, setWasUpdated] = useState(false);
     const [justAdded, setJustAdded] = useState(false);
 
     // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)
@@ -87,12 +86,8 @@ export default function TripDetailPage() {
         }
     }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);  // Re-run when this trip's cart data changes
 
-    // Reset wasUpdated when trip is removed from cart or when selections change
     useEffect(() => {
-        const tripInCart = cart.trips.some((t) => t.slug === trip?.slug);
-        if (!tripInCart) {
-            setWasUpdated(false);
-        }
+        // Reserved for future cart updates if needed
     }, [cart.trips.length, trip?.slug]);
 
     if (!trip) {
@@ -118,14 +113,42 @@ export default function TripDetailPage() {
     const totalPriceGroup = optionsTotal + addOnsTotal;
 
     const isInCart = cart.trips.some((t) => t.slug === trip.slug);
+    const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
     const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
 
-    // Reset wasUpdated when user changes options or add-ons (but not immediately after adding)
-    useEffect(() => {
-        if (isInCart && !justAdded) {
-            setWasUpdated(false);
+    // Check if current selections differ from cart
+    let hasChanges = false;
+    if (isInCart && cartTrip) {
+        const cartOpts = cartTrip.selectedOptions || [];
+        if (cartOpts.length !== selectedOptions.length) {
+            hasChanges = true;
+        } else {
+            for (const co of cartOpts) {
+                const match = selectedOptions.find(o => o.nameAr === co.nameAr);
+                if (!match || (personCounts[match.id] || 1) !== (co.persons || 1)) {
+                    hasChanges = true;
+                    break;
+                }
+            }
         }
-    }, [selectedOptionIds.size, selectedAddOnIds.size, JSON.stringify(personCounts), JSON.stringify(addOnPersonCounts), isInCart, justAdded]);
+
+        if (!hasChanges) {
+            const cartAdds = cartTrip.selectedAddOns || [];
+            if (cartAdds.length !== selectedAddOns.length) {
+                hasChanges = true;
+            } else {
+                for (const ca of cartAdds) {
+                    const match = selectedAddOns.find(a => a.nameAr === ca.nameAr);
+                    if (!match || (addOnPersonCounts[match.id] || 1) !== (ca.persons || 1)) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // (Removed wasUpdated effect)
 
     // Reset justAdded flag after a short delay
     useEffect(() => {
@@ -175,18 +198,16 @@ export default function TripDetailPage() {
                 ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
                 : undefined,
         });
-        // Always show "View Cart" button after adding/updating
-        setWasUpdated(true);
         if (!wasInCartBefore) {
             setJustAdded(true);
         }
     };
 
     const handleUpdateOrViewCart = () => {
-        if (wasUpdated) {
-            openCart();
-        } else {
+        if (hasChanges) {
             handleAddToCart();
+        } else {
+            openCart();
         }
     };
 
@@ -235,11 +256,6 @@ export default function TripDetailPage() {
                                 {trip.options.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
-                                            <div className="w-7 h-7 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-                                                <svg className="w-3.5 h-3.5 text-[#2563EB]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                                                </svg>
-                                            </div>
                                             <h3 className="font-bold text-[#0f172a]">خيارات الرحلة</h3>
                                         </div>
                                         <div className="flex flex-col gap-3">
@@ -313,12 +329,7 @@ export default function TripDetailPage() {
                                 {trip.addOns.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
-                                            <div className="w-7 h-7 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center shrink-0">
-                                                <svg className="w-3.5 h-3.5 text-[#F59E0B]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                </svg>
-                                            </div>
-                                            <h3 className="font-bold text-[#0f172a]">الإضافات الاختيارية</h3>
+                                            <h3 className="font-bold text-[#0f172a]">الإضافات <span className="text-xs font-medium text-[#64748b]  px-0 py-0.5 rounded-md mr-1">(اختياري)</span></h3>
                                         </div>
                                         <div className="flex flex-col gap-3">
                                             {trip.addOns.map((addOn) => {
@@ -411,7 +422,6 @@ export default function TripDetailPage() {
                                         <button
                                             onClick={() => {
                                                 removeTrip(trip.slug);
-                                                setWasUpdated(false);
                                                 setJustAdded(false);
                                             }}
                                             className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
@@ -421,22 +431,22 @@ export default function TripDetailPage() {
                                         <button
                                             onClick={handleUpdateOrViewCart}
                                             className={`py-3 px-5 rounded-2xl text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-[0.98] cursor-pointer ${
-                                                wasUpdated ? 'bg-[#10B981] hover:bg-[#059669]' : 'bg-[#2563EB] hover:bg-[#1d4ed8]'
+                                                hasChanges ? 'bg-[#2563EB] hover:bg-[#1d4ed8]' : 'bg-[#10B981] hover:bg-[#059669]'
                                             }`}
                                         >
-                                            {wasUpdated ? (
-                                                <>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                    عرض السلة
-                                                </>
-                                            ) : (
+                                            {hasChanges ? (
                                                 <>
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                     </svg>
                                                     تعديل الحجز
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    عرض السلة
                                                 </>
                                             )}
                                         </button>
