@@ -241,9 +241,6 @@ export default function CartDrawer() {
                           />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">{trip.titleAr}</h4>
-                            <p className="text-sm font-extrabold text-[#0F172A] mt-1">
-                              {price > 0 ? `$${price}` : "السعر عند الطلب"}
-                            </p>
                           </div>
                         </div>
 
@@ -286,12 +283,10 @@ export default function CartDrawer() {
 
                         {/* Trip controls */}
                         <div className="px-4 py-3 flex items-center justify-between border-t border-[#F1F5F9]">
-                          <button className="text-xs text-[#94A3B8]">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-[#64748B]">الإجمالي:</span>
+                            <span className="text-base font-extrabold text-[#0F172A]">${price}</span>
+                          </div>
                           <div className="flex items-center gap-2">
                             {/* Edit button */}
                             <Link
