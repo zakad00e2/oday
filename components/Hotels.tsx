@@ -15,6 +15,8 @@ const hotels = [
     description: "منتجع فاخر على شاطئ البحر الأحمر مع خدمة شاملة وإطلالات ساحرة.",
     stars: 5,
     price: 120,
+    originalPrice: 150,
+    discount: "20%",
     features: ["إطلالة بحرية", "سبا وعافية", "مسبح لا متناهي", "مطاعم عالمية"],
     gallery: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
@@ -49,6 +51,8 @@ const hotels = [
     description: "ملاذ هادئ على ساحل البحر الأحمر مع مرافق عصرية وخدمة متميزة.",
     stars: 5,
     price: 100,
+    originalPrice: 125,
+    discount: "20%",
     features: ["حمام سباحة ساخن", "مركز لياقة", "مطعم بوفيه", "موقف سيارات"],
     gallery: [
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
@@ -108,6 +112,16 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
     <div className="group bg-white rounded-[24px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-xl transition-all duration-500">
       {/* Image Carousel */}
       <div className="relative overflow-hidden aspect-[16/10]">
+        {"discount" in hotel && hotel.discount && (
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-500/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-[11px] font-bold text-white tracking-wide">
+              خصم {hotel.discount}
+            </span>
+          </div>
+        )}
         {images.map((src, i) => (
           <Image
             key={src}
@@ -195,11 +209,18 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
 
         {/* Price + CTA */}
         <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
-          <div>
-            <span className="text-[11px] text-[#64748B] font-medium block mb-0.5">يبدأ من</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString('en-US') || "---"}</span>
-              <span className="text-sm font-semibold text-[#0EA5E9]">$</span>
+          <div className="flex flex-col">
+            <span className="text-[11px] text-[#64748B] font-medium mb-1">يبدأ من</span>
+            <div className="flex items-baseline gap-2">
+              {"originalPrice" in hotel && hotel.originalPrice && (
+                <span className="text-sm font-medium text-red-400 line-through">
+                  {hotel.originalPrice.toLocaleString('en-US')}$
+                </span>
+              )}
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-2xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString('en-US') || "---"}</span>
+                <span className="text-sm font-semibold text-[#0EA5E9]">$</span>
+              </div>
               <span className="text-xs text-[#94A3B8]">/ ليلة</span>
             </div>
           </div>
@@ -222,11 +243,13 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
 export default function Hotels() {
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [filterStars, setFilterStars] = useState<number>(0);
+  const [showDiscountsOnly, setShowDiscountsOnly] = useState<boolean>(false);
 
-  // Filter hotels based on selected city and stars
+  // Filter hotels based on selected city, stars, and discounts
   const filteredHotels = hotels.filter((h) => {
     if (selectedCity !== "all" && h.city !== selectedCity) return false;
     if (filterStars > 0 && h.stars < filterStars) return false;
+    if (showDiscountsOnly && !("discount" in h && h.discount)) return false;
     return true;
   });
 
@@ -249,20 +272,49 @@ export default function Hotels() {
               نختار لك أفضل الفنادق في أشهر الوجهات السياحية المصرية بأسعار تنافسية وخدمة متميزة.
             </p>
 
+            {/* Filter Tabs (All vs Offers) */}
+            <div className="flex justify-center mb-8">
+              <div className="inline-flex bg-[#F8FAFC] border border-[#E2E8F0] shadow-sm rounded-full p-1.5">
+                <button
+                  onClick={() => setShowDiscountsOnly(false)}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[13.5px] font-bold transition-all duration-300 ${
+                    !showDiscountsOnly 
+                    ? "bg-[#111] text-white shadow-sm" 
+                    : "text-[#64748B] hover:text-[#111]"
+                  }`}
+                >
+                  جميع الفنادق
+                </button>
+                <button
+                  onClick={() => setShowDiscountsOnly(true)}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[13.5px] font-bold transition-all duration-300 ${
+                    showDiscountsOnly 
+                    ? "bg-red-500 text-white shadow-sm" 
+                    : "text-[#64748B] hover:text-red-500"
+                  }`}
+                >
+                  {/* <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg> */}
+                  عروض وتخفيضات
+                </button>
+              </div>
+            </div>
+
             {/* Filter Bar */}
             <div className="w-full max-w-2xl mx-auto mb-10">
               <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm px-4 py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
 
                 {/* Region Filter */}
                 <div className="flex-1 flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-[#94A3B8] tracking-wide px-1">المنطقة</label>
+                  <label className="text-[11px] font-semibold text-[#94A3B8] tracking-wide px-1">الوجهة</label>
                   <div className="relative">
                     <select
                       value={selectedCity}
                       onChange={(e) => setSelectedCity(e.target.value)}
                       className="w-full appearance-none bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pr-4 pl-9 py-2.5 text-[13.5px] font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] cursor-pointer transition-all"
                     >
-                      <option value="all">كل المناطق</option>
+                      <option value="all">كل الوجهات</option>
                       {cities.map((city) => (
                         <option key={city} value={city}>{city}</option>
                       ))}
