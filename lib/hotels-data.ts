@@ -60,9 +60,9 @@ export const allHotels: HotelDetail[] = [
       { icon: "🚗", label: "خدمة توصيل" },
     ],
     rooms: [
-      { name: "غرفة مزدوجة فاخرة", price: 120, description: "غرفة واسعة مع إطلالة على الحديقة" },
-      { name: "غرفة بإطلالة بحرية", price: 160, description: "إطلالة مباشرة على البحر الأحمر" },
-      { name: "جناح فاخر", price: 220, description: "جناح واسع مع بلكونة وإطلالة بانورامية" },
+      { name: "غرفة مزدوجة فاخرة", price: 120, description: "شخصين" },
+      { name: "غرفة بإطلالة بحرية", price: 160, description: "شخصين + طفل" },
+      { name: "جناح فاخر", price: 220, description: "٤ أشخاص" },
     ],
   },
   {
@@ -107,9 +107,9 @@ export const allHotels: HotelDetail[] = [
       { icon: "📶", label: "Wi-Fi مجاني" },
     ],
     rooms: [
-      { name: "غرفة مزدوجة", price: 80, description: "غرفة مريحة مع إطلالة على الحديقة" },
-      { name: "غرفة عائلية", price: 120, description: "غرفة كبيرة مناسبة للعائلات" },
-      { name: "غرفة بإطلالة بحرية", price: 110, description: "إطلالة مباشرة على البحر" },
+      { name: "غرفة مزدوجة", price: 80, description: "شخصين" },
+      { name: "غرفة عائلية", price: 120, description: "٤ أشخاص + طفلين" },
+      { name: "غرفة بإطلالة بحرية", price: 110, description: "شخصين + طفل" },
     ],
   },
   {
@@ -153,9 +153,9 @@ export const allHotels: HotelDetail[] = [
       { icon: "🎾", label: "ملاعب رياضية" },
     ],
     rooms: [
-      { name: "غرفة مزدوجة", price: 100, description: "غرفة مريحة مع إطلالة جميلة" },
-      { name: "غرفة بإطلالة بحرية", price: 140, description: "إطلالة مباشرة على البحر الأحمر" },
-      { name: "جناح عائلي", price: 180, description: "جناح واسع مناسب للعائلات" },
+      { name: "غرفة مزدوجة", price: 100, description: "شخصين" },
+      { name: "غرفة بإطلالة بحرية", price: 140, description: "شخصين + طفل" },
+      { name: "جناح عائلي", price: 180, description: "٤ أشخاص + طفل" },
     ],
   },
   {
@@ -200,9 +200,9 @@ export const allHotels: HotelDetail[] = [
       { icon: "🚤", label: "رحلات بحرية" },
     ],
     rooms: [
-      { name: "غرفة ديلوكس", price: 150, description: "غرفة فاخرة مع إطلالة على البحر" },
-      { name: "جناح جونيور", price: 220, description: "جناح واسع مع صالة جلوس مستقلة" },
-      { name: "فيلا خاصة", price: 400, description: "فيلا مستقلة مع مسبح خاص" },
+      { name: "غرفة ديلوكس", price: 150, description: "شخصين" },
+      { name: "جناح جونيور", price: 220, description: "شخصين + طفلين" },
+      { name: "فيلا خاصة", price: 400, description: "٦ أشخاص" },
     ],
   },
 ];
