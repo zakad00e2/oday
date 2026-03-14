@@ -288,6 +288,12 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
     );
 }
 
+const hotelAddOnsData = [
+    { id: "sea_view", name: "إطلالة بحرية", price: 40, description: "غرفة بإطلالة مباشرة على البحر" },
+    { id: "pool_view", name: "إطلالة مسبح", price: 20, description: "غرفة بإطلالة على المسبح الخارجي" },
+    { id: "first_row", name: "صف أول على البحر", price: 60, description: "موقع في الصف الأول مباشرةً أمام الشاطئ" }
+];
+
 export default function HotelDetailPage() {
     const params = useParams();
     const slug = params?.slug as string;
@@ -296,13 +302,32 @@ export default function HotelDetailPage() {
     const isInCart = cart.hotel?.id === hotel?.id;
 
     const [selectedRoom, setSelectedRoom] = useState(0);
+    const [roomsCount, setRoomsCount] = useState(1);
+    const [selectedAddOns, setSelectedAddOns] = useState<string | null>(null);
     const today = new Date().toISOString().split("T")[0];
     const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
     const [savedRoom, setSavedRoom] = useState<number | null>(null);
+    const [savedRoomsCount, setSavedRoomsCount] = useState<number | null>(null);
+    const [savedAddOns, setSavedAddOns] = useState<string | null | undefined>(undefined);
     const [savedCheckIn, setSavedCheckIn] = useState<string | null>(null);
     const [savedCheckOut, setSavedCheckOut] = useState<string | null>(null);
+
+    // Initialize state from cart if it's already in the cart
+    useEffect(() => {
+        if (isInCart && cart.hotel) {
+            if (cart.hotel.roomName) {
+                const roomIndex = hotel?.rooms.findIndex(r => r.name === cart.hotel?.roomName);
+                if (roomIndex !== undefined && roomIndex !== -1) setSelectedRoom(roomIndex);
+                if (cart.hotel.roomsCount) setRoomsCount(cart.hotel.roomsCount);
+            }
+            if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
+                const found = hotelAddOnsData.find(a => a.name === cart.hotel!.selectedAddOns![0].name);
+                setSelectedAddOns(found ? found.id : null);
+            }
+        }
+    }, [isInCart, cart.hotel, hotel?.rooms]);
 
     const nights = Math.max(1, Math.round(
         (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000 
@@ -312,11 +337,22 @@ export default function HotelDetailPage() {
         document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
+    const isAddOnsChanged = () => {
+        const reference = savedAddOns !== undefined ? savedAddOns : (() => {
+            if (!isInCart || !cart.hotel?.selectedAddOns?.length) return null;
+            const found = hotelAddOnsData.find(a => a.name === cart.hotel!.selectedAddOns![0].name);
+            return found ? found.id : null;
+        })();
+        return selectedAddOns !== reference;
+    };
+
     const hasChanges = Boolean(
         isInCart && (
             (savedRoom !== null ? selectedRoom !== savedRoom : hotel?.rooms[selectedRoom].price !== cart.hotel?.pricePerNight) ||
+            (savedRoomsCount !== null ? roomsCount !== savedRoomsCount : roomsCount !== (cart.hotel?.roomsCount || 1)) ||
             (savedCheckIn !== null && checkIn !== savedCheckIn) ||
-            (savedCheckOut !== null ? checkOut !== savedCheckOut : nights !== cart.nights)
+            (savedCheckOut !== null ? checkOut !== savedCheckOut : nights !== cart.nights) ||
+            isAddOnsChanged()
         )
     );
 
@@ -335,7 +371,13 @@ export default function HotelDetailPage() {
     }
 
     const room = hotel.rooms[selectedRoom];
-    const totalPrice = room.price * nights;
+    let addonsPriceTotal = 0;
+    if (selectedAddOns) {
+        const found = hotelAddOnsData.find(a => a.id === selectedAddOns);
+        if (found) addonsPriceTotal = found.price;
+    }
+
+    const totalPrice = (room.price * roomsCount + addonsPriceTotal) * nights;
 
     return (
         <main className="bg-[#FAFAFA]">
@@ -406,8 +448,8 @@ export default function HotelDetailPage() {
                             </div>
                         </div>
 
-                        {/* Room + Nights grid */}
-                        <div className="px-6 md:px-8 py-7 border-b border-[#e2e8f0] grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+                        {/* Room + Addons + Nights grid */}
+                        <div className="px-6 md:px-8 py-7 border-b border-[#e2e8f0] grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                             {/* Room selector */}
                             <div>
@@ -423,9 +465,9 @@ export default function HotelDetailPage() {
                                                 role="radio"
                                                 aria-checked={isSelected}
                                                 tabIndex={0}
-                                                onClick={() => setSelectedRoom(i)}
-                                                onKeyDown={(e) => e.key === "Enter" && setSelectedRoom(i)}
-                                                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"}`}
+                                                onClick={() => { if (selectedRoom !== i) { setSelectedRoom(i); setRoomsCount(1); } }}
+                                                onKeyDown={(e) => e.key === "Enter" && (() => { if (selectedRoom !== i) { setSelectedRoom(i); setRoomsCount(1); } })()}
+                                                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"}`}
                                             >
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex items-start gap-2.5 flex-1">
@@ -445,6 +487,25 @@ export default function HotelDetailPage() {
                                                         ${r.price.toLocaleString("en-US")}
                                                     </span>
                                                 </div>
+                                                {isSelected && (
+                                                    <div
+                                                        className="mt-3 pt-3 border-t border-[#0EA5E9]/20 flex items-center justify-between"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <span className="text-xs font-medium text-[#64748b]">عدد الغرف</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => setRoomsCount(c => Math.max(1, c - 1))}
+                                                                className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] font-bold flex items-center justify-center hover:bg-[#0EA5E9]/20 transition text-base leading-none cursor-pointer"
+                                                            >−</button>
+                                                            <span className="w-5 text-center font-bold text-[#0f172a] text-sm">{roomsCount}</span>
+                                                            <button
+                                                                onClick={() => setRoomsCount(c => c + 1)}
+                                                                className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] font-bold flex items-center justify-center hover:bg-[#0EA5E9]/20 transition text-base leading-none cursor-pointer"
+                                                            >+</button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
@@ -453,8 +514,44 @@ export default function HotelDetailPage() {
                                     <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    يمكن تغيير نوع الغرفة بعد إتمام الحجز، وذلك عبر التواصل معنا عبر الواتساب، حسب التوفر وبرسوم إضافية.
+                                    يمكن تغيير نوع الغرفة بعد إتمام الحجز، وذلك عبر التواصل معنا على الواتساب، حسب التوفر وبرسوم إضافية.
                                 </p>
+                            </div>
+
+                            {/* Add-ons — col 2 on desktop, spans 2 rows */}
+                            <div className="lg:row-span-2">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <h3 className="font-bold text-[#0f172a]">الإضافات <span className="text-xs font-normal text-[#94a3b8]">(اختياري)</span></h3>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {hotelAddOnsData.map((addon) => {
+                                        const isSelected = selectedAddOns === addon.id;
+                                        return (
+                                            <div
+                                                key={addon.id}
+                                                onClick={() => setSelectedAddOns(isSelected ? null : addon.id)}
+                                                className={`flex items-start justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#F59E0B] bg-[#F59E0B]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"}`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"}`}>
+                                                        {isSelected && (
+                                                            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-bold text-[#0f172a] text-sm block">{addon.name}</span>
+                                                        <span className="text-xs text-[#64748b]">{addon.description}</span>
+                                                    </div>
+                                                </div>
+                                                <span className={`font-black shrink-0 mt-0.5 ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
+                                                    +{addon.price}$
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             {/* Dates */}
@@ -462,7 +559,6 @@ export default function HotelDetailPage() {
                                 <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-bold text-[#0f172a]">تواريخ الإقامة</h3>
                                 </div>
-
 
                                 {/* Dates Grid */}
                                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -481,7 +577,7 @@ export default function HotelDetailPage() {
                                                         setCheckOut(next);
                                                     }
                                                 }}
-                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30 focus:border-[#F59E0B] transition cursor-pointer"
                                             />
                                         </div>
                                     </div>
@@ -495,29 +591,38 @@ export default function HotelDetailPage() {
                                                 value={checkOut}
                                                 min={(() => { const d = new Date(checkIn); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
                                                 onChange={(e) => setCheckOut(e.target.value)}
-                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] transition cursor-pointer"
+                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30 focus:border-[#F59E0B] transition cursor-pointer"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Nights badge */}
-                                <div className="flex items-center gap-2 bg-[#F0F9FF] border border-[#E0F2FE] rounded-xl px-4 py-2.5">
-                                    <svg className="w-4 h-4 text-[#0EA5E9] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <div className="flex items-center gap-2 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl px-4 py-2.5">
+                                    <svg className="w-4 h-4 text-[#F59E0B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                     </svg>
                                     <span className="text-sm font-medium text-[#0f172a]">{nights} {nights === 1 ? "ليلة" : "ليالٍ"}</span>
                                 </div>
                             </div>
+
                         </div>
 
                         {/* Total + CTA */}
                         <div className="px-6 md:px-8 py-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                             <div>
                                 <p className="text-sm text-[#64748b] mb-1">الإجمالي التقديري لـ {nights} {nights === 1 ? "ليلة" : "ليالٍ"}</p>
-                                <div className="flex items-baseline gap-1.5">
+                                <div className="flex items-baseline gap-1.5 flex-wrap">
                                     <span className="text-4xl font-extrabold text-[#0EA5E9]">${totalPrice.toLocaleString("en-US")}</span>
-                                    <span className="text-sm text-[#94a3b8]">({room.name})</span>
+                                    <span className="text-sm text-[#94a3b8]">({room.name}{roomsCount > 1 ? ` × ${roomsCount}` : ""})</span>
+                                    {selectedAddOns && (() => {
+                                        const addon = hotelAddOnsData.find(a => a.id === selectedAddOns);
+                                        return addon ? (
+                                            <span className="text-sm text-[#94a3b8]">
+                                                + {addon.name}
+                                            </span>
+                                        ) : null;
+                                    })()}
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5 w-full sm:w-auto">
@@ -529,11 +634,19 @@ export default function HotelDetailPage() {
                                             name: hotel.name,
                                             city: hotel.city,
                                             image: hotel.image,
-                                            pricePerNight: room.price,
-                                            stars: hotel.stars,
-                                        });
-                                        setNights(nights);
-                                        setSavedRoom(selectedRoom);
+                                              pricePerNight: room.price,
+                                              stars: hotel.stars,
+                                              roomName: room.name,
+                                              roomsCount: roomsCount,
+                                              selectedAddOns: selectedAddOns ? (() => {
+                                                  const a = hotelAddOnsData.find(x => x.id === selectedAddOns);
+                                                  return a ? [{ name: a.name, price: a.price }] : [];
+                                              })() : []
+                                          });
+                                          setNights(nights);
+                                          setSavedRoom(selectedRoom);
+                                          setSavedRoomsCount(roomsCount);
+                                          setSavedAddOns(selectedAddOns);
                                         setSavedCheckIn(checkIn);
                                         setSavedCheckOut(checkOut);
                                         openCart();

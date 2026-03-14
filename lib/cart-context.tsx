@@ -19,6 +19,9 @@ export interface CartHotel {
   image: string;
   pricePerNight: number;
   stars: number;
+  roomsCount?: number;
+  roomName?: string;
+  selectedAddOns?: { name: string; price: number }[];
 }
 
 export interface CartTrip {
@@ -156,7 +159,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
-  const hotelCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights : 0;
+  const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+  const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+  const hotelCost = hotelBaseCost + hotelAddOnsCost;
+
   const tripsCost = cart.trips.reduce((sum, t) => {
     const persons = t.persons ?? guestsTotal;
     if (t.selectedOptions && t.selectedOptions.length > 0) {

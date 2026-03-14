@@ -15,7 +15,9 @@ export default function CheckoutPage() {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const guestsTotal = cart.guests.adults + cart.guests.children;
-    const hotelCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights : 0;
+    const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+    const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+    const hotelCost = hotelBaseCost + hotelAddOnsCost;
 
     const validate = () => {
         const errs: Record<string, string> = {};
@@ -230,7 +232,16 @@ export default function CheckoutPage() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs text-[#0EA5E9] font-semibold">إقامة فندقية</p>
                                         <p className="text-sm font-bold text-[#0f172a] truncate">{cart.hotel.name}</p>
-                                        <p className="text-xs text-[#64748b]">{cart.nights} ليالي</p>
+                                        <p className="text-xs text-[#64748b]">
+                                            {cart.nights} ليالي
+                                            {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} غرف` : ''}
+                                        </p>
+                                        {cart.hotel.roomName && <p className="text-[11px] text-[#94a3b8] mt-0.5">{cart.hotel.roomName}</p>}
+                                        {cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0 && (
+                                            <p className="text-[11px] text-[#94a3b8] mt-0.5">
+                                                + {cart.hotel.selectedAddOns.map(a => a.name).join("، ")}
+                                            </p>
+                                        )}
                                     </div>
                                     <span className="text-sm font-bold text-[#0f172a] shrink-0">${hotelCost}</span>
                                 </div>

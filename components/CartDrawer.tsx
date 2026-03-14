@@ -36,12 +36,20 @@ export default function CartDrawer() {
   }, [isOpen]);
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
-  const hotelCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights : 0;
+  const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+  const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
+  const hotelCost = hotelBaseCost + hotelAddOnsCost;
 
   const buildWhatsAppMsg = () => {
     let msg = "🌟 *طلب حجز — Oday Tourism*\n\n";
     if (cart.hotel) {
       msg += `🏨 *الفندق:* ${cart.hotel.name} — ${cart.hotel.city}\n`;
+      if (cart.hotel.roomName) {
+        msg += `🛏️ *الغرفة:* ${cart.hotel.roomName} × ${cart.hotel.roomsCount || 1}\n`;
+      }
+      if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
+        msg += `✨ *الإضافات:* ${cart.hotel.selectedAddOns.map(a => a.name).join("، ")}\n`;
+      }
       msg += `🌙 عدد الليالي: ${cart.nights}\n`;
       msg += `💰 تكلفة الإقامة: $${hotelCost}\n\n`;
     }
@@ -177,6 +185,11 @@ export default function CartDrawer() {
                       </div>
                       <h4 className="font-bold text-white text-sm leading-tight truncate">{cart.hotel.name}</h4>
                       <p className="text-[11px] text-white/70">{cart.hotel.city}</p>
+                      {cart.hotel.roomName && (
+                        <p className="text-[11px] text-white/90 font-medium mt-1">
+                          {cart.hotel.roomName} &times; {cart.hotel.roomsCount || 1}
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={() => setHotel(null)}
@@ -190,7 +203,10 @@ export default function CartDrawer() {
                   <div className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <svg className="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                      <span className="text-xs text-[#64748B]">{cart.nights} ليالي</span>
+                      <span className="text-xs text-[#64748B]">
+                        {cart.nights} ليالي
+                        {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} غرفة` : ''}
+                      </span>
                       <span className="text-base font-extrabold text-[#0F172A] mr-1">${hotelCost}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -216,6 +232,25 @@ export default function CartDrawer() {
                     
                   </div>
                 </div>
+              )}
+
+              {/* ── Browse Trips CTA ── */}
+              {cart.hotel && cart.trips.length === 0 && (
+                <Link
+                  href="/trips"
+                  onClick={closeCart}
+                  className="block bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden hover:bg-[#F8FAFC] transition-colors group"
+                >
+                  <div className="px-5 py-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-[#0F172A] text-sm mb-1">هل تريد إضافة رحلات؟</p>
+                      <p className="text-xs text-[#64748B] leading-relaxed">اكتشف أفضل الرحلات السياحية وأضفها لبرنامج رحلتك</p>
+                    </div>
+                    <svg className="w-5 h-5 text-[#94A3B8] shrink-0 scale-x-[-1] group-hover:translate-x-[-3px] transition-transform" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </Link>
               )}
 
               {/* ── Trips ── */}
