@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
+import Reviews from "@/components/Reviews";
 
 /* ── SVG Icon Components ─────────────────────────────── */
 
@@ -453,6 +454,10 @@ export default function AboutPage() {
                 </div>
             </section>
 
+            {/* ════════════════════════════════════════════════════
+                ██  Reviews SECTION
+            ════════════════════════════════════════════════════ */}
+            <Reviews />
 
             {/* ════════════════════════════════════════════════════
                 ██  5. FAQ SECTION

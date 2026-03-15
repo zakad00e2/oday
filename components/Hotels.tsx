@@ -17,6 +17,7 @@ const hotels = [
     price: 120,
     originalPrice: 150,
     discount: "20%",
+    filterTag: "most_booked" as const,
     features: ["إطلالة بحرية", "سبا وعافية", "مسبح لا متناهي", "مطاعم عالمية"],
     gallery: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
@@ -34,6 +35,7 @@ const hotels = [
     description: "إقامة راقية مع شاطئ خاص وأنشطة مائية متنوعة للعائلات والأزواج.",
     stars: 4,
     price: 80,
+    filterTag: "lowest_price" as const,
     features: ["شاطئ خاص", "أنشطة مائية", "نادي أطفال", "Wi-Fi مجاني"],
     gallery: [
       "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
@@ -46,13 +48,14 @@ const hotels = [
     id: 3,
     slug: "movenpick-ain-sokhna",
     name: "فندق موفنبيك العين السخنة",
-    city: "العين السخنة",
+    city: "عين السخنة",
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
     description: "ملاذ هادئ على ساحل البحر الأحمر مع مرافق عصرية وخدمة متميزة.",
     stars: 5,
     price: 100,
     originalPrice: 125,
     discount: "20%",
+    filterTag: "most_booked" as const,
     features: ["حمام سباحة ساخن", "مركز لياقة", "مطعم بوفيه", "موقف سيارات"],
     gallery: [
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
@@ -65,11 +68,12 @@ const hotels = [
     id: 4,
     slug: "kempinski-soma-bay",
     name: "فندق كمبينسكي سوما باي",
-    city: "سوما باي",
+    city: "الغردقة",
     image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
     description: "تجربة فندقية استثنائية تجمع بين الفخامة والطبيعة الخلابة.",
     stars: 5,
     price: 150,
+    filterTag: "highest_rated" as const,
     features: ["غوص وسنوركل", "ملعب غولف", "مسبح خاص", "خدمة غرف 24/7"],
     gallery: [
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
@@ -122,6 +126,20 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
             </span>
           </div>
         )}
+        {"filterTag" in hotel && hotel.filterTag && (() => {
+          const tagConfig = {
+            most_booked: { label: "الأكثر حجزاً", bg: "bg-orange-500/90", icon: "🔥" },
+            highest_rated: { label: "الأعلى تقييماً", bg: "bg-yellow-500/90", icon: "⭐" },
+            lowest_price: { label: "الأقل سعراً", bg: "bg-emerald-500/90", icon: "💰" },
+          }[hotel.filterTag as string];
+          if (!tagConfig) return null;
+          return (
+            <div className={`absolute top-4 left-4 z-20 flex items-center gap-1 ${tagConfig.bg} backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20`}>
+              <span className="text-[11px]">{tagConfig.icon}</span>
+              <span className="text-[11px] font-bold text-white tracking-wide">{tagConfig.label}</span>
+            </div>
+          );
+        })()}
         {images.map((src, i) => (
           <Image
             key={src}
@@ -245,22 +263,13 @@ export default function Hotels() {
   const [sortBy, setSortBy] = useState<string>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState<boolean>(false);
 
-  // Filter hotels based on selected city, stars, price, and discounts
+  // Filter hotels
   let filteredHotels = [...hotels].filter((h) => {
     if (selectedCity !== "all" && h.city !== selectedCity) return false;
     if (showDiscountsOnly && !("discount" in h && h.discount)) return false;
+    if (sortBy !== "default" && ("filterTag" in h ? h.filterTag : undefined) !== sortBy) return false;
     return true;
   });
-
-  // Sort hotels
-  if (sortBy === "lowest_price") {
-    filteredHotels.sort((a, b) => a.price - b.price);
-  } else if (sortBy === "highest_rated") {
-    filteredHotels.sort((a, b) => b.stars - a.stars);
-  } else if (sortBy === "most_booked") {
-    // default/most booked fallback (e.g., sort by ID or predetermined popularity)
-    filteredHotels.sort((a, b) => a.id - b.id);
-  }
 
   return (
     <section id="hotels" className="py-20 bg-[#FAFAFA]">
