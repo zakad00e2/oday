@@ -26,12 +26,12 @@ const packages = [
     label: "عرض الرحلات",
   },
   {
-    title: "رحلة خاصة مخصصة",
-    description: "صمم رحلتك بالكامل وفق رغباتك مع مرافق خاص ووسائل نقل مريحة.",
-    image: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(4).jpeg",
-    price: "١٢٩٩",
-    href: "/package-builder",
-    label: "صمّم باقتك",
+    title: "الموافقات الأمنية وتأشيرات",
+    description: "نقدم خدمة استخراج الموافقات الأمنية والتأشيرات لضمان رحلة مريحة وآمنة.",
+    image: "/WhatsApp%20Image%202026-02-27%20at%208.28.18%20PM.jpeg",
+    price: "٨٩٩",
+    href: "/airport-coordination",
+    label: "عرض التفاصيل",
   },
   {
     title: "تواصل معنا",

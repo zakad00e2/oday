@@ -8,7 +8,6 @@ const quickLinks = [
   { label: "الرحلات", href: "/trips" },
   { label: "صمّم باقتك", href: "/package-builder" },
   { label: "من نحن", href: "/about" },
-  { label: "تواصل معنا", href: "/contact" },
 ];
 
 const contactInfo = [

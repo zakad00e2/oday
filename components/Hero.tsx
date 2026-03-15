@@ -32,7 +32,7 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto -mt-28">
+      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto -mt-11">
         <div
           className={`transition-all duration-1000 ${loaded
             ? "opacity-100 translate-y-0"
@@ -113,7 +113,7 @@ export default function Hero() {
         </p>
 
         {/* Book now button */}
-        <a
+        {/* <a
           href="https://wa.me/201032549630"
           target="_blank"
           rel="noopener noreferrer"
@@ -127,7 +127,7 @@ export default function Hero() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
             </svg>
           </span>
-        </a>
+        </a> */}
       </div>
 
       {/* Bottom gradient fade */}

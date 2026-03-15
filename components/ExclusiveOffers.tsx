@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 
 const offers = [
@@ -75,9 +74,6 @@ function CheckIcon() {
 }
 
 export default function ExclusiveOffers() {
-  const [activeTab, setActiveTab] = useState<"all" | "highlighted">("all");
-  const filtered = activeTab === "all" ? offers : offers.filter((o) => o.highlight);
-
   return (
     <section id="offers" className="py-20 bg-white">
       <ScrollReveal>
@@ -96,29 +92,11 @@ export default function ExclusiveOffers() {
             <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
               استفد من أقوى العروض على أفضل الوجهات السياحية المصرية بأسعار مميزة تشمل الإقامة والخدمات.
             </p>
-
-            {/* Filter tabs */}
-            <div className="inline-flex bg-[#F9FAFB] border border-[#E5E7EB] rounded-full p-1">
-              <button
-                onClick={() => setActiveTab("all")}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === "all" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
-                  }`}
-              >
-                جميع العروض
-              </button>
-              <button
-                onClick={() => setActiveTab("highlighted")}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === "highlighted" ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111]"
-                  }`}
-              >
-                الأكثر طلباً
-              </button>
-            </div>
           </div>
 
           {/* Offers Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filtered.map((offer) => (
+            {offers.map((offer) => (
               <div
                 key={offer.id}
                 className="group relative flex flex-col"

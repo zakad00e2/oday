@@ -11,7 +11,6 @@ const navLinks = [
   { label: "الرحلات", href: "/trips" },
   { label: "الموافقات الامنية", href: "/airport-coordination" },
   { label: "من نحن", href: "/about" },
-  { label: "تواصل معنا", href: "/contact" },
 ];
 
 export default function Navbar() {
@@ -113,7 +112,7 @@ export default function Navbar() {
           )}
         </button>
 
-        <Link
+        {/* <Link
           href="/package-builder"
           className={`flex items-center gap-2.5 pr-5 pl-2 py-2 rounded-full text-[13.5px] font-semibold transition-all duration-300 hover:scale-105 ${useDark
             ? "bg-[#111] text-white shadow-md"
@@ -129,7 +128,7 @@ export default function Navbar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
             </svg>
           </span>
-        </Link>
+        </Link> */}
       </div>
 
       {/* ── Mobile Cart + Hamburger ───────────────────── */}
