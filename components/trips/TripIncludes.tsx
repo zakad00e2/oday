@@ -2,7 +2,7 @@
 
 import ScrollReveal from "../ScrollReveal";
 
-export default function TripIncludes({ items }: { items: string[] }) {
+export default function TripIncludes({ items, title }: { items: string[]; title: string }) {
     return (
         <div>
             <ScrollReveal>
@@ -12,7 +12,7 @@ export default function TripIncludes({ items }: { items: string[] }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">ماذا تشمل الرحلة؟</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">{title}</h2>
                 </div>
             </ScrollReveal>
 

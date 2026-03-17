@@ -2,6 +2,7 @@
 
 import { TripDetail, TripOption, TripAddOn } from "@/lib/trips-types";
 import { useCart } from "@/lib/cart-context";
+import { useI18n } from "@/lib/i18n/dictionary-context";
 import Link from "next/link";
 
 interface TripCartSidebarProps {
@@ -20,19 +21,21 @@ export default function TripCartSidebar({
     optionQuantity,
 }: TripCartSidebarProps) {
     const { addTrip, removeTrip, cart, openCart } = useCart();
+    const { lang } = useI18n();
     const isInCart = cart.trips.some((t) => t.slug === trip.slug);
 
     const handleAddToCart = () => {
         addTrip({
             slug: trip.slug,
             titleAr: trip.titleAr,
+            titleEn: trip.titleEn,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
             selectedOptions: selectedOption
-                ? [{ nameAr: selectedOption.nameAr, price: selectedOption.price }]
+                ? [{ nameAr: selectedOption.nameAr, nameEn: selectedOption.nameEn, price: selectedOption.price }]
                 : undefined,
             selectedAddOns: selectedAddOns.length > 0
-                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, price: a.price }))
+                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, nameEn: a.nameEn, price: a.price }))
                 : undefined,
         });
         openCart();
@@ -133,7 +136,7 @@ export default function TripCartSidebar({
             </div>
 
             <Link
-                href="/trips"
+                href={`/${lang}/trips`}
                 className="block text-center text-xs text-[#94a3b8] hover:text-[#2563EB] transition-colors py-2"
             >
                 تصفح المزيد من الرحلات ←

@@ -1,20 +1,8 @@
-﻿"use client";
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
-
-const quickLinks = [
-  { label: "الرئيسية", href: "/" },
-  { label: "الفنادق", href: "/hotels" },
-  { label: "الرحلات", href: "/trips" },
-  { label: "صمّم باقتك", href: "/package-builder" },
-  { label: "من نحن", href: "/about" },
-];
-
-const contactInfo = [
-  "hello@odaytourism.com",
-  "+20 103 254 9630",
-  "القاهرة، مصر",
-];
+import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const socials = [
   {
@@ -40,7 +28,22 @@ const socials = [
 ];
 
 export default function Footer() {
+  const { dict, lang } = useI18n();
   const [email, setEmail] = useState("");
+
+  const quickLinks = [
+    { label: dict.nav.home, href: `/${lang}` },
+    { label: dict.nav.hotels, href: `/${lang}/hotels` },
+    { label: dict.nav.trips, href: `/${lang}/trips` },
+    { label: dict.footer.packageBuilder, href: `/${lang}/package-builder` },
+    { label: dict.nav.about, href: `/${lang}/about` },
+  ];
+
+  const contactInfo = [
+    "hello@odaytourism.com",
+    "+20 103 254 9630",
+    dict.footer.location,
+  ];
 
   return (
     <footer className="bg-white">
@@ -52,21 +55,17 @@ export default function Footer() {
           {/* Col 1 — Brand */}
           <div className="lg:col-span-5">
             <div className="flex items-center gap-2.5 mb-4">
-              <img
-                src="/logo.png"
-                alt="Oday Tourism Logo"
-                className="h-10 w-auto object-contain"
-              />
-              <span className="text-xl font-semibold text-[#111]">Oday Tourism</span>
+              <img src="/logo.png" alt="Oday Tourism Logo" className="h-10 w-auto object-contain" />
+              <span className="text-xl font-semibold text-[#111]">{dict.footer.brand}</span>
             </div>
             <p className="text-[#6B7280] text-sm leading-relaxed max-w-[400px]">
-              نقدم خدمات سفر وسياحة متكاملة تشمل حجوزات الفنادق والرحلات، ونرافقكم بخبرة وثقة من بداية التخطيط حتى نهاية رحلتكم
+              {dict.footer.description}
             </p>
           </div>
 
           {/* Col 2 — Quick Links */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-semibold text-[#111] mb-5">روابط سريعة</h4>
+            <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.quickLinks}</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
@@ -80,7 +79,7 @@ export default function Footer() {
 
           {/* Col 3 — Contact Info */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-semibold text-[#111] mb-5">معلومات التواصل</h4>
+            <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.contactInfo}</h4>
             <ul className="space-y-3">
               {contactInfo.map((line, i) => (
                 <li key={i} className="text-sm text-[#6B7280]">{line}</li>
@@ -90,21 +89,20 @@ export default function Footer() {
 
           {/* Col 4 — Newsletter + Social */}
           <div className="lg:col-span-3 flex flex-col gap-5">
-            {/* Pill input + button */}
-            <div className="flex items-center rounded-full border border-[#E5E7EB] bg-white overflow-hidden pl-4 pr-1.5 py-1.5">
+            <div className="flex items-center rounded-full border border-[#E5E7EB] bg-white overflow-hidden pe-4 ps-1.5 py-1.5">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ادخل بريدك الالكتروني"
-                aria-label="البريد الالكتروني للاشتراك"
-                className="flex-1 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] text-right min-w-0"
+                placeholder={dict.footer.emailPlaceholder}
+                aria-label={dict.footer.subscribeLabel}
+                className="flex-1 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] min-w-0"
               />
               <button
-                aria-label="اشترك في النشرة البريدية"
+                aria-label={dict.footer.subscribeBtnLabel}
                 className="bg-[#111] text-white text-sm font-medium px-5 py-2 rounded-full hover:bg-[#333] active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
               >
-                اشترك
+                {dict.footer.subscribe}
               </button>
             </div>
 
@@ -129,7 +127,7 @@ export default function Footer() {
         {/* Divider + copyright */}
         <div className="border-t border-[#E5E7EB] mt-14 pt-6 text-center">
           <p className="text-sm text-[#9CA3AF]">
-            &copy; {new Date().getFullYear()} Oday Tourism. جميع الحقوق محفوظة.
+            &copy; {new Date().getFullYear()} {dict.footer.brand}. {dict.footer.copyright}
           </p>
         </div>
 

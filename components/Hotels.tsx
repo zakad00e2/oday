@@ -4,21 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
+import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const hotels = [
   {
     id: 1,
     slug: "rexos-sharm",
     name: "منتجع ريكسوس شرم الشيخ",
+    nameEn: "Rixos Sharm El Sheikh Resort",
     city: "شرم الشيخ",
+    cityEn: "Sharm El Sheikh",
     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
     description: "منتجع فاخر على شاطئ البحر الأحمر مع خدمة شاملة وإطلالات ساحرة.",
+    descriptionEn: "A luxurious resort on the Red Sea coast with all-inclusive service and stunning views.",
     stars: 5,
     price: 120,
     originalPrice: 150,
     discount: "20%",
     filterTag: "most_booked" as const,
     features: ["إطلالة بحرية", "سبا وعافية", "مسبح لا متناهي", "مطاعم عالمية"],
+    featuresEn: ["Sea View", "Spa & Wellness", "Infinity Pool", "International Restaurants"],
     gallery: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
@@ -30,13 +35,17 @@ const hotels = [
     id: 2,
     slug: "stella-di-mare-hurghada",
     name: "فندق ستيلا دي ماري الغردقة",
+    nameEn: "Stella Di Mare Hurghada Hotel",
     city: "الغردقة",
+    cityEn: "Hurghada",
     image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
     description: "إقامة راقية مع شاطئ خاص وأنشطة مائية متنوعة للعائلات والأزواج.",
+    descriptionEn: "An upscale stay with a private beach and diverse water activities for families and couples.",
     stars: 4,
     price: 80,
     filterTag: "lowest_price" as const,
     features: ["شاطئ خاص", "أنشطة مائية", "نادي أطفال", "Wi-Fi مجاني"],
+    featuresEn: ["Private Beach", "Water Activities", "Kids Club", "Free Wi-Fi"],
     gallery: [
       "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
@@ -48,15 +57,19 @@ const hotels = [
     id: 3,
     slug: "movenpick-ain-sokhna",
     name: "فندق موفنبيك العين السخنة",
+    nameEn: "Movenpick Ain Sokhna Hotel",
     city: "عين السخنة",
+    cityEn: "Ain Sokhna",
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
     description: "ملاذ هادئ على ساحل البحر الأحمر مع مرافق عصرية وخدمة متميزة.",
+    descriptionEn: "A serene retreat on the Red Sea coast with modern facilities and excellent service.",
     stars: 5,
     price: 100,
     originalPrice: 125,
     discount: "20%",
     filterTag: "most_booked" as const,
     features: ["حمام سباحة ساخن", "مركز لياقة", "مطعم بوفيه", "موقف سيارات"],
+    featuresEn: ["Heated Pool", "Fitness Center", "Buffet Restaurant", "Parking"],
     gallery: [
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
@@ -68,13 +81,17 @@ const hotels = [
     id: 4,
     slug: "kempinski-soma-bay",
     name: "فندق كمبينسكي سوما باي",
+    nameEn: "Kempinski Soma Bay Hotel",
     city: "الغردقة",
+    cityEn: "Hurghada",
     image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
     description: "تجربة فندقية استثنائية تجمع بين الفخامة والطبيعة الخلابة.",
+    descriptionEn: "An exceptional hotel experience combining luxury and breathtaking nature.",
     stars: 5,
     price: 150,
     filterTag: "highest_rated" as const,
     features: ["غوص وسنوركل", "ملعب غولف", "مسبح خاص", "خدمة غرف 24/7"],
+    featuresEn: ["Diving & Snorkeling", "Golf Course", "Private Pool", "24/7 Room Service"],
     gallery: [
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
       "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=600&q=80",
@@ -84,7 +101,7 @@ const hotels = [
   },
 ];
 
-// Extract unique cities from the hotel list
+// Extract unique cities from the hotel list (Arabic keys for filtering)
 const cities = Array.from(new Set(hotels.map((h) => h.city)));
 
 function FeatureIcon() {
@@ -97,9 +114,15 @@ function FeatureIcon() {
 
 type Hotel = typeof hotels[0];
 
-function HotelCard({ hotel }: { hotel: Hotel }) {
+function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnType<typeof useI18nHotels> }) {
   const images = hotel.gallery?.length ? hotel.gallery : [hotel.image];
   const [imgIdx, setImgIdx] = useState(0);
+  const isAr = lang === "ar";
+
+  const hotelName = isAr ? hotel.name : hotel.nameEn;
+  const hotelCity = isAr ? hotel.city : hotel.cityEn;
+  const hotelDesc = isAr ? hotel.description : hotel.descriptionEn;
+  const hotelFeatures = isAr ? hotel.features : hotel.featuresEn;
 
   const prev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -115,24 +138,24 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
       {/* Image Carousel */}
       <div className="relative overflow-hidden aspect-[16/10]">
         {"discount" in hotel && hotel.discount && (
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-500/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20">
+          <div className="absolute top-4 end-4 z-20 flex items-center gap-1.5 bg-red-500/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20">
             <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-[11px] font-bold text-white tracking-wide">
-              خصم {hotel.discount}
+              {d.discount} {hotel.discount}
             </span>
           </div>
         )}
         {"filterTag" in hotel && hotel.filterTag && (() => {
           const tagConfig = {
-            most_booked: { label: "الأكثر حجزاً", bg: "bg-orange-500/90", icon: "🔥" },
-            highest_rated: { label: "الأعلى تقييماً", bg: "bg-yellow-500/90", icon: "⭐" },
-            lowest_price: { label: "الأقل سعراً", bg: "bg-emerald-500/90", icon: "💰" },
+            most_booked: { label: d.mostBooked, bg: "bg-orange-500/90", icon: "🔥" },
+            highest_rated: { label: d.highestRated, bg: "bg-yellow-500/90", icon: "⭐" },
+            lowest_price: { label: d.lowestPrice, bg: "bg-emerald-500/90", icon: "💰" },
           }[hotel.filterTag as string];
           if (!tagConfig) return null;
           return (
-            <div className={`absolute top-4 left-4 z-20 flex items-center gap-1 ${tagConfig.bg} backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20`}>
+            <div className={`absolute top-4 start-4 z-20 flex items-center gap-1 ${tagConfig.bg} backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20`}>
               <span className="text-[11px]">{tagConfig.icon}</span>
               <span className="text-[11px] font-bold text-white tracking-wide">{tagConfig.label}</span>
             </div>
@@ -142,7 +165,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
           <Image
             key={src}
             src={src}
-            alt={`${hotel.name} - ${i + 1}`}
+            alt={`${hotelName} - ${i + 1}`}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className={`object-cover transition-all duration-500 ${i === imgIdx ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
@@ -155,8 +178,8 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
           <>
             <button
               onClick={prev}
-              aria-label="الصورة السابقة"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
+              aria-label={d.prevImage}
+              className="absolute end-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -164,8 +187,8 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
             </button>
             <button
               onClick={next}
-              aria-label="الصورة التالية"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
+              aria-label={d.nextImage}
+              className="absolute start-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/60 transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -192,7 +215,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
         {/* Name + Stars */}
         <div>
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="text-base font-bold text-[#111] leading-snug">{hotel.name}</h3>
+            <h3 className="text-base font-bold text-[#111] leading-snug">{hotelName}</h3>
             <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <svg key={i} className={`w-3.5 h-3.5 ${i < hotel.stars ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
@@ -206,16 +229,16 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
-            <span className="text-xs text-[#94A3B8]">{hotel.city}</span>
+            <span className="text-xs text-[#94A3B8]">{hotelCity}</span>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-[#6B7280] leading-relaxed">{hotel.description}</p>
+        <p className="text-sm text-[#6B7280] leading-relaxed">{hotelDesc}</p>
 
         {/* Features */}
         <div className="flex flex-wrap gap-1.5">
-          {hotel.features.map((f, i) => (
+          {hotelFeatures.map((f, i) => (
             <span key={i} className="inline-flex items-center gap-1 text-xs font-medium text-[#374151] bg-[#F0F9FF] border border-[#E0F2FE] rounded-full px-2.5 py-1">
               <FeatureIcon />
               {f}
@@ -226,7 +249,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
         {/* Price + CTA */}
         <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
           <div className="flex flex-col">
-            <span className="text-[11px] text-[#64748B] font-medium mb-1">يبدأ من</span>
+            <span className="text-[11px] text-[#64748B] font-medium mb-1">{d.startsFrom}</span>
             <div className="flex items-baseline gap-2">
               {"originalPrice" in hotel && hotel.originalPrice && (
                 <span className="text-sm font-medium text-red-400 line-through">
@@ -237,14 +260,14 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
                 <span className="text-2xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString('en-US') || "---"}</span>
                 <span className="text-sm font-semibold text-[#0EA5E9]">$</span>
               </div>
-              <span className="text-xs text-[#94A3B8]">/ ليلة</span>
+              <span className="text-xs text-[#94A3B8]">{d.perNight}</span>
             </div>
           </div>
           <Link
-            href={`/hotels/${hotel.slug}`}
+            href={`/${lang}/hotels/${hotel.slug}`}
             className="inline-flex items-center gap-2 text-sm font-bold text-[#0f172a] hover:text-[#0EA5E9] hover:gap-3 transition-all duration-300"
           >
-            التفاصيل والحجز
+            {d.detailsAndBook}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -256,10 +279,26 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
   );
 }
 
+// Helper to get the hotels dict section
+function useI18nHotels() {
+  const { dict } = useI18n();
+  return dict.hotelsPage;
+}
+
 export default function Hotels() {
+  const { dict, lang } = useI18n();
+  const d = dict.hotelsPage;
+  const isAr = lang === "ar";
+
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState<boolean>(false);
+
+  // City options for dropdown
+  const cityOptions = cities.map((city, i) => ({
+    value: city,
+    label: isAr ? city : hotels.find(h => h.city === city)?.cityEn || city,
+  }));
 
   // Filter hotels
   const filteredHotels = [...hotels].filter((h) => {
@@ -279,13 +318,13 @@ export default function Hotels() {
               <svg className="w-4 h-4 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              <span className="text-xs font-medium text-[#111]">فنادق مختارة</span>
+              <span className="text-xs font-medium text-[#111]">{d.selectedHotels}</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-              أفخم الفنادق <span className="font-semibold">بأفضل الأسعار</span>
+              {d.title} <span className="font-semibold">{d.titleBold}</span>
             </h2>
             <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
-              نختار لك أفضل الفنادق في أشهر الوجهات السياحية المصرية بأسعار تنافسية وخدمة متميزة.
+              {d.subtitle}
             </p>
 
             {/* Filter Bar */}
@@ -294,19 +333,19 @@ export default function Hotels() {
 
                 {/* Region Filter */}
                 <div className="flex-1 min-w-[150px] flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-[#94A3B8] tracking-wide px-1">الوجهة</label>
+                  <label className="text-[11px] font-semibold text-[#94A3B8] tracking-wide px-1">{d.destinationLabel}</label>
                   <div className="relative">
                     <select
                       value={selectedCity}
                       onChange={(e) => setSelectedCity(e.target.value)}
-                      className="w-full appearance-none bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pr-4 pl-9 py-2 text-[13px] font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] cursor-pointer transition-all"
+                      className="w-full appearance-none bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pe-4 ps-9 py-2 text-[13px] font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30 focus:border-[#0EA5E9] cursor-pointer transition-all"
                     >
-                      <option value="all">كل الوجهات</option>
-                      {cities.map((city) => (
-                        <option key={city} value={city}>{city}</option>
+                      <option value="all">{d.allDestinations}</option>
+                      {cityOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
-                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#94A3B8]">
+                    <div className="absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#94A3B8]">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -321,7 +360,7 @@ export default function Hotels() {
                     onClick={() => { setSelectedCity("all"); setSortBy("default"); setShowDiscountsOnly(false); }}
                     className="flex-[0_1_auto] min-w-[100px] h-[36px] px-3 rounded-xl bg-[#FEF2F2] text-[#EF4444] text-[12px] font-semibold border border-[#FECACA] hover:bg-[#FEE2E2] transition-all whitespace-nowrap flex items-center justify-center"
                   >
-                    مسح الفلاتر
+                    {d.clearFilters}
                   </button>
                 )}
               </div>
@@ -337,10 +376,10 @@ export default function Hotels() {
                       : "bg-white text-[#64748B] border border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A] shadow-sm"
                   }`}
                 >
-                  الافتراضي
+                  {d.defaultSort}
                 </button>
 
-                {/* View Offers Button (placed after default) */}
+                {/* View Offers Button */}
                 <button
                   onClick={() => {
                     const newDiscountsState = !showDiscountsOnly;
@@ -353,15 +392,13 @@ export default function Hotels() {
                       : "bg-white text-[#64748B] border border-[#E2E8F0] hover:border-[#CBD5E1] hover:text-[#0F172A] shadow-sm"
                   }`}
                 >
-                  تخفيضات
+                  {d.discounts}
                 </button>
 
                 {[
-                                    { id: "most_booked", label: "الأكثر حجزاً" },
-
-                  { id: "highest_rated", label: "الأعلى تقييماً" },
-                                    { id: "lowest_price", label: "الأقل سعراً" },
-
+                  { id: "most_booked", label: d.mostBooked },
+                  { id: "highest_rated", label: d.highestRated },
+                  { id: "lowest_price", label: d.lowestPrice },
                 ].map((sortOption) => (
                   <button
                     key={sortOption.id}
@@ -378,8 +415,8 @@ export default function Hotels() {
               </div>
 
               {/* Results count */}
-              <p className="text-[12px] text-[#94A3B8] mt-2 text-right px-1">
-                {filteredHotels.length} فندق متاح
+              <p className="text-[12px] text-[#94A3B8] mt-2 text-end px-1">
+                {filteredHotels.length} {d.hotelsAvailable}
               </p>
             </div>
           </div>
@@ -387,7 +424,7 @@ export default function Hotels() {
           {/* Hotel Cards */}
           <div className="grid md:grid-cols-2 gap-6">
             {filteredHotels.map((hotel) => (
-              <HotelCard key={hotel.id} hotel={hotel} />
+              <HotelCard key={hotel.id} hotel={hotel} lang={lang} d={d} />
             ))}
           </div>
 
@@ -399,7 +436,7 @@ export default function Hotels() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <p className="text-sm font-medium">لا توجد فنادق تطابق بحثك</p>
+              <p className="text-sm font-medium">{d.noResults}</p>
             </div>
           )}
 

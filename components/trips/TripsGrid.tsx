@@ -3,8 +3,12 @@
 import { allTrips } from "@/lib/trips-data";
 import TripCard from "./TripCard";
 import ScrollReveal from "../ScrollReveal";
+import { useI18n } from "@/lib/i18n/dictionary-context";
+import type { ReactNode } from "react";
 
 export default function TripsGrid() {
+    const { lang } = useI18n();
+    const t = (ar: ReactNode, en: ReactNode) => (lang === "ar" ? ar : en);
     const [featured, ...rest] = allTrips;
 
     return (
@@ -13,14 +17,23 @@ export default function TripsGrid() {
                 <ScrollReveal>
                     <div className="text-center mb-12">
                         <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563eb] bg-[#2563eb]/8 rounded-full px-4 py-1.5 mb-4">
-                            رحلاتنا المميزة
+                            {t("رحلاتنا المميزة", "Featured trips")}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-4 font-arabic">
-                            اختر رحلتك{" "}
-                            <span className="text-[#2563eb]">المفضلة</span>
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-4">
+                            {t(
+                                <>
+                                    اختر رحلتك <span className="text-[#2563eb]">المفضلة</span>
+                                </>,
+                                <>
+                                    Pick your <span className="text-[#2563eb]">favorite</span> trip
+                                </>
+                            )}
                         </h2>
-                        <p className="text-[#64748b] text-base max-w-lg mx-auto font-arabic">
-                             رحلات وانشطة متنوعة في انتظارك — كل رحلة تجربة لا تُنسى
+                        <p className="text-[#64748b] text-base max-w-lg mx-auto">
+                            {t(
+                                "رحلات وانشطة متنوعة في انتظارك — كل رحلة تجربة لا تُنسى",
+                                "A variety of trips and activities await you — every trip is unforgettable"
+                            )}
                         </p>
                     </div>
                 </ScrollReveal>

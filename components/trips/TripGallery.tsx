@@ -4,7 +4,21 @@ import { useState } from "react";
 import Image from "next/image";
 import ScrollReveal from "../ScrollReveal";
 
-export default function TripGallery({ images, tripTitle, youtubeUrl }: { images: string[]; tripTitle: string; youtubeUrl?: string }) {
+export default function TripGallery({
+    images,
+    tripTitle,
+    youtubeUrl,
+    title,
+    videoTitle,
+    imageLabel,
+}: {
+    images: string[];
+    tripTitle: string;
+    youtubeUrl?: string;
+    title: string;
+    videoTitle: string;
+    imageLabel: string;
+}) {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
     return (
@@ -16,7 +30,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">لحظات من الرحلة</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{title}</h2>
                 </div>
             </ScrollReveal>
 
@@ -28,7 +42,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                         <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#f0f0f0] w-full h-full min-h-[300px] aspect-[9/16] md:aspect-auto">
                             <iframe
                                 src={youtubeUrl}
-                                title="فيديو الرحلة"
+                                title={videoTitle}
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                                 className="w-full h-full absolute inset-0"
@@ -46,7 +60,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                                 >
                                     <Image
                                         src={img}
-                                        alt={`${tripTitle} - صورة ${i + 1}`}
+                                        alt={`${tripTitle} - ${imageLabel} ${i + 1}`}
                                         fill
                                         sizes="(max-width: 768px) 50vw, 33vw"
                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -72,7 +86,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                                     >
                                         <Image
                                             src={img}
-                                            alt={`${tripTitle} - صورة ${i + 5}`}
+                                            alt={`${tripTitle} - ${imageLabel} ${i + 5}`}
                                             fill
                                             sizes="(max-width: 768px) 50vw, 33vw"
                                             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -103,7 +117,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
                             >
                                 <Image
                                     src={img}
-                                    alt={`${tripTitle} - صورة ${i + 1}`}
+                                    alt={`${tripTitle} - ${imageLabel} ${i + 1}`}
                                     fill
                                     sizes="(max-width: 768px) 50vw, 33vw"
                                     className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -162,7 +176,7 @@ export default function TripGallery({ images, tripTitle, youtubeUrl }: { images:
 
                     <img
                         src={images[lightboxIdx]}
-                        alt={`${tripTitle} - صورة ${lightboxIdx + 1}`}
+                        alt={`${tripTitle} - ${imageLabel} ${lightboxIdx + 1}`}
                         className="max-w-full max-h-[85vh] object-contain rounded-2xl"
                         onClick={(e) => e.stopPropagation()}
                     />

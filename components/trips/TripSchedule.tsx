@@ -1,13 +1,30 @@
 "use client";
 
-import { TripSchedule as TripScheduleType } from "@/lib/trips-types";
 import ScrollReveal from "../ScrollReveal";
 
-export default function TripSchedule({ schedule }: { schedule: TripScheduleType }) {
+export default function TripSchedule({
+    startTime,
+    endTime,
+    duration,
+    frequency,
+    labels,
+}: {
+    startTime: string;
+    endTime: string;
+    duration: string;
+    frequency: string;
+    labels: {
+        start: string;
+        end: string;
+        duration: string;
+        frequency: string;
+        heading: string;
+    };
+}) {
     const items = [
         {
-            label: "بداية الرحلة",
-            value: schedule.startTime,
+            label: labels.start,
+            value: startTime,
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -15,8 +32,8 @@ export default function TripSchedule({ schedule }: { schedule: TripScheduleType 
             ),
         },
         {
-            label: "نهاية الرحلة",
-            value: schedule.endTime,
+            label: labels.end,
+            value: endTime,
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -24,8 +41,8 @@ export default function TripSchedule({ schedule }: { schedule: TripScheduleType 
             ),
         },
         {
-            label: "مدة الرحلة",
-            value: schedule.duration,
+            label: labels.duration,
+            value: duration,
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -33,8 +50,8 @@ export default function TripSchedule({ schedule }: { schedule: TripScheduleType 
             ),
         },
         {
-            label: "التكرار",
-            value: schedule.frequency,
+            label: labels.frequency,
+            value: frequency,
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -53,7 +70,7 @@ export default function TripSchedule({ schedule }: { schedule: TripScheduleType 
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div> */}
-                        <h3 className="text-base font-bold text-[#0F2854]">مواعيد الرحلة</h3>
+                        <h3 className="text-base font-bold text-[#0F2854]">{labels.heading}</h3>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 lg:flex lg:flex-col lg:gap-4">

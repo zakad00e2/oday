@@ -3,9 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { TripDetail } from "@/lib/trips-types";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useI18n } from "@/lib/i18n/dictionary-context";
 
 export default function TripCard({ trip, index, featured = false }: { trip: TripDetail; index: number; featured?: boolean }) {
+    const { lang } = useI18n();
+    const isAr = lang === "ar";
+    const title = isAr ? trip.titleAr : trip.titleEn;
+    const tagline = isAr ? trip.taglineAr : trip.taglineEn;
+    const cta = isAr ? "عرض التفاصيل والحجز" : "View details and book";
 
     return (
         <div className={`group relative block overflow-hidden rounded-3xl ${
@@ -13,14 +19,14 @@ export default function TripCard({ trip, index, featured = false }: { trip: Trip
             }`}
         >
             <Link
-                href={`/trips/${trip.slug}`}
+                href={`/${lang}/trips/${trip.slug}`}
                 className="absolute inset-0"
-                aria-label={trip.titleAr}
+                aria-label={title}
             >
             {/* Background Image */}
             <Image
                 src={trip.heroImage}
-                alt={trip.titleAr}
+                alt={title}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority={index === 0}
@@ -33,26 +39,24 @@ export default function TripCard({ trip, index, featured = false }: { trip: Trip
             {/* Bottom Content */}
             <div className="absolute bottom-0 inset-x-0 p-5 md:p-6">
 
-                {/* Arabic title */}
-                <h3 className={`font-extrabold text-white leading-snug mb-2 font-arabic ${
+                <h3 className={`font-extrabold text-white leading-snug mb-2 ${isAr ? "font-arabic" : ""} ${
                     featured ? "text-lg md:text-3xl" : "text-lg"
                 }`}>
-                    {trip.titleAr}
+                    {title}
                 </h3>
 
-                {/* Tagline — hidden on mobile, visible on hover for non-featured on md+, always for featured */}
-                <p className={`hidden md:block text-white/65 text-sm leading-relaxed font-arabic mb-4 line-clamp-2 overflow-hidden transition-all duration-500 ease-in-out ${
+                <p className={`hidden md:block text-white/65 text-sm leading-relaxed ${isAr ? "font-arabic" : ""} mb-4 line-clamp-2 overflow-hidden transition-all duration-500 ease-in-out ${
                     featured
                         ? "max-h-20 opacity-100"
                         : "max-h-0 opacity-0 mb-0 group-hover:max-h-20 group-hover:opacity-100 group-hover:mb-4"
                 }`}>
-                    {trip.taglineAr}
+                    {tagline}
                 </p>
 
                 {/* CTA */}
                 <span className="inline-flex items-center gap-2 text-sm font-bold text-white/90 group-hover:text-white group-hover:gap-3 transition-all duration-300">
-                    عرض التفاصيل والحجز
-                    <ChevronLeft className="w-4 h-4" />
+                    {cta}
+                    {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </span>
             </div>
             </Link>

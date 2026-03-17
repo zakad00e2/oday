@@ -32,9 +32,17 @@
   body {
     background: var(--color-background);
     color: var(--color-foreground);
-    font-family: 'Urbanist', 'Cairo', sans-serif;
     line-height: 1.7;
     overflow-x: hidden;
+  }
+
+  /* Font switching based on direction */
+  [dir="rtl"] body {
+    font-family: var(--font-arabic);
+  }
+
+  [dir="ltr"] body {
+    font-family: var(--font-english);
   }
 }
 

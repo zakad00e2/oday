@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useMemo } from "react";
+import { useI18n } from "@/lib/i18n/dictionary-context";
 import {
     price24,
     price72,
@@ -36,6 +37,10 @@ interface FormErrors {
 
 /* ─── Component ──────────────────────────────────────────────── */
 export default function AirportCoordination() {
+    const { lang } = useI18n();
+    const isAr = lang === "ar";
+    const t = (ar: string, en: string) => (isAr ? ar : en);
+
     // ── Document type
     const [documentType, setDocumentType] = useState<DocumentType>(null);
 
@@ -79,12 +84,12 @@ export default function AirportCoordination() {
 
     /* ─── Airline display name ─────────────────────────────────── */
     const resolvedAirlineName = useMemo(() => {
-        if (airlineChoice === "egyptair") return "مصر للطيران (EgyptAir)";
+        if (airlineChoice === "egyptair") return t("مصر للطيران (EgyptAir)", "EgyptAir");
         if (!otherAirlineId) return "";
-        if (otherAirlineId === "other") return customAirlineName || "أخرى";
+        if (otherAirlineId === "other") return customAirlineName || t("أخرى", "Other");
         const found = AIRLINES.find((a) => a.id === otherAirlineId);
         return found ? `${found.labelAr} (${found.labelEn})` : "";
-    }, [airlineChoice, otherAirlineId, customAirlineName]);
+    }, [airlineChoice, otherAirlineId, customAirlineName, t]);
 
     /* ─── File handler ─────────────────────────────────────────── */
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,6 +195,57 @@ export default function AirportCoordination() {
     const otherAirlines = AIRLINES.filter((a) => !a.isEgyptAir);
 
     /* ─── Render ───────────────────────────────────────────────── */
+    if (!isAr) {
+        return (
+            <section className="py-20 bg-[#FAFAFA] min-h-screen">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                    <div className="text-center mb-10">
+                        <span className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 mb-5 shadow-sm text-xs font-semibold text-amber-800">
+                            English version
+                        </span>
+                        <h1 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+                            Security approvals & Egypt entry visas
+                        </h1>
+                        <p className="text-[#6B7280] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                            We’re preparing a fully translated English form. For now, you can either use the Arabic form, or message us on WhatsApp and we’ll help you complete the request.
+                        </p>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6 md:p-8">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <a
+                                href="/ar/airport-coordination"
+                                className="flex-1 inline-flex items-center justify-center rounded-xl border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-semibold text-[#0F172A] hover:bg-[#F8FAFC] transition"
+                            >
+                                Open Arabic form
+                            </a>
+                            <a
+                                href={`https://wa.me/201032549630?text=${encodeURIComponent(
+                                    "Hi, I’d like to apply for a security approval / visa support. Please guide me."
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 inline-flex items-center justify-center rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white hover:bg-[#1da851] transition shadow-md"
+                            >
+                                Message on WhatsApp
+                            </a>
+                        </div>
+
+                        <div className="mt-6 text-sm text-[#475569] leading-relaxed">
+                            <p className="font-semibold text-[#0F172A] mb-2">What we’ll ask you for</p>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>Passport / travel document image (JPG/PNG/PDF)</li>
+                                <li>Departure country and airport</li>
+                                <li>Airline and preferred processing (24h or 72h)</li>
+                                <li>Full name and WhatsApp number</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
     return (
         <section className="py-20 bg-[#FAFAFA] min-h-screen">
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -199,12 +255,19 @@ export default function AirportCoordination() {
                         <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span className="text-xs font-semibold text-amber-800">لحملة الجنسية الفلسطينية فقط</span>
+                        <span className="text-xs font-semibold text-amber-800">
+                            {t("لحملة الجنسية الفلسطينية فقط", "For Palestinian passport/ID holders only")}
+                        </span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-                        الموافقات الأمنية وتأشيرات دخول مصر                                        </h1>
+                        {t("الموافقات الأمنية وتأشيرات دخول مصر", "Security approvals & Egypt entry visas")}
+                    </h1>
                     <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                        نوفر خدمة استخراج الموافقات الأمنية لدخول مصر بسرعة وموثوقية، مع متابعة كاملة لجميع الإجراءات حتى صدور الموافقة ودخولك إلى مصر بسهولة وأمان.                 </p>
+                        {t(
+                            "نوفر خدمة استخراج الموافقات الأمنية لدخول مصر بسرعة وموثوقية، مع متابعة كاملة لجميع الإجراءات حتى صدور الموافقة ودخولك إلى مصر بسهولة وأمان.",
+                            "We help you obtain security approvals for entering Egypt quickly and reliably, with full follow‑up until approval is issued so you can enter Egypt smoothly and safely."
+                        )}
+                    </p>
                 </div>
 
                 {/* Who needs approval note */}

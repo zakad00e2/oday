@@ -5,9 +5,11 @@ export interface TripOption {
     nameAr: string;
     nameEn: string;
     descriptionAr: string;
+    descriptionEn: string;
     price: number;           // 0 = placeholder / TBD
     maxQuantity?: number;    // if user can select quantity (e.g. buggy count)
-    capacityLabel?: string;  // e.g. "شخص واحد" or "شخصين"
+    capacityLabelAr?: string;  // e.g. "شخص واحد"
+    capacityLabelEn?: string;  // e.g. "1 person"
 }
 
 export interface TripAddOn {
@@ -16,14 +18,17 @@ export interface TripAddOn {
     nameEn: string;
     price: number;           // 0 = placeholder / TBD
     descriptionAr: string;
+    descriptionEn: string;
     icon?: string;           // emoji
 }
 
 export interface TripSchedule {
     startTime: string;       // e.g. "08:00 AM"
     endTime: string;         // e.g. "04:00 PM"
-    duration: string;        // e.g. "8 ساعات"
-    frequency: string;       // e.g. "يومياً" or "حسب الجدول"
+    durationAr: string;      // e.g. "8 ساعات"
+    durationEn: string;      // e.g. "8 hours"
+    frequencyAr: string;     // e.g. "يومياً"
+    frequencyEn: string;     // e.g. "Daily"
 }
 
 export interface TripDetail {
@@ -31,13 +36,17 @@ export interface TripDetail {
     titleAr: string;
     titleEn: string;
     taglineAr: string;
+    taglineEn: string;
     descriptionAr: string;
+    descriptionEn: string;
     heroImage: string;
     galleryImages: string[];
     youtubeUrl: string;
     schedule: TripSchedule;
-    includes: string[];
-    essentials: string[];
+    includesAr: string[];
+    includesEn: string[];
+    essentialsAr: string[];
+    essentialsEn: string[];
     options: TripOption[];
     addOns: TripAddOn[];
     startingPrice: number;   // 0 = placeholder / TBD

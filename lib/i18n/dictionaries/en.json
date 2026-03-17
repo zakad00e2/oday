@@ -1,0 +1,258 @@
+{
+  "meta": {
+    "title": "Oday Tourism | Travel & Tours",
+    "description": "Hotel bookings • Tour management • Custom travel experiences — Oday Tourism",
+    "keywords": "tourism, travel, bookings, hotels, tours, Oday Tourism"
+  },
+  "nav": {
+    "home": "Home",
+    "hotels": "Hotels",
+    "trips": "Trips",
+    "airportCoordination": "Airport Coordination",
+    "about": "About Us",
+    "bookNow": "Book Now",
+    "cartLabel": "Booking Cart",
+    "menu": "Menu"
+  },
+  "hero": {
+    "badge": "Licensed Travel & Tourism Company",
+    "titleLine1": "Discover the Magic of Egypt",
+    "titleLine2": "with Oday Tourism",
+    "subtitle": "Hotel Bookings • Tourist Trips • All-Inclusive Packages",
+    "bookHotel": "Book a Hotel",
+    "browseTrips": "Browse Trips",
+    "joinUs": "Join Us",
+    "floatingDesc": "Travel through the most beautiful destinations and explore unforgettable experiences with the Oday Tourism team.",
+    "travelerAlt": "Traveler",
+    "heroImageAlt": "Stunning landscape"
+  },
+  "offers": {
+    "badge": "Exclusive Offers",
+    "title": "Offers for",
+    "titleBold": "the Best Destinations",
+    "subtitle": "Take advantage of the best deals on top Egyptian tourist destinations with special prices that include accommodation and services.",
+    "mostRequested": "Most Requested",
+    "quickBook": "Quick Book",
+    "perPerson": "per person",
+    "items": [
+      {
+        "destination": "Sharm El Sheikh",
+        "price": "2,499",
+        "currency": "EGP",
+        "duration": "3 Nights / 4 Days",
+        "services": ["5-Star Hotel Stay", "Daily Breakfast", "Airport Transfer", "Free Boat Tour"]
+      },
+      {
+        "destination": "Hurghada",
+        "price": "1,999",
+        "currency": "EGP",
+        "duration": "3 Nights / 4 Days",
+        "services": ["4-Star Hotel Stay", "Breakfast & Dinner", "Airport Transfer", "Free Snorkeling"]
+      },
+      {
+        "destination": "Ain Sokhna",
+        "price": "1,299",
+        "currency": "EGP",
+        "duration": "2 Nights / 3 Days",
+        "services": ["4-Star Hotel Stay", "Daily Breakfast", "Pool Access", "Free Wi-Fi"]
+      },
+      {
+        "destination": "Marsa Matrouh",
+        "price": "1,799",
+        "currency": "EGP",
+        "duration": "3 Nights / 4 Days",
+        "services": ["4-Star Hotel Stay", "Daily Breakfast", "City Tour", "Internal Transfer"]
+      },
+      {
+        "destination": "Luxor & Aswan",
+        "price": "3,499",
+        "currency": "EGP",
+        "duration": "4 Nights / 5 Days",
+        "services": ["Luxury Nile Cruise", "Full Board Meals", "Historical Tours", "Tour Guide"]
+      },
+      {
+        "destination": "Dahab",
+        "price": "1,599",
+        "currency": "EGP",
+        "duration": "3 Nights / 4 Days",
+        "services": ["Boutique Accommodation", "Daily Breakfast", "Safari Trip", "Free Diving"]
+      }
+    ]
+  },
+  "packages": {
+    "sectionTitle": "Our",
+    "sectionTitleBold": "Services",
+    "sectionSubtitle": "We offer a comprehensive range of tourism services for an unforgettable travel experience",
+    "featured": {
+      "title": "Discover All-Inclusive Travel Packages"
+    },
+    "items": [
+      {
+        "title": "Hotel Bookings",
+        "description": "Luxury hotels and resorts at exclusive prices in the most beautiful destinations.",
+        "label": "Browse Hotels"
+      },
+      {
+        "title": "Tourist Trips",
+        "description": "Boat tours, safaris, and historical tours with professional guides.",
+        "label": "Discover Trips"
+      },
+      {
+        "title": "Airport Coordination",
+        "description": "Meet and greet services with comfortable and safe airport transfers.",
+        "label": "Book Service"
+      },
+      {
+        "title": "Contact Us",
+        "description": "Our team is ready to help you plan your perfect trip via WhatsApp.",
+        "label": "Contact Now"
+      }
+    ]
+  },
+  "gallery": {
+    "badge": "Photo Gallery",
+    "title": "Unforgettable",
+    "titleBold": "Moments",
+    "subtitle": "Browse the most beautiful moments and experiences our clients enjoyed on their trips with Oday Tourism",
+    "prev": "Previous",
+    "next": "Next",
+    "cards": [
+      { "title": "Sunset in Sharm El Sheikh", "desc": "Stunning view of the Red Sea" },
+      { "title": "Diving in Dahab", "desc": "Discover the underwater world" },
+      { "title": "Safari Adventure", "desc": "Adventure in the heart of the desert" },
+      { "title": "Nile Cruise in Luxor", "desc": "A journey through history" },
+      { "title": "Hurghada Beach", "desc": "Relaxation on white sands" },
+      { "title": "Abu Simbel Temples", "desc": "Wonders of ancient civilization" },
+      { "title": "Siwa Oasis", "desc": "Paradise in the desert" },
+      { "title": "Boat Trip", "desc": "A full day at sea" },
+      { "title": "Luxury Resort", "desc": "An unmatched stay" }
+    ]
+  },
+  "howItWorks": {
+    "sectionTitle": "How to Book Your Trip?",
+    "categories": ["Explore", "Trips", "Hotels", "Adventures", "Honeymoon", "Private Tours"],
+    "subtitle": "How We Work",
+    "stepsTitle": "Book your trip in 4 easy steps",
+    "tripImageAlt": "Tourist trip",
+    "steps": [
+      { "number": "1", "title": "Choose a Hotel", "description": "Browse our featured hotels in Sharm El Sheikh and choose your preferred accommodation." },
+      { "number": "2", "title": "Choose Trips", "description": "Add boat tours, safaris, and activities you'd like to enjoy." },
+      { "number": "3", "title": "Add-ons", "description": "Select additional services like airport pickup to ensure your comfort." },
+      { "number": "4", "title": "Review", "description": "Review the final cost details and submit your booking request." }
+    ]
+  },
+  "cta": {
+    "title": "Start Your Journey with",
+    "brandName": "Oday Tourism"
+  },
+  "reviews": {
+    "badge": "Customer Reviews",
+    "title": "What Our",
+    "titleBold": "Clients Say",
+    "subtitle": "Real experiences from travelers who enjoyed their trips with us",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "footer": {
+    "brand": "Oday Tourism",
+    "description": "Oday Tourism — We provide the best travel and tourism experiences in Egypt. Hotel bookings, tourist trips, and comprehensive services.",
+    "quickLinks": "Quick Links",
+    "packageBuilder": "Package Builder",
+    "contactInfo": "Contact Info",
+    "location": "Cairo, Egypt",
+    "emailPlaceholder": "Enter your email",
+    "subscribeLabel": "Email for subscription",
+    "subscribeBtnLabel": "Subscribe to newsletter",
+    "subscribe": "Subscribe",
+    "copyright": "All rights reserved."
+  },
+  "cart": {
+    "title": "Your Trip Plan",
+    "emptyCount": "Nothing added yet",
+    "itemSingular": "item",
+    "itemPlural": "items",
+    "close": "Close",
+    "emptyTitle": "Start building your trip!",
+    "emptySubtitle": "Choose a hotel and trips to customize your ideal experience",
+    "browseHotels": "Browse Hotels",
+    "browseTrips": "Browse Trips",
+    "removeHotel": "Remove Hotel",
+    "nights": "nights",
+    "room": "room",
+    "edit": "Edit",
+    "addTripsTitle": "Want to add trips?",
+    "addTripsDesc": "Discover the best tourist trips and add them to your plan",
+    "tripsLabel": "Trips",
+    "total": "Total:",
+    "removeTrip": "Remove Trip",
+    "free": "Free",
+    "estimatedTotal": "Estimated Total",
+    "onRequest": "On Request",
+    "checkout": "Complete Booking",
+    "clearCart": "Clear Cart",
+    "whatsapp": {
+      "header": "Booking Request — Oday Tourism",
+      "hotel": "Hotel:",
+      "roomLabel": "Room:",
+      "addOns": "Add-ons:",
+      "nightsLabel": "Nights:",
+      "stayCost": "Stay Cost:",
+      "tripsLabel": "Trips:",
+      "guests": "Guests:",
+      "adults": "adults",
+      "children": "children",
+      "travelDate": "Travel Date:",
+      "estimatedTotal": "Estimated Total:"
+    }
+  },
+  "hotelsPage": {
+    "heroBadge": "Unforgettable Luxury Stay",
+    "heroTitle": "Choose Your Stay at the Finest Destinations",
+    "heroDesc1": "We offer you the best hotels and resorts",
+    "heroDesc2": "at competitive prices with exceptional service",
+    "exploreHotels": "Explore Hotels",
+    "heroImageAlt": "Luxury hotels in Sharm El Sheikh",
+    "selectedHotels": "Selected Hotels",
+    "title": "Premium Hotels",
+    "titleBold": "at the Best Prices",
+    "subtitle": "We select the best hotels in the most popular Egyptian destinations at competitive prices with excellent service.",
+    "destinationLabel": "Destination",
+    "allDestinations": "All Destinations",
+    "clearFilters": "Clear Filters",
+    "defaultSort": "Default",
+    "discounts": "Discounts",
+    "mostBooked": "Most Booked",
+    "highestRated": "Highest Rated",
+    "lowestPrice": "Lowest Price",
+    "hotelsAvailable": "hotels available",
+    "discount": "Discount",
+    "prevImage": "Previous image",
+    "nextImage": "Next image",
+    "startsFrom": "Starts from",
+    "perNight": "/ night",
+    "detailsAndBook": "Details & Book",
+    "noResults": "No hotels match your search"
+  },
+  "langSwitcher": {
+    "ar": "عربي",
+    "en": "English"
+  ,
+  "tripsPage": {
+    "badge": "Featured Trips",
+    "heading": {
+      "title": "Discover Trips",
+      "subtitle": "Choose your next adventure from our curated list"
+    },
+    "grid": {
+      "title": "Trips",
+      "subtitle": "Pick the trip that suits you"
+    }
+  },
+  "tripDetail": {
+    "title": "Trip Details",
+    "schedule": "Schedule",
+    "includes": "Includes",
+    "booking": "Booking"
+  }
+}
+}

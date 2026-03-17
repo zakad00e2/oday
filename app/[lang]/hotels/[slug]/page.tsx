@@ -7,9 +7,21 @@ import Image from "next/image";
 import { getHotelBySlug } from "@/lib/hotels-data";
 import { useCart } from "@/lib/cart-context";
 import ScrollReveal from "@/components/ScrollReveal";
+import { useI18n } from "@/lib/i18n/dictionary-context";
+import { hotelAddOnsEn, hotelDetailEn } from "@/lib/hotel-detail-locales";
 
 /* ─── Hero ─────────────────────────────────────────────────── */
-function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHotelBySlug> & object; onBookNow: () => void }) {
+function HotelDetailHero({
+    hotel,
+    onBookNow,
+    isAr,
+    labels,
+}: {
+    hotel: ReturnType<typeof getHotelBySlug> & object;
+    onBookNow: () => void;
+    isAr: boolean;
+    labels: { stars: string; bookNow: string; viewGallery: string };
+}) {
     const images = hotel.gallery ?? [];
     const [idx, setIdx] = useState(0);
 
@@ -54,18 +66,18 @@ function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHot
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
                                 ))}
-                                <span className="text-white/70 text-sm mr-2">{hotel.stars} نجوم</span>
+                                <span className={`text-white/70 text-sm ${isAr ? "mr-2" : "ml-2"}`}>{hotel.stars} {labels.stars}</span>
                             </div>
                         </ScrollReveal>
                         <ScrollReveal delay={300}>
                             <div className="flex flex-wrap gap-3">
                                 <button
                                     onClick={onBookNow}
-                                    className="group inline-flex items-center gap-2 sm:gap-2.5 pr-5 pl-2 py-2 sm:pr-7 sm:pl-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0369A1] via-[#0284C7] to-[#0EA5E9] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(14,165,233,0.5)] hover:shadow-[0_0_24px_rgba(14,165,233,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20 cursor-pointer"
+                                    className="group inline-flex items-center gap-2 sm:gap-2.5 ps-5 pe-2 py-2 sm:ps-7 sm:pe-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0369A1] via-[#0284C7] to-[#0EA5E9] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(14,165,233,0.5)] hover:shadow-[0_0_24px_rgba(14,165,233,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20 cursor-pointer"
                                 >
-                                    احجز الآن
+                                    {labels.bookNow}
                                     <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#0284C7] shadow-md shrink-0">
-                                        <svg className="w-3.5 h-3.5 scale-x-[-1]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                        <svg className={`w-3.5 h-3.5 ${isAr ? "scale-x-[-1]" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                                         </svg>
                                     </span>
@@ -77,7 +89,7 @@ function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHot
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    شاهد الصور
+                                    {labels.viewGallery}
                                 </a>
                             </div>
                         </ScrollReveal>
@@ -116,7 +128,21 @@ function HotelDetailHero({ hotel, onBookNow }: { hotel: ReturnType<typeof getHot
 }
 
 /* ─── Gallery ───────────────────────────────────────────────── */
-function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: string; youtubeUrl?: string }) {
+function HotelGallery({
+    images,
+    name,
+    youtubeUrl,
+    title,
+    videoTitle,
+    imageLabel,
+}: {
+    images: string[];
+    name: string;
+    youtubeUrl?: string;
+    title: string;
+    videoTitle: string;
+    imageLabel: string;
+}) {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     return (
         <section id="gallery" className="py-10 md:py-14 border-b border-[#e2e8f0] scroll-mt-24">
@@ -127,7 +153,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">صور الفندق</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{title}</h2>
                 </div>
             </ScrollReveal>
 
@@ -139,7 +165,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
                         <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#f0f0f0] w-full h-full min-h-[300px] aspect-[9/16] md:aspect-auto">
                             <iframe
                                 src={youtubeUrl}
-                                title="فيديو الفندق"
+                                title={videoTitle}
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                                 className="w-full h-full absolute inset-0"
@@ -157,7 +183,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
                                 >
                                     <Image
                                         src={img}
-                                        alt={`${name} - صورة ${i + 1}`}
+                                        alt={`${name} - ${imageLabel} ${i + 1}`}
                                         fill
                                         sizes="(max-width: 768px) 50vw, 33vw"
                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -183,7 +209,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
                                     >
                                         <Image
                                             src={img}
-                                            alt={`${name} - صورة ${i + 5}`}
+                                            alt={`${name} - ${imageLabel} ${i + 5}`}
                                             fill
                                             sizes="(max-width: 768px) 50vw, 33vw"
                                             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -214,7 +240,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
                             >
                                 <Image
                                     src={img}
-                                    alt={`${name} - صورة ${i + 1}`}
+                                    alt={`${name} - ${imageLabel} ${i + 1}`}
                                     fill
                                     sizes="(max-width: 768px) 50vw, 33vw"
                                     className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -273,7 +299,7 @@ function HotelGallery({ images, name, youtubeUrl }: { images: string[]; name: st
 
                     <img
                         src={images[lightboxIdx]}
-                        alt={`${name} - صورة ${lightboxIdx + 1}`}
+                        alt={`${name} - ${imageLabel} ${lightboxIdx + 1}`}
                         className="max-w-full max-h-[85vh] object-contain rounded-2xl"
                         onClick={(e) => e.stopPropagation()}
                     />
@@ -298,8 +324,61 @@ export default function HotelDetailPage() {
     const params = useParams();
     const slug = params?.slug as string;
     const hotel = getHotelBySlug(slug);
+    const { lang } = useI18n();
+    const isAr = lang === "ar";
     const { setHotel, cart, openCart, setNights } = useCart();
     const isInCart = cart.hotel?.id === hotel?.id;
+    const hotelLocale = hotel && !isAr ? hotelDetailEn[hotel.slug] : null;
+    const localizedHotel = hotel
+        ? {
+            ...hotel,
+            name: isAr ? hotel.name : hotelLocale?.name ?? hotel.name,
+            city: isAr ? hotel.city : hotelLocale?.city ?? hotel.city,
+            description: isAr ? hotel.description : hotelLocale?.description ?? hotel.description,
+            amenities: hotel.amenities.map((item, index) => ({
+                ...item,
+                label: isAr ? item.label : hotelLocale?.amenities[index] ?? item.label,
+            })),
+            rooms: hotel.rooms.map((room, index) => ({
+                ...room,
+                name: isAr ? room.name : hotelLocale?.rooms[index]?.name ?? room.name,
+                description: isAr ? room.description : hotelLocale?.rooms[index]?.description ?? room.description,
+            })),
+        }
+        : null;
+    const localizedAddOns = hotelAddOnsData.map((addon) => ({
+        ...addon,
+        name: isAr ? addon.name : hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.name ?? addon.name,
+        description: isAr ? addon.description : hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.description ?? addon.description,
+    }));
+    const labels = {
+        notFound: isAr ? "الفندق غير موجود" : "Hotel not found",
+        backToHotels: isAr ? "العودة للفنادق" : "Back to hotels",
+        stars: isAr ? "نجوم" : "stars",
+        bookNow: isAr ? "احجز الآن" : "Book now",
+        viewGallery: isAr ? "شاهد الصور" : "View gallery",
+        aboutHotel: isAr ? "نبذة عن الفندق" : "About the hotel",
+        amenities: isAr ? "المرافق والخدمات" : "Amenities and services",
+        chooseRoom: isAr ? "اختر غرفتك واحجز" : "Choose your room and book",
+        chooseRoomSub: isAr ? "حدد نوع الغرفة وعدد الليالي" : "Select your room type and number of nights",
+        roomType: isAr ? "نوع الغرفة" : "Room type",
+        roomCount: isAr ? "عدد الغرف" : "Rooms",
+        roomChangeNote: isAr ? "يمكن تغيير نوع الغرفة بعد إتمام الحجز، وذلك عبر التواصل معنا على الواتساب، حسب التوفر وبرسوم إضافية." : "Room type can be changed after booking by contacting us on WhatsApp, subject to availability and possible extra fees.",
+        addOns: isAr ? "الإضافات" : "Add-ons",
+        optional: isAr ? "(اختياري)" : "(Optional)",
+        stayDates: isAr ? "تواريخ الإقامة" : "Stay dates",
+        checkIn: isAr ? "تاريخ الوصول" : "Check-in date",
+        checkOut: isAr ? "تاريخ المغادرة" : "Check-out date",
+        night: isAr ? "ليلة" : "night",
+        nights: isAr ? "ليالٍ" : "nights",
+        estimatedTotalFor: isAr ? "الإجمالي التقديري لـ" : "Estimated total for",
+        updateBooking: isAr ? "تعديل الحجز" : "Update booking",
+        addedToPlan: isAr ? "تمت الإضافة لبرنامجك" : "Added to your plan",
+        addToPlan: isAr ? "أضف لبرنامجك" : "Add to your plan",
+        hotelGallery: isAr ? "صور الفندق" : "Hotel gallery",
+        hotelVideo: isAr ? "فيديو الفندق" : "Hotel video",
+        image: isAr ? "صورة" : "Image",
+    };
 
     const [selectedRoom, setSelectedRoom] = useState(0);
     const [roomsCount, setRoomsCount] = useState(1);
@@ -318,16 +397,16 @@ export default function HotelDetailPage() {
     useEffect(() => {
         if (isInCart && cart.hotel) {
             if (cart.hotel.roomName) {
-                const roomIndex = hotel?.rooms.findIndex(r => r.name === cart.hotel?.roomName);
+                const roomIndex = localizedHotel?.rooms.findIndex((r) => r.name === cart.hotel?.roomName);
                 if (roomIndex !== undefined && roomIndex !== -1) setSelectedRoom(roomIndex);
                 if (cart.hotel.roomsCount) setRoomsCount(cart.hotel.roomsCount);
             }
             if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
-                const found = hotelAddOnsData.find(a => a.name === cart.hotel!.selectedAddOns![0].name);
+                const found = localizedAddOns.find((a) => a.name === cart.hotel!.selectedAddOns![0].name);
                 setSelectedAddOns(found ? found.id : null);
             }
         }
-    }, [isInCart, cart.hotel, hotel?.rooms]);
+    }, [isInCart, cart.hotel, localizedHotel?.rooms, localizedAddOns]);
 
     const nights = Math.max(1, Math.round(
         (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000 
@@ -340,7 +419,7 @@ export default function HotelDetailPage() {
     const isAddOnsChanged = () => {
         const reference = savedAddOns !== undefined ? savedAddOns : (() => {
             if (!isInCart || !cart.hotel?.selectedAddOns?.length) return null;
-            const found = hotelAddOnsData.find(a => a.name === cart.hotel!.selectedAddOns![0].name);
+            const found = localizedAddOns.find((a) => a.name === cart.hotel!.selectedAddOns![0].name);
             return found ? found.id : null;
         })();
         return selectedAddOns !== reference;
@@ -361,16 +440,17 @@ export default function HotelDetailPage() {
             <main className="min-h-screen bg-[#FAFAFA] flex items-center justify-center pt-20">
                 <div className="text-center">
                     <h1 className="text-4xl font-bold text-[#0f172a] mb-4">404</h1>
-                    <p className="text-[#64748b] text-lg">الفندق غير موجود</p>
-                    <Link href="/hotels" className="inline-block mt-6 bg-[#0EA5E9] text-white px-6 py-3 rounded-full font-bold hover:bg-[#0284C7] transition">
-                        العودة للفنادق
+                    <p className="text-[#64748b] text-lg">{labels.notFound}</p>
+                    <Link href={`/${lang}/hotels`} className="inline-block mt-6 bg-[#0EA5E9] text-white px-6 py-3 rounded-full font-bold hover:bg-[#0284C7] transition">
+                        {labels.backToHotels}
                     </Link>
                 </div>
             </main>
         );
     }
 
-    const room = hotel.rooms[selectedRoom];
+    const resolvedHotel = localizedHotel!;
+    const room = resolvedHotel.rooms[selectedRoom];
     let addonsPriceTotal = 0;
     if (selectedAddOns) {
         const found = hotelAddOnsData.find(a => a.id === selectedAddOns);
@@ -381,7 +461,7 @@ export default function HotelDetailPage() {
 
     return (
         <main className="bg-[#FAFAFA]">
-            <HotelDetailHero hotel={hotel} onBookNow={scrollToBooking} />
+            <HotelDetailHero hotel={resolvedHotel} onBookNow={scrollToBooking} isAr={isAr} labels={{ stars: labels.stars, bookNow: labels.bookNow, viewGallery: labels.viewGallery }} />
 
             <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12">
 
@@ -396,11 +476,11 @@ export default function HotelDetailPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">نبذة عن الفندق</h2>
+                                <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{labels.aboutHotel}</h2>
                             </div>
                         </ScrollReveal>
                         <ScrollReveal delay={100}>
-                            <p className="text-[#444] text-base md:text-lg leading-[2] max-w-3xl whitespace-pre-line">{hotel.description}</p>
+                            <p className="text-[#444] text-base md:text-lg leading-[2] max-w-3xl whitespace-pre-line">{resolvedHotel.description}</p>
                         </ScrollReveal>
                     </section>
 
@@ -413,11 +493,11 @@ export default function HotelDetailPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 0 0 2.25-2.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v2.25A2.25 2.25 0 0 0 6 10.5Zm0 9.75h2.25A2.25 2.25 0 0 0 10.5 18v-2.25a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25V18A2.25 2.25 0 0 0 6 20.25Zm9.75-9.75H18a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 18 3.75h-2.25A2.25 2.25 0 0 0 13.5 6v2.25a2.25 2.25 0 0 0 2.25 2.25Z" />
                                     </svg>
                                 </div>
-                                <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">المرافق والخدمات</h2>
+                                <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">{labels.amenities}</h2>
                             </div>
                         </ScrollReveal>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {hotel.amenities.map((item, i) => (
+                            {resolvedHotel.amenities.map((item, i) => (
                                 <ScrollReveal key={item.label} delay={i * 40}>
                                     <div className="flex items-center gap-2.5 px-1 py-2">
                                         <svg className="w-4 h-4 text-[#10B981] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -432,7 +512,7 @@ export default function HotelDetailPage() {
                 </div>
 
                 {/* ── Booking Section ── */}
-                <div id="booking" className="py-10 md:py-14 scroll-mt-24" dir="rtl">
+                <div id="booking" className="py-10 md:py-14 scroll-mt-24" dir={isAr ? "rtl" : "ltr"}>
                     <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
 
                         {/* Header */}
@@ -443,8 +523,8 @@ export default function HotelDetailPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-[#0f172a]">اختر غرفتك واحجز</h2>
-                                <p className="text-xs text-[#64748b] mt-0.5">حدد نوع الغرفة وعدد الليالي</p>
+                                <h2 className="text-lg font-bold text-[#0f172a]">{labels.chooseRoom}</h2>
+                                <p className="text-xs text-[#64748b] mt-0.5">{labels.chooseRoomSub}</p>
                             </div>
                         </div>
 
@@ -454,10 +534,10 @@ export default function HotelDetailPage() {
                             {/* Room selector */}
                             <div>
                                 <div className="flex items-center gap-2 mb-4">
-                                    <h3 className="font-bold text-[#0f172a]">نوع الغرفة</h3>
+                                    <h3 className="font-bold text-[#0f172a]">{labels.roomType}</h3>
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    {hotel.rooms.map((r, i) => {
+                                    {resolvedHotel.rooms.map((r, i) => {
                                         const isSelected = selectedRoom === i;
                                         return (
                                             <div
@@ -492,7 +572,7 @@ export default function HotelDetailPage() {
                                                         className="mt-3 pt-3 border-t border-[#0EA5E9]/20 flex items-center justify-between"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        <span className="text-xs font-medium text-[#64748b]">عدد الغرف</span>
+                                                        <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
                                                         <div className="flex items-center gap-2">
                                                             <button
                                                                 onClick={() => setRoomsCount(c => Math.max(1, c - 1))}
@@ -514,17 +594,17 @@ export default function HotelDetailPage() {
                                     <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    يمكن تغيير نوع الغرفة بعد إتمام الحجز، وذلك عبر التواصل معنا على الواتساب، حسب التوفر وبرسوم إضافية.
+                                    {labels.roomChangeNote}
                                 </p>
                             </div>
 
                             {/* Add-ons — col 2 on desktop, spans 2 rows */}
                             <div className="lg:row-span-2">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <h3 className="font-bold text-[#0f172a]">الإضافات <span className="text-xs font-normal text-[#94a3b8]">(اختياري)</span></h3>
+                                    <h3 className="font-bold text-[#0f172a]">{labels.addOns} <span className="text-xs font-normal text-[#94a3b8]">{labels.optional}</span></h3>
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    {hotelAddOnsData.map((addon) => {
+                                    {localizedAddOns.map((addon) => {
                                         const isSelected = selectedAddOns === addon.id;
                                         return (
                                             <div
@@ -557,14 +637,14 @@ export default function HotelDetailPage() {
                             {/* Dates */}
                             <div className="flex flex-col gap-5">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-bold text-[#0f172a]">تواريخ الإقامة</h3>
+                                    <h3 className="font-bold text-[#0f172a]">{labels.stayDates}</h3>
                                 </div>
 
                                 {/* Dates Grid */}
                                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                     {/* Check-in */}
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">تاريخ الوصول</label>
+                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkIn}</label>
                                         <div className="relative">
                                             <input
                                                 type="date"
@@ -584,7 +664,7 @@ export default function HotelDetailPage() {
 
                                     {/* Check-out */}
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">تاريخ المغادرة</label>
+                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkOut}</label>
                                         <div className="relative">
                                             <input
                                                 type="date"
@@ -602,7 +682,7 @@ export default function HotelDetailPage() {
                                     <svg className="w-4 h-4 text-[#F59E0B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                     </svg>
-                                    <span className="text-sm font-medium text-[#0f172a]">{nights} {nights === 1 ? "ليلة" : "ليالٍ"}</span>
+                                    <span className="text-sm font-medium text-[#0f172a]">{nights} {nights === 1 ? labels.night : labels.nights}</span>
                                 </div>
                             </div>
 
@@ -611,12 +691,12 @@ export default function HotelDetailPage() {
                         {/* Total + CTA */}
                         <div className="px-6 md:px-8 py-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                             <div>
-                                <p className="text-sm text-[#64748b] mb-1">الإجمالي التقديري لـ {nights} {nights === 1 ? "ليلة" : "ليالٍ"}</p>
+                                <p className="text-sm text-[#64748b] mb-1">{labels.estimatedTotalFor} {nights} {nights === 1 ? labels.night : labels.nights}</p>
                                 <div className="flex items-baseline gap-1.5 flex-wrap">
                                     <span className="text-4xl font-extrabold text-[#0EA5E9]">${totalPrice.toLocaleString("en-US")}</span>
                                     <span className="text-sm text-[#94a3b8]">({room.name}{roomsCount > 1 ? ` × ${roomsCount}` : ""})</span>
                                     {selectedAddOns && (() => {
-                                        const addon = hotelAddOnsData.find(a => a.id === selectedAddOns);
+                                        const addon = localizedAddOns.find(a => a.id === selectedAddOns);
                                         return addon ? (
                                             <span className="text-sm text-[#94a3b8]">
                                                 + {addon.name}
@@ -631,18 +711,25 @@ export default function HotelDetailPage() {
                                         setHotel({
                                             id: hotel.id,
                                             slug: hotel.slug,
-                                            name: hotel.name,
-                                            city: hotel.city,
+                                            name: resolvedHotel.name,
+                                            nameAr: hotel.name,
+                                            nameEn: hotelLocale?.name ?? hotel.name,
+                                            city: resolvedHotel.city,
+                                            cityAr: hotel.city,
+                                            cityEn: hotelLocale?.city ?? hotel.city,
                                             image: hotel.image,
-                                              pricePerNight: room.price,
-                                              stars: hotel.stars,
-                                              roomName: room.name,
-                                              roomsCount: roomsCount,
-                                              selectedAddOns: selectedAddOns ? (() => {
-                                                  const a = hotelAddOnsData.find(x => x.id === selectedAddOns);
-                                                  return a ? [{ name: a.name, price: a.price }] : [];
-                                              })() : []
-                                          });
+                                               pricePerNight: room.price,
+                                               stars: hotel.stars,
+                                               roomName: room.name,
+                                               roomNameAr: hotel.rooms[selectedRoom]?.name,
+                                               roomNameEn: resolvedHotel.rooms[selectedRoom]?.name,
+                                               roomsCount: roomsCount,
+                                               selectedAddOns: selectedAddOns ? (() => {
+                                                   const a = localizedAddOns.find(x => x.id === selectedAddOns);
+                                                   const arabicAddOn = hotelAddOnsData.find(x => x.id === selectedAddOns);
+                                                   return a ? [{ name: a.name, nameAr: arabicAddOn?.name ?? a.name, nameEn: a.name, price: a.price }] : [];
+                                               })() : []
+                                           });
                                           setNights(nights);
                                           setSavedRoom(selectedRoom);
                                           setSavedRoomsCount(roomsCount);
@@ -664,21 +751,21 @@ export default function HotelDetailPage() {
                                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
-                                            تعديل الحجز
+                                            {labels.updateBooking}
                                         </>
                                     ) : isInCart ? (
                                         <>
                                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
-                                            تمت الإضافة لبرنامجك
+                                            {labels.addedToPlan}
                                         </>
                                     ) : (
                                         <>
                                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                                             </svg>
-                                            أضف لبرنامجك
+                                            {labels.addToPlan}
                                         </>
                                     )}
                                 </button>
@@ -688,7 +775,7 @@ export default function HotelDetailPage() {
                 </div>
 
                 {/* ── Gallery ── */}
-                <HotelGallery images={hotel.gallery} name={hotel.name} youtubeUrl={hotel.youtubeUrl} />
+                <HotelGallery images={hotel.gallery} name={resolvedHotel.name} youtubeUrl={hotel.youtubeUrl} title={labels.hotelGallery} videoTitle={labels.hotelVideo} imageLabel={labels.image} />
 
             </div>
         </main>

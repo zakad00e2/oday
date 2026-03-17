@@ -3,6 +3,123 @@
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
 import Reviews from "@/components/Reviews";
+import { useI18n } from "@/lib/i18n/dictionary-context";
+
+function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
+    return (
+        <main className="bg-[#FAFAFA]">
+            <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-28 md:pt-48 md:pb-28">
+                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#60A5FA] opacity-5 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#93C5FD] opacity-5 rounded-full blur-[100px] pointer-events-none" />
+
+                <div className="relative z-10 max-w-[1100px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div className={`space-y-6 order-1 lg:order-2 flex flex-col items-center text-center lg:items-start lg:text-start transition-all duration-1000 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563EB] border border-[#2563EB]/20 bg-[#2563EB]/5 rounded-full px-4 py-1.5">
+                            About us
+                        </span>
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-tight">
+                            Oday{" "}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#2563EB] to-[#60A5FA]">
+                                Tourism
+                            </span>
+                        </h1>
+                        <p className="text-[#64748b] text-base md:text-lg leading-relaxed max-w-lg">
+                            We craft unforgettable travel experiences in Egypt — from the Red Sea to the golden desert. Our team supports you from planning to your safe return.
+                        </p>
+                        <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
+                            <a
+                                href={`/${lang}/package-builder`}
+                                className="flex items-center gap-2 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-all text-sm"
+                            >
+                                Build your package
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                                </svg>
+                            </a>
+                            <a
+                                href={`/${lang}/contact`}
+                                className="flex items-center gap-2 border border-[#cbd5e1] text-[#0f172a] font-semibold px-6 py-3 rounded-full hover:bg-[#f8fafc] transition text-sm"
+                            >
+                                Contact us
+                            </a>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start pt-8 mt-4 border-t border-[#e2e8f0] w-full">
+                            {[
+                                { number: "500+", label: "Trips organized" },
+                                { number: "10+", label: "Years of experience" },
+                                { number: "1000+", label: "Happy customers" },
+                            ].map((stat, index) => (
+                                <div key={stat.label} className={`flex flex-col items-center lg:items-start px-4 sm:px-6 md:px-8 ${index !== 2 ? "border-l border-[#e2e8f0]" : ""} ${index === 0 ? "lg:pr-0 pl-4 sm:pl-6 md:pl-8" : ""}`}>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-3xl md:text-4xl font-black text-[#0f172a]">{stat.number.replace("+", "")}</span>
+                                        <span className="text-xl md:text-2xl font-bold text-[#0f172a]">+</span>
+                                    </div>
+                                    <p className="text-xs sm:text-sm font-medium text-[#64748b] mt-1">{stat.label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className={`order-2 lg:order-1 relative transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+                        <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)] rotate-1">
+                            <img
+                                src="/WhatsApp Image 2026-02-27 at 8.28.18 PM (1).jpeg"
+                                alt="Sharm El‑Sheikh activities"
+                                className="w-full h-[450px] object-cover"
+                                loading="eager"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/60 to-transparent" />
+                        </div>
+                        <div className="absolute -bottom-5 -right-4 bg-white rounded-2xl shadow-xl px-5 py-4 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-[#111]">Trusted experience</p>
+                                <p className="text-xs text-gray-500">Sharm El‑Sheikh • Egypt</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
+                <ScrollReveal className="text-center mb-14">
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#2563EB] mb-2 block">
+                        What we do
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#111]">Our services</h2>
+                    <p className="mt-4 text-[#6B7280] text-base md:text-lg max-w-xl mx-auto">
+                        A complete set of travel services to match your needs.
+                    </p>
+                </ScrollReveal>
+                <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                        { title: "Hotels & resorts", desc: "Handpicked stays in Sharm El‑Sheikh — from luxury hotels to great-value resorts.", icon: <HotelIcon /> },
+                        { title: "Boat trips & yachts", desc: "Snorkeling, diving, and Red Sea cruises with reliable organization.", icon: <ShipIcon /> },
+                        { title: "Safari & adventures", desc: "Desert safaris, quad biking, and unforgettable outdoor experiences.", icon: <SunIcon /> },
+                        { title: "Complete packages", desc: "Bundle accommodation, transfers, and activities for a smooth trip.", icon: <SuitcaseIcon /> },
+                    ].map((s, i) => (
+                        <ScrollReveal key={s.title} delay={i * 100}>
+                            <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#2563EB]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
+                                <div className="text-[#2563EB] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
+                                    {s.icon}
+                                </div>
+                                <h3 className="text-lg font-bold text-[#111] mb-3">{s.title}</h3>
+                                <p className="text-[#6B7280] text-sm leading-relaxed">{s.desc}</p>
+                            </div>
+                        </ScrollReveal>
+                    ))}
+                </div>
+            </section>
+
+            <Reviews />
+        </main>
+    );
+}
 
 /* ── SVG Icon Components ─────────────────────────────── */
 
@@ -217,6 +334,11 @@ function FAQList() {
 export default function AboutPage() {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => { setLoaded(true); }, []);
+    const { lang } = useI18n();
+
+    if (lang === "en") {
+        return <AboutPageEn loaded={loaded} lang={lang} />;
+    }
 
     return (
         <main className="bg-[#FAFAFA]">
@@ -247,7 +369,7 @@ export default function AboutPage() {
                         </p>
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
                             <a
-                                href="/package-builder"
+                                href={`/${lang}/package-builder`}
                                 className="flex items-center gap-2 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg  hover:scale-105 transition-all text-sm"
                             >
                                 احجز رحلتك الآن
@@ -256,7 +378,7 @@ export default function AboutPage() {
                                 </svg>
                             </a>
                             <a
-                                href="/contact"
+                                href={`/${lang}/contact`}
                                 className="flex items-center gap-2 border border-[#cbd5e1] text-[#0f172a] font-semibold px-6 py-3 rounded-full hover:bg-[#f8fafc] transition text-sm"
                             >
                                 تواصل معنا

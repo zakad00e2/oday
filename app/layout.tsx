@@ -1,6 +1,5 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
-import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata: Metadata = {
   title: "Oday Tourism | عدي للسياحة",
@@ -15,9 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className="antialiased font-[var(--font-arabic)]">
-        <LayoutWrapper>{children}</LayoutWrapper>
+    <html suppressHydrationWarning>
+      <body className="antialiased">
+        {children}
       </body>
     </html>
   );

@@ -15,23 +15,30 @@ export interface CartHotel {
   id: number;
   slug: string;
   name: string;
+  nameAr?: string;
+  nameEn?: string;
   city: string;
+  cityAr?: string;
+  cityEn?: string;
   image: string;
   pricePerNight: number;
   stars: number;
   roomsCount?: number;
   roomName?: string;
-  selectedAddOns?: { name: string; price: number }[];
+  roomNameAr?: string;
+  roomNameEn?: string;
+  selectedAddOns?: { name: string; nameAr?: string; nameEn?: string; price: number }[];
 }
 
 export interface CartTrip {
   slug: string;
   titleAr: string;
+  titleEn?: string;
   heroImage: string;
   startingPrice: number; // per person, 0 = TBD
   persons?: number;      // number of persons selected
-  selectedOptions?: { nameAr: string; price: number; persons?: number }[];
-  selectedAddOns?: { nameAr: string; price: number; persons?: number }[];
+  selectedOptions?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];
+  selectedAddOns?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];
 }
 
 export interface CartGuests {

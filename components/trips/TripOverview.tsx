@@ -2,7 +2,7 @@
 
 import ScrollReveal from "../ScrollReveal";
 
-export default function TripOverview({ description }: { description: string }) {
+export default function TripOverview({ description, title }: { description: string; title: string }) {
     return (
         <section>
             <ScrollReveal>
@@ -12,7 +12,7 @@ export default function TripOverview({ description }: { description: string }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">تفاصيل الرحلة</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{title}</h2>
                 </div>
             </ScrollReveal>
             <ScrollReveal delay={100}>
