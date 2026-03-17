@@ -44,11 +44,11 @@ export default function TripDetailHero({
                 {/* Content */}
                 <div className="relative z-10 w-full max-w-[900px] px-5 md:px-14 pb-8 md:pb-12 pt-32 md:pt-48">
 
-                    <ScrollReveal>
+                    {/* <ScrollReveal>
                         <span className="inline-block text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-[#93C5FD] border border-[#93C5FD]/30 bg-white/5 backdrop-blur-sm rounded-full px-3 py-1 sm:px-4 sm:py-1.5 mb-3 sm:mb-5">
                             {kicker}
                         </span>
-                    </ScrollReveal>
+                    </ScrollReveal> */}
 
                     <ScrollReveal delay={100}>
                         <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-4 max-w-3xl" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>

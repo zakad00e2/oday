@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { getHotelBySlug } from "@/lib/hotels-data";
 import { useCart } from "@/lib/cart-context";
@@ -314,11 +314,269 @@ function HotelGallery({
     );
 }
 
+function parseIsoDate(value: string): Date | null {
+    if (!value) return null;
+    const [year, month, day] = value.split("-").map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+}
+
+function formatIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function LocalizedDatePicker({
+    value,
+    onChange,
+    locale,
+    label,
+    placeholder,
+    clearLabel,
+    minDate,
+    open,
+    onOpenChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    locale: "ar" | "en";
+    label: string;
+    placeholder: string;
+    clearLabel: string;
+    minDate?: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
+    const isAr = locale === "ar";
+    const selectedDate = parseIsoDate(value);
+    const minDateValue = parseIsoDate(minDate ?? "");
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
+    const [visibleMonth, setVisibleMonth] = useState<Date>(() => {
+        const base = selectedDate ?? minDateValue ?? new Date();
+        return new Date(base.getFullYear(), base.getMonth(), 1);
+    });
+
+    useEffect(() => {
+        if (!open) return;
+
+        const updatePlacement = () => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+            const estimatedPanelHeight = 380;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            setPlacement(spaceBelow < estimatedPanelHeight && spaceAbove > spaceBelow ? "top" : "bottom");
+        };
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!containerRef.current?.contains(event.target as Node)) {
+                onOpenChange(false);
+            }
+        };
+
+        updatePlacement();
+        document.addEventListener("pointerdown", handlePointerDown);
+        window.addEventListener("resize", updatePlacement);
+        window.addEventListener("scroll", updatePlacement, true);
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            window.removeEventListener("resize", updatePlacement);
+            window.removeEventListener("scroll", updatePlacement, true);
+        };
+    }, [open, onOpenChange]);
+
+    const weekdayFormatter = useMemo(
+        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { weekday: "short" }),
+        [isAr]
+    );
+    const monthFormatter = useMemo(
+        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { month: "long", year: "numeric" }),
+        [isAr]
+    );
+    const displayFormatter = useMemo(
+        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { year: "numeric", month: "long", day: "numeric" }),
+        [isAr]
+    );
+
+    const weekdayLabels = useMemo(() => {
+        const start = new Date(2026, 0, 4);
+        return Array.from({ length: 7 }, (_, idx) => {
+            const date = new Date(start);
+            date.setDate(start.getDate() + idx);
+            return weekdayFormatter.format(date);
+        });
+    }, [weekdayFormatter]);
+
+    const calendarDays = useMemo(() => {
+        const year = visibleMonth.getFullYear();
+        const month = visibleMonth.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const cells: Array<Date | null> = Array.from({ length: firstDay }, () => null);
+
+        for (let day = 1; day <= daysInMonth; day += 1) {
+            cells.push(new Date(year, month, day));
+        }
+
+        while (cells.length % 7 !== 0) {
+            cells.push(null);
+        }
+
+        return cells;
+    }, [visibleMonth]);
+
+    const chooseDate = (date: Date) => {
+        if (minDateValue && date < minDateValue) return;
+        onChange(formatIsoDate(date));
+        setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+        onOpenChange(false);
+    };
+
+    return (
+        <div ref={containerRef} className="relative">
+            <button
+                type="button"
+                onClick={() => onOpenChange(!open)}
+                className={`w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] transition-all flex items-center justify-between gap-3 hover:border-[#0EA5E9] ${isAr ? "text-right" : "text-left"}`}
+            >
+                <span className={value ? "text-[#0F172A]" : "text-[#94A3B8]"}>
+                    {selectedDate ? displayFormatter.format(selectedDate) : placeholder}
+                </span>
+                <svg className="w-5 h-5 text-[#64748B] shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </button>
+
+            {open && (
+                <div className={`absolute z-30 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] sm:w-full sm:min-w-[280px] rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xl ${placement === "top" ? "bottom-full mb-2" : "top-full mt-2"} ${isAr ? "right-0" : "left-0"}`}>
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]"
+                            aria-label={isAr ? "الشهر السابق" : "Previous month"}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d={isAr ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
+                            </svg>
+                        </button>
+                        <div className="text-sm font-semibold text-[#111]">{monthFormatter.format(visibleMonth)}</div>
+                        <button
+                            type="button"
+                            onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]"
+                            aria-label={isAr ? "الشهر التالي" : "Next month"}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d={isAr ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div className="mb-2 grid grid-cols-7 gap-1">
+                        {weekdayLabels.map((day) => (
+                            <div key={day} className="py-1 text-center text-xs font-semibold text-[#94A3B8]">
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1">
+                        {calendarDays.map((date, index) => {
+                            if (!date) {
+                                return <div key={`empty-${index}`} className="h-10" />;
+                            }
+
+                            const iso = formatIsoDate(date);
+                            const isSelected = iso === value;
+                            const isToday = iso === formatIsoDate(new Date());
+                            const isDisabled = minDateValue ? date < minDateValue : false;
+
+                            return (
+                                <button
+                                    key={iso}
+                                    type="button"
+                                    disabled={isDisabled}
+                                    onClick={() => chooseDate(date)}
+                                    className={`h-10 rounded-xl text-sm transition-all ${
+                                        isSelected
+                                            ? "bg-[#0EA5E9] text-white shadow-sm"
+                                            : isDisabled
+                                            ? "text-[#CBD5E1] cursor-not-allowed"
+                                            : isToday
+                                            ? "border border-[#0EA5E9] text-[#0EA5E9] hover:bg-[#F0F9FF]"
+                                            : "text-[#0F172A] hover:bg-[#F8FAFC]"
+                                    }`}
+                                >
+                                    {date.getDate()}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                onOpenChange(false);
+                            }}
+                            className="text-xs font-medium text-[#64748B] hover:text-[#111]"
+                        >
+                            {clearLabel}
+                        </button>
+                        <div className="text-xs text-[#94A3B8]">{label}</div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const hotelAddOnsData = [
     { id: "sea_view", name: "إطلالة بحرية", price: 40, description: "غرفة بإطلالة مباشرة على البحر" },
     { id: "pool_view", name: "إطلالة مسبح", price: 20, description: "غرفة بإطلالة على المسبح الخارجي" },
     { id: "first_row", name: "صف أول على البحر", price: 60, description: "موقع في الصف الأول مباشرةً أمام الشاطئ" }
 ];
+
+function resolveRoomIndexFromCart(
+    hotel: ReturnType<typeof getHotelBySlug>,
+    hotelLocale: (typeof hotelDetailEn)[string] | null,
+    cartHotel: ReturnType<typeof useCart>["cart"]["hotel"]
+) {
+    if (!hotel || !cartHotel) return -1;
+
+    const cartRoomNames = [cartHotel.roomName, cartHotel.roomNameAr, cartHotel.roomNameEn].filter(
+        (value): value is string => Boolean(value)
+    );
+    if (cartRoomNames.length === 0) return -1;
+
+    return hotel.rooms.findIndex((room, index) => {
+        const localizedRoomName = hotelLocale?.rooms[index]?.name;
+        return cartRoomNames.includes(room.name) || (localizedRoomName ? cartRoomNames.includes(localizedRoomName) : false);
+    });
+}
+
+function resolveAddOnIdFromCart(cartHotel: ReturnType<typeof useCart>["cart"]["hotel"]) {
+    if (!cartHotel?.selectedAddOns?.length) return null;
+
+    for (const cartAddon of cartHotel.selectedAddOns) {
+        const addonNames = [cartAddon.name, cartAddon.nameAr, cartAddon.nameEn].filter(
+            (value): value is string => Boolean(value)
+        );
+        const found = hotelAddOnsData.find((addon) => {
+            const englishName = hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.name;
+            return addonNames.includes(addon.name) || (englishName ? addonNames.includes(englishName) : false);
+        });
+        if (found) return found.id;
+    }
+
+    return null;
+}
 
 export default function HotelDetailPage() {
     const params = useParams();
@@ -389,24 +647,35 @@ export default function HotelDetailPage() {
     const [checkOut, setCheckOut] = useState(tomorrow);
     const [savedRoom, setSavedRoom] = useState<number | null>(null);
     const [savedRoomsCount, setSavedRoomsCount] = useState<number | null>(null);
-    const [savedAddOns, setSavedAddOns] = useState<string | null | undefined>(undefined);
+    const [savedAddOns, setSavedAddOns] = useState<string | null>(null);
     const [savedCheckIn, setSavedCheckIn] = useState<string | null>(null);
     const [savedCheckOut, setSavedCheckOut] = useState<string | null>(null);
+    const [openDatePicker, setOpenDatePicker] = useState<"checkIn" | "checkOut" | null>(null);
 
     // Initialize state from cart if it's already in the cart
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (isInCart && cart.hotel) {
-            if (cart.hotel.roomName) {
-                const roomIndex = localizedHotel?.rooms.findIndex((r) => r.name === cart.hotel?.roomName);
-                if (roomIndex !== undefined && roomIndex !== -1) setSelectedRoom(roomIndex);
-                if (cart.hotel.roomsCount) setRoomsCount(cart.hotel.roomsCount);
+            const roomIndex = resolveRoomIndexFromCart(hotel, hotelLocale, cart.hotel);
+            if (roomIndex !== -1) {
+                setSelectedRoom((prev) => (prev === roomIndex ? prev : roomIndex));
+                setSavedRoom((prev) => (prev === roomIndex ? prev : roomIndex));
             }
-            if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
-                const found = localizedAddOns.find((a) => a.name === cart.hotel!.selectedAddOns![0].name);
-                setSelectedAddOns(found ? found.id : null);
+            if (cart.hotel.roomsCount) {
+                setRoomsCount((prev) => (prev === cart.hotel!.roomsCount ? prev : cart.hotel!.roomsCount!));
+                setSavedRoomsCount((prev) => (prev === cart.hotel!.roomsCount ? prev : cart.hotel!.roomsCount!));
             }
+            const addOnId = resolveAddOnIdFromCart(cart.hotel);
+            setSelectedAddOns((prev) => (prev === addOnId ? prev : addOnId));
+            setSavedAddOns((prev) => (prev === addOnId ? prev : addOnId));
         }
-    }, [isInCart, cart.hotel, localizedHotel?.rooms, localizedAddOns]);
+    }, [
+        isInCart,
+        cart.hotel,
+        hotel,
+        hotelLocale,
+    ]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const nights = Math.max(1, Math.round(
         (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000 
@@ -417,11 +686,10 @@ export default function HotelDetailPage() {
     };
 
     const isAddOnsChanged = () => {
-        const reference = savedAddOns !== undefined ? savedAddOns : (() => {
-            if (!isInCart || !cart.hotel?.selectedAddOns?.length) return null;
-            const found = localizedAddOns.find((a) => a.name === cart.hotel!.selectedAddOns![0].name);
-            return found ? found.id : null;
-        })();
+        if (savedAddOns !== null) {
+            return selectedAddOns !== savedAddOns;
+        }
+        const reference = isInCart ? resolveAddOnIdFromCart(cart.hotel) : null;
         return selectedAddOns !== reference;
     };
 
@@ -429,7 +697,7 @@ export default function HotelDetailPage() {
         isInCart && (
             (savedRoom !== null ? selectedRoom !== savedRoom : hotel?.rooms[selectedRoom].price !== cart.hotel?.pricePerNight) ||
             (savedRoomsCount !== null ? roomsCount !== savedRoomsCount : roomsCount !== (cart.hotel?.roomsCount || 1)) ||
-            (savedCheckIn !== null && checkIn !== savedCheckIn) ||
+            (savedCheckIn !== null ? checkIn !== savedCheckIn : false) ||
             (savedCheckOut !== null ? checkOut !== savedCheckOut : nights !== cart.nights) ||
             isAddOnsChanged()
         )
@@ -451,13 +719,30 @@ export default function HotelDetailPage() {
 
     const resolvedHotel = localizedHotel!;
     const room = resolvedHotel.rooms[selectedRoom];
-    let addonsPriceTotal = 0;
-    if (selectedAddOns) {
-        const found = hotelAddOnsData.find(a => a.id === selectedAddOns);
-        if (found) addonsPriceTotal = found.price;
-    }
+    type HotelSelectedAddOn = {
+        name: string;
+        nameAr: string;
+        nameEn: string;
+        price: number;
+    };
 
-    const totalPrice = (room.price * roomsCount + addonsPriceTotal) * nights;
+    const selectedHotelAddOns = selectedAddOns
+        ? (() => {
+              const addon = localizedAddOns.find((a) => a.id === selectedAddOns);
+              const source = hotelAddOnsData.find((a) => a.id === selectedAddOns);
+              const englishName = hotelAddOnsEn[selectedAddOns as keyof typeof hotelAddOnsEn]?.name;
+              return addon
+                  ? [{
+                        name: addon.name,
+                        nameAr: source?.name ?? addon.name,
+                        nameEn: englishName ?? addon.name,
+                        price: addon.price,
+                    } satisfies HotelSelectedAddOn]
+                  : [];
+          })()
+        : [];
+    const addonsPriceTotal = selectedHotelAddOns.reduce((sum, addon) => sum + addon.price, 0) * nights * roomsCount;
+    const totalPrice = (room.price * roomsCount * nights) + addonsPriceTotal;
 
     return (
         <main className="bg-[#FAFAFA]">
@@ -513,7 +798,7 @@ export default function HotelDetailPage() {
 
                 {/* ── Booking Section ── */}
                 <div id="booking" className="py-10 md:py-14 scroll-mt-24" dir={isAr ? "rtl" : "ltr"}>
-                    <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-visible">
 
                         {/* Header */}
                         <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
@@ -609,7 +894,7 @@ export default function HotelDetailPage() {
                                         return (
                                             <div
                                                 key={addon.id}
-                                                onClick={() => setSelectedAddOns(isSelected ? null : addon.id)}
+                                                onClick={() => setSelectedAddOns((prev) => (prev === addon.id ? null : addon.id))}
                                                 className={`flex items-start justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#F59E0B] bg-[#F59E0B]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"}`}
                                             >
                                                 <div className="flex items-start gap-3">
@@ -635,45 +920,57 @@ export default function HotelDetailPage() {
                             </div>
 
                             {/* Dates */}
-                            <div className="flex flex-col gap-5">
+                            <div className="relative z-20 flex flex-col gap-5">
                                 <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-bold text-[#0f172a]">{labels.stayDates}</h3>
                                 </div>
 
                                 {/* Dates Grid */}
-                                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {/* Check-in */}
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkIn}</label>
-                                        <div className="relative">
-                                            <input
-                                                type="date"
-                                                value={checkIn}
-                                                min={today}
-                                                onChange={(e) => {
-                                                    setCheckIn(e.target.value);
-                                                    if (e.target.value >= checkOut) {
-                                                        const d = new Date(e.target.value); d.setDate(d.getDate() + 1); const next = d.toISOString().split("T")[0];
-                                                        setCheckOut(next);
-                                                    }
-                                                }}
-                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30 focus:border-[#F59E0B] transition cursor-pointer"
-                                            />
-                                        </div>
+                                        <LocalizedDatePicker
+                                            value={checkIn}
+                                            minDate={today}
+                                            locale={isAr ? "ar" : "en"}
+                                            label={labels.checkIn}
+                                            open={openDatePicker === "checkIn"}
+                                            onOpenChange={(open) => setOpenDatePicker(open ? "checkIn" : null)}
+                                            placeholder={isAr ? "اختر التاريخ" : "Select a date"}
+                                            clearLabel={isAr ? "مسح" : "Clear"}
+                                            onChange={(value) => {
+                                                const nextCheckIn = value || today;
+                                                setCheckIn(nextCheckIn);
+                                                if (nextCheckIn >= checkOut) {
+                                                    const d = new Date(nextCheckIn);
+                                                    d.setDate(d.getDate() + 1);
+                                                    setCheckOut(formatIsoDate(d));
+                                                }
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Check-out */}
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkOut}</label>
-                                        <div className="relative">
-                                            <input
-                                                type="date"
-                                                value={checkOut}
-                                                min={(() => { const d = new Date(checkIn); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
-                                                onChange={(e) => setCheckOut(e.target.value)}
-                                                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-2 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30 focus:border-[#F59E0B] transition cursor-pointer"
-                                            />
-                                        </div>
+                                        <LocalizedDatePicker
+                                            value={checkOut}
+                                            minDate={(() => {
+                                                const d = new Date(checkIn);
+                                                d.setDate(d.getDate() + 1);
+                                                return formatIsoDate(d);
+                                            })()}
+                                            locale={isAr ? "ar" : "en"}
+                                            label={labels.checkOut}
+                                            open={openDatePicker === "checkOut"}
+                                            onOpenChange={(open) => setOpenDatePicker(open ? "checkOut" : null)}
+                                            placeholder={isAr ? "اختر التاريخ" : "Select a date"}
+                                            clearLabel={isAr ? "مسح" : "Clear"}
+                                            onChange={(value) => {
+                                                if (value) setCheckOut(value);
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
@@ -695,14 +992,11 @@ export default function HotelDetailPage() {
                                 <div className="flex items-baseline gap-1.5 flex-wrap">
                                     <span className="text-4xl font-extrabold text-[#0EA5E9]">${totalPrice.toLocaleString("en-US")}</span>
                                     <span className="text-sm text-[#94a3b8]">({room.name}{roomsCount > 1 ? ` × ${roomsCount}` : ""})</span>
-                                    {selectedAddOns && (() => {
-                                        const addon = localizedAddOns.find(a => a.id === selectedAddOns);
-                                        return addon ? (
-                                            <span className="text-sm text-[#94a3b8]">
-                                                + {addon.name}
-                                            </span>
-                                        ) : null;
-                                    })()}
+                                    {selectedHotelAddOns.length > 0 && (
+                                        <span className="text-sm text-[#94a3b8]">
+                                            + {selectedHotelAddOns.map((addon) => addon.name).join(isAr ? "، " : ", ")}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5 w-full sm:w-auto">
@@ -718,17 +1012,13 @@ export default function HotelDetailPage() {
                                             cityAr: hotel.city,
                                             cityEn: hotelLocale?.city ?? hotel.city,
                                             image: hotel.image,
-                                               pricePerNight: room.price,
-                                               stars: hotel.stars,
-                                               roomName: room.name,
-                                               roomNameAr: hotel.rooms[selectedRoom]?.name,
-                                               roomNameEn: resolvedHotel.rooms[selectedRoom]?.name,
-                                               roomsCount: roomsCount,
-                                               selectedAddOns: selectedAddOns ? (() => {
-                                                   const a = localizedAddOns.find(x => x.id === selectedAddOns);
-                                                   const arabicAddOn = hotelAddOnsData.find(x => x.id === selectedAddOns);
-                                                   return a ? [{ name: a.name, nameAr: arabicAddOn?.name ?? a.name, nameEn: a.name, price: a.price }] : [];
-                                               })() : []
+                                            pricePerNight: room.price,
+                                            stars: hotel.stars,
+                                            roomName: room.name,
+                                            roomNameAr: hotel.rooms[selectedRoom]?.name,
+                                            roomNameEn: resolvedHotel.rooms[selectedRoom]?.name,
+                                            roomsCount: roomsCount,
+                                            selectedAddOns: selectedHotelAddOns,
                                            });
                                           setNights(nights);
                                           setSavedRoom(selectedRoom);
