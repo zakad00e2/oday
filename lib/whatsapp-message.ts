@@ -17,50 +17,57 @@ export interface AirportFormData {
     notes: string;
 }
 
+type AirportMessageLocale = "ar" | "en";
+
 /**
- * Build a formatted Arabic WhatsApp message from the form data.
+ * Build a formatted WhatsApp message from the form data.
  */
-export function buildWhatsAppMessage(data: AirportFormData): string {
+export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessageLocale = "ar"): string {
+    const isAr = locale === "ar";
     const documentLabel =
-        data.documentType === "palestinian" ? "الجوازات الفلسطينية (السلطة)" :
-            data.documentType === "european" ? "الوثائق الاوروبية (اللاجئين)" :
-                "الجوازات المصفرة";
+        data.documentType === "palestinian"
+            ? (isAr ? "الجوازات الفلسطينية (السلطة)" : "Palestinian passport (Authority)")
+            : data.documentType === "european"
+                ? (isAr ? "الوثائق الاوروبية (اللاجئين)" : "European travel document (refugees)")
+                : (isAr ? "الجوازات المصفرة" : "Yellow passports");
     const serviceLabel =
         data.serviceType === "24h"
-            ? "موافقة أمنية خلال 24 ساعة"
-            : "موافقة أمنية خلال 72 ساعة";
+            ? (isAr ? "موافقة أمنية خلال 24 ساعة" : "Security approval within 24 hours")
+            : (isAr ? "موافقة أمنية خلال 72 ساعة" : "Security approval within 72 hours");
 
     const lines = [
-        `— *خدمات التأشيرات والموافقات الأمنية* —`,
+        isAr ? `— *خدمات التأشيرات والموافقات الأمنية* —` : `— *Visa support & security approvals* —`,
         ``,
-        `• *نوع الوثيقة:* ${documentLabel}`,
-        `• *نوع الخدمة:* ${serviceLabel}`,
-        `• *السعر الأساسي:* $${data.basePrice}`,
-        `• *شركة الطيران:* ${data.airlineName}`,
-        `• *رسوم إضافية:* $${data.extraFee}`,
-        `• *الإجمالي:* $${data.total}`,
+        `${isAr ? "• *نوع الوثيقة:*" : "• *Document type:*"} ${documentLabel}`,
+        `${isAr ? "• *نوع الخدمة:*" : "• *Service type:*"} ${serviceLabel}`,
+        `${isAr ? "• *السعر الأساسي:*" : "• *Base price:*"} $${data.basePrice}`,
+        `${isAr ? "• *شركة الطيران:*" : "• *Airline:*"} ${data.airlineName}`,
+        `${isAr ? "• *رسوم إضافية:*" : "• *Extra fee:*"} $${data.extraFee}`,
+        `${isAr ? "• *الإجمالي:*" : "• *Total:*"} $${data.total}`,
         ``,
-        `• *المستند:* ${data.fileName} — تم إرفاق الملف (سيتم إرساله في المحادثة)`,
+        isAr
+            ? `• *المستند:* ${data.fileName} — تم إرفاق الملف (سيتم إرساله في المحادثة)`
+            : `• *Document:* ${data.fileName} — the file is attached and will be sent in the chat`,
         ``,
-        `• *بلد المغادرة:* ${data.country}`,
-        `• *مطار المغادرة:* ${data.airport}`,
+        `${isAr ? "• *بلد المغادرة:*" : "• *Departure country:*"} ${data.country}`,
+        `${isAr ? "• *مطار المغادرة:*" : "• *Departure airport:*"} ${data.airport}`,
     ];
 
     if (data.travelDate) {
-        lines.push(`• *تاريخ السفر:* ${data.travelDate}`);
+        lines.push(`${isAr ? "• *تاريخ السفر:*" : "• *Travel date:*"} ${data.travelDate}`);
     }
 
     lines.push(
         ``,
-        `• *الاسم:* ${data.fullName}`,
-        `• *واتساب:* ${data.whatsappNumber}`
+        `${isAr ? "• *الاسم:*" : "• *Full name:*"} ${data.fullName}`,
+        `${isAr ? "• *واتساب:*" : "• *WhatsApp:*"} ${data.whatsappNumber}`
     );
 
     if (data.email) {
-        lines.push(`• *البريد:* ${data.email}`);
+        lines.push(`${isAr ? "• *البريد:*" : "• *Email:*"} ${data.email}`);
     }
     if (data.notes) {
-        lines.push(`• *ملاحظات:* ${data.notes}`);
+        lines.push(`${isAr ? "• *Notes:*" : "• *Notes:*"} ${data.notes}`);
     }
 
     return lines.join("\n");

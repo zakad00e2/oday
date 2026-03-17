@@ -147,20 +147,6 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
             </span>
           </div>
         )}
-        {"filterTag" in hotel && hotel.filterTag && (() => {
-          const tagConfig = {
-            most_booked: { label: d.mostBooked, bg: "bg-orange-500/90", icon: "🔥" },
-            highest_rated: { label: d.highestRated, bg: "bg-yellow-500/90", icon: "⭐" },
-            lowest_price: { label: d.lowestPrice, bg: "bg-emerald-500/90", icon: "💰" },
-          }[hotel.filterTag as string];
-          if (!tagConfig) return null;
-          return (
-            <div className={`absolute top-4 start-4 z-20 flex items-center gap-1 ${tagConfig.bg} backdrop-blur-md rounded-full px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/20`}>
-              <span className="text-[11px]">{tagConfig.icon}</span>
-              <span className="text-[11px] font-bold text-white tracking-wide">{tagConfig.label}</span>
-            </div>
-          );
-        })()}
         {images.map((src, i) => (
           <Image
             key={src}
@@ -252,7 +238,7 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
             <span className="text-[11px] text-[#64748B] font-medium mb-1">{d.startsFrom}</span>
             <div className="flex items-baseline gap-2">
               {"originalPrice" in hotel && hotel.originalPrice && (
-                <span className="text-sm font-medium text-red-400 line-through">
+                <span className="text-sm font-medium text-[#9CA3AF] line-through decoration-[#9CA3AF]">
                   {hotel.originalPrice.toLocaleString('en-US')}$
                 </span>
               )}
@@ -314,12 +300,6 @@ export default function Hotels() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-5 shadow-sm">
-              <svg className="w-4 h-4 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span className="text-xs font-medium text-[#111]">{d.selectedHotels}</span>
-            </div>
             <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
               {d.title} <span className="font-semibold">{d.titleBold}</span>
             </h2>
@@ -414,10 +394,6 @@ export default function Hotels() {
                 ))}
               </div>
 
-              {/* Results count */}
-              <p className="text-[12px] text-[#94A3B8] mt-2 text-end px-1">
-                {filteredHotels.length} {d.hotelsAvailable}
-              </p>
             </div>
           </div>
 
@@ -446,3 +422,4 @@ export default function Hotels() {
     </section>
   );
 }
+

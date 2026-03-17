@@ -124,7 +124,6 @@ export default function Navbar() {
 
       {/* ── Mobile: Cart + Language + Hamburger ──────── */}
       <div className="lg:hidden flex items-center gap-1.5">
-        <LanguageSwitcher className={`text-xs px-2.5 py-1 ${switcherClass}`} />
         <button
           onClick={openCart}
           aria-label={dict.nav.cartLabel}
@@ -179,15 +178,13 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <Link
-            href={`/${lang}/package-builder`}
-            onClick={closeMobile}
-            className={`mt-4 flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold ${
-              useDark ? "bg-[#111] text-white" : "bg-white text-[#111]"
+          <LanguageSwitcher
+            className={`mt-4 w-full justify-center text-sm px-4 py-3 ${
+              useDark
+                ? "border-[#E2E8F0] text-[#111] hover:bg-black/5"
+                : "border-white/20 text-white hover:bg-white/10"
             }`}
-          >
-            {dict.nav.bookNow}
-          </Link>
+          />
         </div>
       )}
     </nav>
