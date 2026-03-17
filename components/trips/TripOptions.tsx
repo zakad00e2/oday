@@ -35,6 +35,7 @@ export default function TripOptions({
                 {options.map((option, i) => {
                     const isSelected = selectedOptionId === option.id;
                     const qty = quantities[option.id] || 1;
+                    const capacityLabel = option.capacityLabelAr ?? option.capacityLabelEn;
 
                     return (
                         <ScrollReveal key={option.id} delay={i * 80}>
@@ -60,9 +61,9 @@ export default function TripOptions({
                                         </div>
                                         <p className="text-xs text-[#94a3b8] font-medium mr-7 mb-1">{option.nameEn}</p>
                                         <p className="text-sm text-[#64748b] mr-7">{option.descriptionAr}</p>
-                                        {option.capacityLabel && (
+                                        {capacityLabel && (
                                             <span className="inline-block mt-2 mr-7 text-xs bg-[#f0f9ff] text-[#2563EB] font-medium rounded-full px-3 py-1">
-                                                {option.capacityLabel}
+                                                {capacityLabel}
                                             </span>
                                         )}
                                     </div>

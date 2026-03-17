@@ -41,17 +41,17 @@ export default function TripDetailPage() {
     const [justAdded, setJustAdded] = useState(false);
     const tripLocale = !isAr && trip ? tripDetailEn[trip.slug] : null;
     const tripTitle = trip ? (isAr ? trip.titleAr : trip.titleEn) : "";
-    const tripDescription = trip ? (isAr ? trip.descriptionAr : tripLocale?.description ?? trip.descriptionAr) : "";
-    const tripIncludes = trip ? (isAr ? (trip as unknown as { includes?: string[] }).includes ?? [] : tripLocale?.includes ?? []) : [];
+    const tripDescription = trip ? (isAr ? trip.descriptionAr : tripLocale?.description ?? trip.descriptionEn) : "";
+    const tripIncludes = trip ? (isAr ? trip.includesAr : trip.includesEn) : [];
     const tripDuration = trip
         ? (isAr
-            ? (trip.schedule as unknown as { duration?: string }).duration ?? ""
-            : tripLocale?.duration ?? (trip.schedule as unknown as { durationEn?: string }).durationEn ?? "")
+            ? trip.schedule.durationAr
+            : tripLocale?.duration ?? trip.schedule.durationEn)
         : "";
     const tripFrequency = trip
         ? (isAr
-            ? (trip.schedule as unknown as { frequency?: string }).frequency ?? ""
-            : tripLocale?.frequency ?? (trip.schedule as unknown as { frequencyEn?: string }).frequencyEn ?? "")
+            ? trip.schedule.frequencyAr
+            : tripLocale?.frequency ?? trip.schedule.frequencyEn)
         : "";
 
     // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)

@@ -1,6 +1,7 @@
+import { tripDetailEn } from "./trip-detail-locales";
 import { TripDetail } from "./trips-types";
 
-export const allTrips: TripDetail[] = [
+const rawTrips = [
     // ═══════════════════════════════════════════════════════════════
     // 1. رحلة يخت رأس محمد والجزيرة البيضاء
     // ═══════════════════════════════════════════════════════════════
@@ -538,6 +539,56 @@ export const allTrips: TripDetail[] = [
         bookingFields: ["name", "guests", "hotel", "date", "time", "notes"],
     },
 ];
+
+export const allTrips: TripDetail[] = rawTrips.map((trip) => {
+    const locale = tripDetailEn[trip.slug];
+
+    return {
+        ...trip,
+        taglineEn: locale?.tagline ?? trip.taglineAr,
+        descriptionEn: locale?.description ?? trip.descriptionAr,
+        schedule: {
+            startTime: trip.schedule.startTime,
+            endTime: trip.schedule.endTime,
+            durationAr: trip.schedule.duration,
+            durationEn: locale?.duration ?? trip.schedule.duration,
+            frequencyAr: trip.schedule.frequency,
+            frequencyEn: locale?.frequency ?? trip.schedule.frequency,
+        },
+        includesAr: trip.includes,
+        includesEn: locale?.includes ?? trip.includes,
+        essentialsAr: trip.essentials,
+        essentialsEn: trip.essentials,
+        options: trip.options.map((option) => {
+            const optionLocale = locale?.options?.[option.id];
+
+            return {
+                id: option.id,
+                nameAr: option.nameAr,
+                nameEn: option.nameEn,
+                descriptionAr: option.descriptionAr,
+                descriptionEn: optionLocale?.description ?? option.descriptionAr,
+                price: option.price,
+                maxQuantity: "maxQuantity" in option ? option.maxQuantity : undefined,
+                capacityLabelAr: "capacityLabel" in option ? option.capacityLabel : undefined,
+                capacityLabelEn: optionLocale?.capacityLabel,
+            };
+        }),
+        addOns: trip.addOns.map((addOn) => {
+            const addOnLocale = locale?.addOns?.[addOn.id];
+
+            return {
+                id: addOn.id,
+                nameAr: addOn.nameAr,
+                nameEn: addOn.nameEn,
+                price: addOn.price,
+                descriptionAr: addOn.descriptionAr,
+                descriptionEn: addOnLocale?.description ?? addOn.descriptionAr,
+                icon: addOn.icon,
+            };
+        }),
+    };
+});
 
 // Helper to find a trip by slug
 export function getTripBySlug(slug: string): TripDetail | undefined {

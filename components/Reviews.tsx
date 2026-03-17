@@ -5,13 +5,62 @@ import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const reviews = [
-  { id: 1, name: "محمد أحمد", image: "https://i.pravatar.cc/120?img=11", rating: 5, text: "تجربة ممتازة من البداية للنهاية! الفندق كان فوق التوقعات والمرشد السياحي كان محترف جداً. أنصح الجميع بالتعامل مع Oday Tourism." },
-  { id: 2, name: "سارة عبدالله", image: "https://i.pravatar.cc/120?img=5", rating: 5, text: "رحلة شرم الشيخ كانت لا تُنسى! كل شيء منظم بشكل مذهل من الحجز للإقامة. شكراً لفريق عدي للسياحة." },
-  { id: 3, name: "أحمد فوزي", image: "https://i.pravatar.cc/120?img=12", rating: 4, text: "خدمة عملاء ممتازة وأسعار تنافسية جداً. الرحلة النيلية كانت تجربة رائعة لي ولعائلتي." },
-  { id: 4, name: "نورا حسين", image: "https://i.pravatar.cc/120?img=9", rating: 5, text: "أفضل شركة سياحة تعاملت معها. الاهتمام بالتفاصيل والمرونة في التعديلات كانت مذهلة." },
-  { id: 5, name: "علي محمود", image: "https://i.pravatar.cc/120?img=33", rating: 5, text: "حجزنا رحلة الغردقة وكانت من أجمل الرحلات. الفندق ممتاز والأنشطة البحرية رائعة!" },
-  { id: 6, name: "ريم خالد", image: "https://i.pravatar.cc/120?img=25", rating: 4, text: "تعامل راقي وخدمة سريعة عبر الواتساب. الرحلة كانت منظمة بشكل احترافي من الألف للياء." },
-  { id: 7, name: "كريم ياسر", image: "https://i.pravatar.cc/120?img=15", rating: 5, text: "رحلة سيوة مع Oday Tourism غيرت نظرتي للسياحة الداخلية. تنظيم ممتاز ومرشد رائع!" },
+  {
+    id: 1,
+    nameAr: "محمد أحمد",
+    nameEn: "Mohamed Ahmed",
+    rating: 5,
+    textAr: "تجربة ممتازة من البداية للنهاية! الفندق كان فوق التوقعات والمرشد السياحي كان محترف جداً. أنصح الجميع بالتعامل مع Oday Tourism.",
+    textEn: "An excellent experience from start to finish. The hotel exceeded expectations and the tour guide was highly professional. I highly recommend booking with Oday Tourism.",
+  },
+  {
+    id: 2,
+    nameAr: "سارة عبدالله",
+    nameEn: "Sara Abdallah",
+    rating: 5,
+    textAr: "رحلة شرم الشيخ كانت لا تُنسى! كل شيء منظم بشكل مذهل من الحجز للإقامة. شكراً لفريق عدي للسياحة.",
+    textEn: "Our Sharm El-Sheikh trip was unforgettable. Everything was perfectly organized from booking to accommodation. Thanks to the Oday Tourism team.",
+  },
+  {
+    id: 3,
+    nameAr: "أحمد فوزي",
+    nameEn: "Ahmed Fawzy",
+    rating: 4,
+    textAr: "خدمة عملاء ممتازة وأسعار تنافسية جداً. الرحلة النيلية كانت تجربة رائعة لي ولعائلتي.",
+    textEn: "Excellent customer service and very competitive prices. The Nile trip was a wonderful experience for me and my family.",
+  },
+  {
+    id: 4,
+    nameAr: "نورا حسين",
+    nameEn: "Noura Hussein",
+    rating: 5,
+    textAr: "أفضل شركة سياحة تعاملت معها. الاهتمام بالتفاصيل والمرونة في التعديلات كانت مذهلة.",
+    textEn: "This is the best travel company I have worked with. Their attention to detail and flexibility with changes were outstanding.",
+  },
+  {
+    id: 5,
+    nameAr: "علي محمود",
+    nameEn: "Ali Mahmoud",
+    rating: 5,
+    textAr: "حجزنا رحلة الغردقة وكانت من أجمل الرحلات. الفندق ممتاز والأنشطة البحرية رائعة!",
+    textEn: "We booked a Hurghada trip and it was one of our best vacations. The hotel was excellent and the sea activities were amazing.",
+  },
+  {
+    id: 6,
+    nameAr: "ريم خالد",
+    nameEn: "Reem Khaled",
+    rating: 4,
+    textAr: "تعامل راقي وخدمة سريعة عبر الواتساب. الرحلة كانت منظمة بشكل احترافي من الألف للياء.",
+    textEn: "Very professional service and quick support on WhatsApp. The trip was organized smoothly from beginning to end.",
+  },
+  {
+    id: 7,
+    nameAr: "كريم ياسر",
+    nameEn: "Karim Yasser",
+    rating: 5,
+    textAr: "رحلة سيوة مع Oday Tourism غيرت نظرتي للسياحة الداخلية. تنظيم ممتاز ومرشد رائع!",
+    textEn: "My Siwa trip with Oday Tourism completely changed how I see local travel. Excellent organization and a fantastic guide.",
+  },
 ];
 
 function Stars({ count }: { count: number }) {
@@ -27,7 +76,7 @@ function Stars({ count }: { count: number }) {
 }
 
 export default function Reviews() {
-  const { dict } = useI18n();
+  const { dict, lang } = useI18n();
   const d = dict.reviews;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -86,21 +135,24 @@ export default function Reviews() {
             <div className="absolute top-0 end-0 w-16 md:w-24 h-full bg-gradient-to-s from-white to-transparent z-10 pointer-events-none" />
             <div className="absolute top-0 start-0 w-16 md:w-24 h-full bg-gradient-to-e from-white to-transparent z-10 pointer-events-none" />
             <div ref={scrollRef} onScroll={updateActiveFromScroll} className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory py-4 px-2">
-              {reviews.map((review) => (
+              {reviews.map((review) => {
+                const name = lang === "ar" ? review.nameAr : review.nameEn;
+                const text = lang === "ar" ? review.textAr : review.textEn;
+
+                return (
                 <div key={review.id} className="flex-shrink-0 w-[300px] md:w-[360px] snap-center bg-white rounded-[20px] border border-[#F3F4F6] p-6 shadow-sm hover:shadow-lg transition-all duration-400">
-                  <div className="flex items-center gap-3 mb-4">
-                    <img src={review.image} alt={review.name} loading="lazy" className="w-12 h-12 rounded-full object-cover border-2 border-[#F3F4F6]" />
-                    <div>
-                      <h4 className="text-sm font-bold text-[#111]">{review.name}</h4>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <h4 className="text-sm font-bold text-[#111]">{name}</h4>
                       <Stars count={review.rating} />
                     </div>
                   </div>
                   <svg className="w-8 h-8 text-[#E5E7EB] mb-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                   </svg>
-                  <p className="text-sm text-[#374151] leading-relaxed">{review.text}</p>
+                  <p className="text-sm text-[#374151] leading-relaxed">{text}</p>
                 </div>
-              ))}
+              )})}
             </div>
             <div className="flex items-center justify-center gap-4 mt-8">
               <button onClick={() => scroll("prev")} className="w-10 h-10 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-sm hover:bg-[#F9FAFB] hover:shadow-md transition-all" aria-label={d.prev}>
