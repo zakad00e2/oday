@@ -104,14 +104,6 @@ const hotels = [
 // Extract unique cities from the hotel list (Arabic keys for filtering)
 const cities = Array.from(new Set(hotels.map((h) => h.city)));
 
-function FeatureIcon() {
-  return (
-    <svg className="w-3.5 h-3.5 text-[#0EA5E9] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
 type Hotel = typeof hotels[0];
 
 function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnType<typeof useI18nHotels> }) {
@@ -122,7 +114,6 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
   const hotelName = isAr ? hotel.name : hotel.nameEn;
   const hotelCity = isAr ? hotel.city : hotel.cityEn;
   const hotelDesc = isAr ? hotel.description : hotel.descriptionEn;
-  const hotelFeatures = isAr ? hotel.features : hotel.featuresEn;
 
   const prev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -134,7 +125,7 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
   };
 
   return (
-    <div className="group bg-white rounded-[24px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-xl transition-all duration-500">
+    <div className="group h-full bg-white rounded-[24px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col">
       {/* Image Carousel */}
       <div className="relative overflow-hidden aspect-[16/10]">
         {"discount" in hotel && hotel.discount && (
@@ -196,7 +187,7 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col gap-3">
+      <div className="px-5 pt-5 pb-3 flex flex-1 flex-col gap-3">
 
         {/* Name + Stars */}
         <div>
@@ -222,18 +213,8 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
         {/* Description */}
         <p className="text-sm text-[#6B7280] leading-relaxed">{hotelDesc}</p>
 
-        {/* Features */}
-        <div className="flex flex-wrap gap-1.5">
-          {hotelFeatures.map((f, i) => (
-            <span key={i} className="inline-flex items-center gap-1 text-xs font-medium text-[#374151] bg-[#F0F9FF] border border-[#E0F2FE] rounded-full px-2.5 py-1">
-              <FeatureIcon />
-              {f}
-            </span>
-          ))}
-        </div>
-
         {/* Price + CTA */}
-        <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
+        <div className="mt-auto flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
           <div className="flex flex-col">
             <span className="text-[11px] text-[#64748B] font-medium mb-1">{d.startsFrom}</span>
             <div className="flex items-baseline gap-2">
@@ -245,17 +226,25 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
               )}
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-bold text-[#0EA5E9] leading-none">{hotel.price?.toLocaleString('en-US') || "---"}</span>
-                <span className="text-sm font-semibold text-[#0EA5E9]">$</span>
+                <span className="text-2xl font-semibold text-[#0EA5E9] leading-none">$</span>
               </div>
               <span className="text-xs text-[#94A3B8]">{d.perNight}</span>
             </div>
           </div>
           <Link
             href={`/${lang}/hotels/${hotel.slug}`}
-            className="inline-flex items-center gap-2 text-sm font-bold text-[#0f172a] hover:text-[#0EA5E9] hover:gap-3 transition-all duration-300"
+            className="group inline-flex items-center gap-2 text-sm font-bold text-[#0f172a] hover:text-[#0EA5E9] transition-all duration-300"
           >
             {d.detailsAndBook}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <svg
+              className={`w-4 h-4 transition-transform duration-300 ${
+                lang === "en" ? "scale-x-[-1] group-hover:translate-x-1" : "group-hover:-translate-x-1"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
