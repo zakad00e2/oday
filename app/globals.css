@@ -121,6 +121,17 @@
   50% { transform: translateY(-10px); }
 }
 
+@keyframes arrowNudgeDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
   .animate-fade-in-up {
     animation: fadeInUp 0.8s ease forwards;
@@ -128,5 +139,10 @@
 
   .animate-float {
     animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-arrow-nudge-down {
+    opacity: 0;
+    animation: arrowNudgeDown 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.35s 1 forwards;
   }
 }

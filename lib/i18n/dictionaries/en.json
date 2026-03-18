@@ -98,8 +98,8 @@
         "label": "Discover Trips"
       },
       {
-        "title": "Airport Coordination",
-        "description": "Meet and greet services with comfortable and safe airport transfers.",
+        "title": "Security Approvals & Visas",
+        "description": "Support for security approvals, visa processing, and follow-up on required travel procedures.",
         "label": "Book Service"
       },
       {
@@ -135,10 +135,10 @@
     "stepsTitle": "Book your trip in 4 easy steps",
     "tripImageAlt": "Tourist trip",
     "steps": [
-      { "number": "1", "title": "Choose a Hotel", "description": "Browse our featured hotels in Sharm El Sheikh and choose your preferred accommodation." },
-      { "number": "2", "title": "Choose Trips", "description": "Add boat tours, safaris, and activities you'd like to enjoy." },
-      { "number": "3", "title": "Add-ons", "description": "Select additional services like airport pickup to ensure your comfort." },
-      { "number": "4", "title": "Review", "description": "Review the final cost details and submit your booking request." }
+      { "number": "1", "title": "Start by choosing the right hotel", "description": "Browse our featured hotels in Sharm El Sheikh and choose your preferred accommodation." },
+      { "number": "2", "title": "Choose trips and activities that fit your experience", "description": "Add boat tours, safaris, and activities you'd like to enjoy." },
+      { "number": "3", "title": "Add extra services for greater comfort", "description": "Select additional services like airport pickup to ensure your comfort." },
+      { "number": "4", "title": "Review booking details and final cost", "description": "Review the final cost details and submit your booking request." }
     ]
   },
   "cta": {
@@ -207,14 +207,14 @@
   },
   "hotelsPage": {
     "heroBadge": "Unforgettable Luxury Stay",
-    "heroTitle": "Choose Your Stay at the Finest Destinations",
+    "heroTitle": "Choose Your Perfect Destination",
     "heroDesc1": "We offer you the best hotels and resorts",
     "heroDesc2": "at competitive prices with exceptional service",
     "exploreHotels": "Explore Hotels",
     "heroImageAlt": "Luxury hotels in Sharm El Sheikh",
     "selectedHotels": "Selected Hotels",
-    "title": "Premium Hotels",
-    "titleBold": "at the Best Prices",
+    "title": "Discover Egypt’s Best Hotels",
+    "titleBold": "",
     "subtitle": "We select the best hotels in the most popular Egyptian destinations at competitive prices with excellent service.",
     "destinationLabel": "Destination",
     "allDestinations": "All Destinations",

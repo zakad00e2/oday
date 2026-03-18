@@ -34,7 +34,7 @@ export default function Packages() {
           {/* Layout: Featured card + 2x2 grid */}
           <div className="grid lg:grid-cols-[1fr_2fr] gap-4 items-stretch">
             {/* Featured Card */}
-            <div className="relative rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 cursor-pointer group">
+            <div className="relative rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 cursor-pointer group border border-[#F3F4F6] shadow-sm hover:shadow-lg transition-all duration-500">
               <img
                 src={featuredImage}
                 alt={d.featured.title}
@@ -57,7 +57,7 @@ export default function Packages() {
                     key={i}
                     href={isContact ? "https://wa.me/201032549630" : `/${lang}${href}`}
                     {...(isContact ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="group bg-white rounded-[20px] overflow-hidden transition-all duration-300 cursor-pointer flex flex-col hover:shadow-sm"
+                    className="group bg-white rounded-[20px] overflow-hidden border border-[#F3F4F6] shadow-sm hover:shadow-lg transition-all duration-500 cursor-pointer flex flex-col"
                   >
                     <div className="relative overflow-hidden aspect-[4/3] rounded-b-[16px]">
                       <img
@@ -73,7 +73,17 @@ export default function Packages() {
                       <div className="flex items-center justify-between mt-auto ms-auto gap-2">
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111]">
                           {pkg.label}
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <svg
+                            className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                              lang === "ar"
+                                ? "scale-x-[-1] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5"
+                                : "group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                           </svg>
                         </span>

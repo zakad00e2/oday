@@ -238,8 +238,9 @@ function HotelCard({ hotel, lang, d }: { hotel: Hotel; lang: string; d: ReturnTy
             <span className="text-[11px] text-[#64748B] font-medium mb-1">{d.startsFrom}</span>
             <div className="flex items-baseline gap-2">
               {"originalPrice" in hotel && hotel.originalPrice && (
-                <span className="text-sm font-medium text-[#9CA3AF] line-through decoration-[#9CA3AF]">
-                  {hotel.originalPrice.toLocaleString('en-US')}$
+                <span className="relative inline-flex items-center text-sm font-medium text-[#9CA3AF] leading-none">
+                  <span>{hotel.originalPrice.toLocaleString('en-US')}$</span>
+                  <span aria-hidden="true" className="absolute start-0 end-0 top-1/2 h-px -translate-y-1/2 bg-[#9CA3AF]" />
                 </span>
               )}
               <div className="flex items-baseline gap-0.5">
@@ -301,7 +302,7 @@ export default function Hotels() {
           {/* Header */}
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
-              {d.title} <span className="font-semibold">{d.titleBold}</span>
+              {d.title} <span>{d.titleBold}</span>
             </h2>
             <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
               {d.subtitle}
