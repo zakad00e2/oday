@@ -133,7 +133,7 @@ export default function PackagesGallery() {
                       src={pkg.image}
                       alt={pkg.title}
                       loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-contain bg-[#F3F4F6] transition-transform duration-700 ease-out group-hover:scale-105 sm:object-cover sm:bg-transparent"
                     />
                     
                     {/* Gradient Overlay for better contrast when hovered */}
