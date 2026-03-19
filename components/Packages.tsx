@@ -7,7 +7,7 @@ const packageHrefs = ["/hotels", "/trips", "/airport-coordination", "/contact"];
 const packageImages = [
   "/WhatsApp Image 2026-02-27 at 8.28.20 PM.jpeg",
   "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(2).jpeg",
-  "/WhatsApp%20Image%202026-02-27%20at%208.28.18%20PM.jpeg",
+  "/fpi.jpg",
   "/contact-us.jpg",
 ];
 const featuredImage = "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM.jpeg";
@@ -19,7 +19,7 @@ export default function Packages() {
   return (
     <section id="packages" className="py-14 bg-white">
       <ScrollReveal>
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-4xl font-medium text-[#111] leading-tight mb-3">
@@ -34,7 +34,7 @@ export default function Packages() {
           {/* Layout: Featured card + 2x2 grid */}
           <div className="grid lg:grid-cols-[1fr_2fr] gap-4 items-stretch">
             {/* Featured Card */}
-            <div className="relative rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 cursor-pointer group border border-[#F3F4F6] shadow-sm hover:shadow-lg transition-all duration-500">
+            <div className="relative hidden sm:block rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 cursor-pointer group border border-[#F3F4F6] shadow-sm hover:shadow-lg transition-all duration-500">
               <img
                 src={featuredImage}
                 alt={d.featured.title}
