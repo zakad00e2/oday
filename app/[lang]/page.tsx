@@ -1,13 +1,13 @@
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import CTAHeroBanner from "@/components/CTAHeroBanner";
-import Packages from "@/components/Packages";
+import PackagesGallery from "@/components/PackagesGallery";
 
 export default function Home() {
   return (
     <main>
       <Hero />
-      <Packages />
+      <PackagesGallery />
       <HowItWorks />
       <CTAHeroBanner />
     </main>
