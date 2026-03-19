@@ -29,11 +29,15 @@
   "offers": {
     "badge": "PROMOTED DESTINATIONS",
     "title": "Featured Offers",
+    "titleBold": "For You",
     "subtitle": "Luxury-style travel posters for top beach escapes with bold pricing, clear inclusions, and fast booking CTAs.",
     "startingFrom": "Starting from",
     "durationLabel": "Duration",
     "includesLabel": "Offer includes",
     "cta": "Book this offer",
+    "mostRequested": "Most Requested",
+    "perPerson": "/person",
+    "quickBook": "Quick Book",
     "messagePrefix": "I want to book or ask about the offer for",
     "items": [
       {
