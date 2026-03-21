@@ -54,10 +54,13 @@ export default function Footer() {
 
           {/* Col 1 — Brand */}
           <div className="lg:col-span-5">
-            <div className="flex items-center gap-2.5 mb-4">
-              <img src="/logo.png" alt="Oday Tourism Logo" className="h-10 w-auto object-contain" />
-              <span className="text-xl font-semibold text-[#111]">{dict.footer.brand}</span>
-            </div>
+            <Link href={`/${lang}`} className="flex items-center gap-2 mb-6">
+              <img src="/logo.png" alt="Oday Tourism Logo" className="h-16 w-auto object-contain" />
+              <div className="flex flex-col pt-1">
+                <span className="text-xl font-bold leading-none text-[#111]">Oday Tourism</span>
+                <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-[#6B7280]">Travel Services</span>
+              </div>
+            </Link>
             <p className="text-[#6B7280] text-sm leading-relaxed max-w-[400px]">
               {dict.footer.description}
             </p>

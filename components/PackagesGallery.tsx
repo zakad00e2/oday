@@ -110,17 +110,15 @@ export default function PackagesGallery() {
                 <div
                   key={pkg.id}
                   data-package-card-id={pkg.id}
-                  className="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] group relative block h-[480px] md:h-[520px] rounded-[24px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer"
+                  className="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] group relative block aspect-[3/4] md:h-[520px] rounded-[24px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer"
                 >
-                  <a
-                    href={`/${lang}${pkg.href}`}
+                  <div
                     className="absolute inset-0 z-10 block w-full h-full"
                     aria-label={`View ${pkg.title} package`}
                     onClick={(event) => {
                       if (window.innerWidth >= 640) return;
 
                       if (activeMobileCard !== pkg.id) {
-                        event.preventDefault();
                         setActiveMobileCard(pkg.id);
                         return;
                       }
@@ -133,7 +131,7 @@ export default function PackagesGallery() {
                       src={pkg.image}
                       alt={pkg.title}
                       loading="lazy"
-                      className="absolute inset-0 h-full w-full object-contain bg-[#F3F4F6] transition-transform duration-700 ease-out group-hover:scale-105 sm:object-cover sm:bg-transparent"
+                      className="absolute inset-0 h-full w-full object-cover bg-[#F3F4F6] transition-transform duration-700 ease-out group-hover:scale-105 sm:bg-transparent"
                     />
                     
                     {/* Gradient Overlay for better contrast when hovered */}
@@ -142,7 +140,7 @@ export default function PackagesGallery() {
                         activeMobileCard === pkg.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                       }`}
                     />
-                  </a>
+                  </div>
                   
                   {/* WhatsApp Button */}
                   <a

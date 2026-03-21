@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const avatars = [
@@ -63,9 +63,14 @@ export default function Hero() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed">
-            {d.subtitle}
-          </p>
+          <div className="flex flex-wrap justify-center items-center gap-x-2 md:gap-x-6 text-sm sm:text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed">
+            {d.subtitle.split("•").map((part, i, arr) => (
+              <Fragment key={i}>
+                <span className="whitespace-nowrap">{part.trim()}</span>
+                {i < arr.length - 1 ? <span className="opacity-50 text-[10px] md:text-sm">•</span> : null}
+              </Fragment>
+            ))}
+          </div>
 
           {/* CTA Buttons */}
           <div className="inline-flex items-center mt-8 rounded-full overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
