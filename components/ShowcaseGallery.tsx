@@ -89,6 +89,7 @@ export default function ShowcaseGallery() {
             onScroll={updateProgress}
             className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar py-4 px-6 md:px-2"
             role="list"
+            dir={isAr ? "rtl" : "ltr"}
           >
             {d.cards.map((card, idx) => (
               <div

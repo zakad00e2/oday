@@ -105,6 +105,7 @@ export default function PackagesGallery() {
               ref={scrollContainerRef}
               className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-8 scroll-smooth [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              dir={isAr ? "rtl" : "ltr"}
             >
               {galleryPackages.map((pkg) => (
                 <div
