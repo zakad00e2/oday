@@ -88,6 +88,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Always start with defaultCart so server and client render identically (avoids hydration mismatch)
   const [cart, setCart] = useState<CartState>(defaultCart);
   const [isOpen, setIsOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load from localStorage after hydration
   useEffect(() => {
@@ -103,17 +104,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } catch {
       // ignore
+    } finally {
+      setIsInitialized(true);
     }
   }, []);
 
-  // Persist to localStorage on every cart change
+  // Persist to localStorage on every cart change (only after initialization)
   useEffect(() => {
+    if (!isInitialized) return;
     try {
       localStorage.setItem("oday-cart", JSON.stringify(cart));
     } catch {
       // ignore
     }
-  }, [cart]);
+  }, [cart, isInitialized]);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
@@ -172,11 +176,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const tripsCost = cart.trips.reduce((sum, t) => {
     const persons = t.persons ?? guestsTotal;
-    if (t.selectedOptions && t.selectedOptions.length > 0) {
-      const optPrice = t.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
+    const hasOptions = t.selectedOptions && t.selectedOptions.length > 0;
+    const hasAddOns = t.selectedAddOns && t.selectedAddOns.length > 0;
+
+    if (hasOptions || hasAddOns) {
+      const optPrice = (t.selectedOptions || []).reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
       const addOnsPrice = (t.selectedAddOns || []).reduce((s, a) => s + a.price * (a.persons ?? persons), 0);
       return sum + optPrice + addOnsPrice;
     }
+
     return sum + (t.startingPrice > 0 ? t.startingPrice * persons : 0);
   }, 0);
   const totalPrice = hotelCost + tripsCost;

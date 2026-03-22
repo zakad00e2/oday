@@ -26,7 +26,7 @@ export default function TripsHero() {
                 <div className="relative z-10 flex flex-col items-center text-center px-6 md:px-16 py-20 max-w-4xl mx-auto">
                     <ScrollReveal delay={100}>
                         <h1
-                            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${lang === "en" ? "font-medium" : "font-semibold"} text-white leading-tight mb-6`}
+                            className={`text-4xl sm:text-5xl ${lang === "en" ? "md:text-5xl lg:text-5xl font-medium" : "md:text-6xl lg:text-7xl font-semibold"} text-white leading-tight mb-6`}
                             style={{ textShadow: "0 2px 20px rgba(0,0,0,0.4)" }}
                         >
                             {t("اكتشف التجارب السياحية", "Discover unforgettable experiences")}
