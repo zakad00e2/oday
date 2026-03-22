@@ -75,7 +75,7 @@ export default function ShowcaseGallery() {
           <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
             <span className="text-xs font-medium text-[#111]">{d.badge}</span>
           </div>
-          <h2 id="showcase-heading" className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#111] leading-tight mb-4">
+          <h2 id="showcase-heading" className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#111] leading-tight mb-4">
             {d.title}
             <span className="font-semibold"> {d.titleBold}</span>
           </h2>

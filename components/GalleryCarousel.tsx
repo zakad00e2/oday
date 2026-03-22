@@ -104,7 +104,7 @@ export default function GalleryCarousel() {
           </span>
         </div> */}
 
-          <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+          <h2 className="text-3xl md:text-5xl font-semibold text-[#111] leading-tight mb-4">
             خلّد رحلتك مع
             <br />
             <span className="font-semibold">Oday Tourism إلى الأبد</span>

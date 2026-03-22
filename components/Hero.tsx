@@ -52,7 +52,7 @@ export default function Hero() {
 
           {/* Main Heading */}
           <h1
-            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${lang === "en" ? "font-medium" : "font-semibold"
+            className={`text-4xl sm:text-5xl md:text-6xl ${lang === "en" ? "lg:text-6xl" : "lg:text-7xl"} ${lang === "en" ? "font-medium" : "font-semibold"
               } text-white leading-tight mb-6`}
           >
             {d.titleLine1}

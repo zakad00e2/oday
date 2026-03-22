@@ -22,7 +22,7 @@ export default function Packages() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-4xl font-medium text-[#111] leading-tight mb-3">
+            <h2 className="text-2xl md:text-4xl font-semibold text-[#111] leading-tight mb-3">
               {d.sectionTitle}
               <span className="font-semibold"> {d.sectionTitleBold}</span>
             </h2>

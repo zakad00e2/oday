@@ -290,7 +290,7 @@ export default function Hotels() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+            <h2 className="text-3xl md:text-5xl font-semibold text-[#111] leading-tight mb-4">
               {d.title} <span>{d.titleBold}</span>
             </h2>
             <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">

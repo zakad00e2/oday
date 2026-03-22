@@ -70,7 +70,7 @@ export default function TravelGallery() {
               </svg>
               <span className="text-xs font-medium text-[#111]">معرض الرحلات</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
+            <h2 className="text-3xl md:text-5xl font-semibold text-[#111] leading-tight mb-4">
               لحظات من <span className="font-semibold">رحلاتنا المميزة</span>
             </h2>
             <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-8">
