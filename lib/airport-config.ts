@@ -32,7 +32,7 @@ export const NATIONALITY_OPTIONS = [
     { id: "asian", labelAr: "الاسيوي", labelEn: "Asian", price24: 85, price72: 60 },
     {
         id: "stan-group",
-        labelAr: "مجموعة ستان (أوزبكستان - قيرغستان - طاجكستان - باكستان)",
+        labelAr: "مجموعة ستان",
         labelEn: "Stan Group (Uzbekistan - Kyrgyzstan - Tajikistan - Pakistan)",
         price24: 95,
         price72: 70,

@@ -575,7 +575,7 @@ export default function AirportCoordination() {
                                     </div>
                                     <p className="mt-3 text-sm text-[#6B7280]">
                                         {t(
-                                            "سيتم تحديث السعر تلقائياً بعد اختيار الجنسية ونوع الخدمة.",
+                                            "سيتم تحديد السعر تلقائياً بعد اختيار الجنسية",
                                             "Pricing updates automatically after you choose the nationality and service type."
                                         )}
                                     </p>
