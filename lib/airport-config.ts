@@ -30,21 +30,20 @@ export const NATIONALITY_OPTIONS = [
 
     { id: "african", labelAr: "الافريقي", labelEn: "African", price24: 80, price72: 55 },
     { id: "asian", labelAr: "الاسيوي", labelEn: "Asian", price24: 85, price72: 60 },
-    {
-        id: "stan-group",
-        labelAr: "مجموعة ستان",
-        labelEn: "Stan Group (Uzbekistan - Kyrgyzstan - Tajikistan - Pakistan)",
-        price24: 95,
-        price72: 70,
-    },
+    { id: "kazakhstan", labelAr: "كازاخستان", labelEn: "Kazakhstan", price24: 95, price72: 70 },
+    { id: "uzbekistan", labelAr: "أوزبكستان", labelEn: "Uzbekistan", price24: 95, price72: 70 },
+    { id: "turkmenistan", labelAr: "تركمانستان", labelEn: "Turkmenistan", price24: 95, price72: 70 },
+    { id: "kyrgyzstan", labelAr: "قرغيزستان", labelEn: "Kyrgyzstan", price24: 95, price72: 70 },
+    { id: "tajikistan", labelAr: "طاجيكستان", labelEn: "Tajikistan", price24: 95, price72: 70 },
     { id: "sudanese", labelAr: "السوداني", labelEn: "Sudanese", price24: 85, price72: 60 },
     {
         id: "saint-kitts-dominica-group",
-        labelAr: "مجموعة سانت كيتس + دومينيت",
+        labelAr: "سانت كيتس ونيفيس",
         labelEn: "Saint Kitts + Dominica Group",
         price24: 110,
         price72: 80,
     },
+    { id: "dominica", labelAr: "دومينيكا", labelEn: "Dominica", price24: 110, price72: 80 },
   
    
 ] as const;
