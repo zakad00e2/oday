@@ -15,7 +15,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const segments = pathname.split("/").filter(Boolean);
   const lang = segments[0] === "ar" || segments[0] === "en" ? segments[0] : "ar";
   const dir = lang === "ar" ? "rtl" : "ltr";
-  const fontFamily = lang === "ar" ? "'Cairo', sans-serif" : "'Urbanist', sans-serif";
+  const fontFamily = lang === "ar" ? "'Cairo', sans-serif" : "'Manrope', sans-serif";
 
   // Dynamically set html attributes for lang, dir, and font
   useEffect(() => {

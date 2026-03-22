@@ -68,8 +68,8 @@ export default function Navbar() {
           className="h-12 md:h-15 w-auto object-contain drop-shadow-sm"
         />
         <div className="flex flex-col pt-2.5">
-          <span className={`text-base md:text-lg font-semibold font-sans leading-none ${useDark ? "text-[#111]" : "text-white"}`}>Oday Tourism</span>
-          <span className={`text-[8px] md:text-[10px] uppercase tracking-[2.4px] ${useDark ? "text-[#555]" : "text-white/80"}`}>Travel Services</span>
+          <span className={`text-base md:text-lg leading-none ${useDark ? "text-[#111]" : "text-white"}`} style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}>Oday Tourism</span>
+          <span className={`text-[8px] md:text-[10px] uppercase tracking-[2.4px] ${useDark ? "text-[#555]" : "text-white/80"}`} style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 400 }}>Travel Services</span>
         </div>
       </Link>
 

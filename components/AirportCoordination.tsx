@@ -393,7 +393,7 @@ export default function AirportCoordination() {
     const textAlignClass = isAr ? "text-right" : "text-left";
     const choiceTextAlignClass = isAr ? "text-right" : "text-left";
     const selectedBadgeSideClass = isAr ? "left-3" : "right-3";
-    const noteItemPaddingClass = isAr ? "pr-3" : "pl-3";
+    const noteItemPaddingClass = isAr ? "pr-5" : "pl-5";
     const noteItemBulletClass = isAr ? "right-0" : "left-0";
 
     const otherAirlines = AIRLINES.filter((a) => !a.isEgyptAir);
@@ -787,7 +787,7 @@ export default function AirportCoordination() {
                         {/* ── Right/Bottom: Price Card ───── */}
                         <div className="w-full lg:w-80 shrink-0">
                             <div className="lg:sticky lg:top-24">
-                                <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-md p-6 space-y-5">
+                                <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-md p-4 space-y-3">
                                     <h3 className="text-base font-bold text-[#111] flex items-center gap-2">
                                         <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                                             <rect width="16" height="20" x="4" y="2" rx="2" />
@@ -804,7 +804,7 @@ export default function AirportCoordination() {
                                         {t("ملخص الأسعار", "Price summary")}
                                     </h3>
 
-                                    <div className="space-y-3 text-sm">
+                                    <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center gap-4">
                                             <span className="text-[#6B7280]">{t("الجنسية", "Nationality")}</span>
                                             <span className={`font-bold text-[#111] ${textAlignClass}`}>
@@ -835,7 +835,7 @@ export default function AirportCoordination() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white rounded-xl px-6 py-3.5 text-sm font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-200 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                                        className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white rounded-xl px-6 py-3 text-sm font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-200 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
                                         {loading ? (
                                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

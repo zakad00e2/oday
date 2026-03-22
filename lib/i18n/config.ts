@@ -14,5 +14,5 @@ export function getDirection(locale: Locale): "rtl" | "ltr" {
 }
 
 export function getFontFamily(locale: Locale): string {
-  return locale === "ar" ? "'Cairo', sans-serif" : "'Urbanist', sans-serif";
+  return locale === "ar" ? "'Cairo', sans-serif" : "'Manrope', sans-serif";
 }
