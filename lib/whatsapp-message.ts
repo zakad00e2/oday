@@ -1,7 +1,8 @@
-import { ADMIN_WHATSAPP } from "./airport-config";
+import { ADMIN_WHATSAPP, NationalityId } from "./airport-config";
 
 export interface AirportFormData {
-    documentType: "palestinian" | "european" | "zeroed";
+    nationalityId: NationalityId;
+    nationalityLabel: string;
     serviceType: "24h" | "72h";
     basePrice: number;
     airlineName: string;
@@ -19,17 +20,8 @@ export interface AirportFormData {
 
 type AirportMessageLocale = "ar" | "en";
 
-/**
- * Build a formatted WhatsApp message from the form data.
- */
 export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessageLocale = "ar"): string {
     const isAr = locale === "ar";
-    const documentLabel =
-        data.documentType === "palestinian"
-            ? (isAr ? "الجوازات الفلسطينية (السلطة)" : "Palestinian passport (Authority)")
-            : data.documentType === "european"
-                ? (isAr ? "الوثائق الاوروبية (اللاجئين)" : "European travel document (refugees)")
-                : (isAr ? "الجوازات المصفرة" : "Yellow passports");
     const serviceLabel =
         data.serviceType === "24h"
             ? (isAr ? "موافقة أمنية خلال 24 ساعة" : "Security approval within 24 hours")
@@ -38,7 +30,7 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
     const lines = [
         isAr ? `— *خدمات التأشيرات والموافقات الأمنية* —` : `— *Visa support & security approvals* —`,
         ``,
-        `${isAr ? "• *نوع الوثيقة:*" : "• *Document type:*"} ${documentLabel}`,
+        `${isAr ? "• *الجنسية:*" : "• *Nationality:*"} ${data.nationalityLabel}`,
         `${isAr ? "• *نوع الخدمة:*" : "• *Service type:*"} ${serviceLabel}`,
         `${isAr ? "• *السعر الأساسي:*" : "• *Base price:*"} $${data.basePrice}`,
         `${isAr ? "• *شركة الطيران:*" : "• *Airline:*"} ${data.airlineName}`,
@@ -67,15 +59,12 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
         lines.push(`${isAr ? "• *البريد:*" : "• *Email:*"} ${data.email}`);
     }
     if (data.notes) {
-        lines.push(`${isAr ? "• *Notes:*" : "• *Notes:*"} ${data.notes}`);
+        lines.push(`${isAr ? "• *ملاحظات:*" : "• *Notes:*"} ${data.notes}`);
     }
 
     return lines.join("\n");
 }
 
-/**
- * Build a wa.me deep link URL from a message string.
- */
 export function buildWhatsAppUrl(message: string): string {
     return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`;
 }

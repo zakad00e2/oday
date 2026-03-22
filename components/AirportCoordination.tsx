@@ -3,13 +3,13 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import {
-    price24,
-    price72,
+    NATIONALITY_OPTIONS,
     EXTRA_AIRLINE_FEE,
     AIRLINES,
     ACCEPTED_EXTENSIONS,
     ACCEPTED_FILE_TYPES,
     MAX_FILE_SIZE,
+    type NationalityId,
 } from "@/lib/airport-config";
 import {
     buildWhatsAppMessage,
@@ -18,12 +18,11 @@ import {
 } from "@/lib/whatsapp-message";
 
 /* ─── Types ──────────────────────────────────────────────────── */
-type DocumentType = "palestinian" | "european" | "zeroed" | null;
 type ServiceType = "24h" | "72h" | null;
 type AirlineChoice = "egyptair" | "other";
 
 interface FormErrors {
-    documentType?: string;
+    nationalityId?: string;
     serviceType?: string;
     file?: string;
     country?: string;
@@ -219,10 +218,10 @@ function LocalizedDatePicker({
 export default function AirportCoordination() {
     const { lang } = useI18n();
     const isAr = lang === "ar";
-    const t = (ar: string, en: string) => (isAr ? ar : en);
+    const t = useCallback((ar: string, en: string) => (isAr ? ar : en), [isAr]);
 
     // ── Document type
-    const [documentType, setDocumentType] = useState<DocumentType>(null);
+    const [nationalityId, setNationalityId] = useState<NationalityId | null>(null);
 
     // ── Service type
     const [serviceType, setServiceType] = useState<ServiceType>(null);
@@ -255,12 +254,25 @@ export default function AirportCoordination() {
     const [whatsappUrl, setWhatsappUrl] = useState("");
 
     /* ─── Pricing ───────────────────────────────────────────────── */
-    const basePrice = serviceType === "24h" ? price24 : serviceType === "72h" ? price72 : 0;
+    const selectedNationality = useMemo(
+        () => NATIONALITY_OPTIONS.find((option) => option.id === nationalityId) ?? null,
+        [nationalityId]
+    );
+    const selectedNationalityLabel = useMemo(() => {
+        if (!selectedNationality) return "";
+        return isAr ? selectedNationality.labelAr : selectedNationality.labelEn;
+    }, [isAr, selectedNationality]);
+    const basePrice =
+        serviceType === "24h"
+            ? selectedNationality?.price24 ?? 0
+            : serviceType === "72h"
+                ? selectedNationality?.price72 ?? 0
+                : 0;
     const extraFee = useMemo(() => {
         if (!airlineChoice) return 0;
         return airlineChoice === "egyptair" ? 0 : EXTRA_AIRLINE_FEE;
     }, [airlineChoice]);
-    const total = basePrice + extraFee;
+    const total = selectedNationality && serviceType ? basePrice + extraFee : 0;
 
     /* ─── Airline display name ─────────────────────────────────── */
     const resolvedAirlineName = useMemo(() => {
@@ -301,7 +313,7 @@ export default function AirportCoordination() {
         } else {
             setFilePreview(null);
         }
-    }, []);
+    }, [t]);
 
     const removeFile = useCallback(() => {
         setFile(null);
@@ -313,9 +325,9 @@ export default function AirportCoordination() {
     const validate = useCallback((): boolean => {
         const errs: FormErrors = {};
 
-        if (!documentType) errs.documentType = t("يرجى اختيار نوع الجواز أو الوثيقة", "Please select the passport or document type");
+        if (!nationalityId) errs.nationalityId = t("يرجى اختيار الجنسية", "Please select a nationality");
         if (!serviceType) errs.serviceType = t("يرجى اختيار نوع الخدمة", "Please select the service type");
-        if (!file) errs.file = t("يرجى رفع صورة جواز السفر أو وثيقة اللجوء", "Please upload a passport or travel document image");
+        if (!file) errs.file = t("يرجى رفع صورة جواز السفر أو وثيقة السفر", "Please upload a passport or travel document image");
         if (!country.trim()) errs.country = t("يرجى إدخال بلد المغادرة", "Please enter the departure country");
         if (!airport.trim()) errs.airport = t("يرجى إدخال مطار المغادرة", "Please enter the departure airport");
 
@@ -332,7 +344,7 @@ export default function AirportCoordination() {
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [airlineChoice, country, customAirlineName, documentType, file, fullName, otherAirlineId, airport, serviceType, t, whatsapp]);
+    }, [airlineChoice, country, customAirlineName, nationalityId, file, fullName, otherAirlineId, airport, serviceType, t, whatsapp]);
 
     /* ─── Submit ───────────────────────────────────────────────── */
     const handleSubmit = useCallback(
@@ -343,7 +355,8 @@ export default function AirportCoordination() {
             setLoading(true);
 
             const formData: AirportFormData = {
-                documentType: documentType!,
+                nationalityId: nationalityId!,
+                nationalityLabel: selectedNationalityLabel,
                 serviceType: serviceType!,
                 basePrice,
                 airlineName: resolvedAirlineName,
@@ -369,7 +382,7 @@ export default function AirportCoordination() {
                 setLoading(false);
             }, 600);
         },
-        [validate, documentType, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, airport, travelDate, fullName, whatsapp, email, notes, lang]
+        [validate, nationalityId, selectedNationalityLabel, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, airport, travelDate, fullName, whatsapp, email, notes, lang]
     );
 
     /* ─── Helpers ──────────────────────────────────────────────── */
@@ -392,21 +405,13 @@ export default function AirportCoordination() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 {/* Header */}
                 <div className="text-center mb-12 animate-fade-in-up">
-                    <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 mb-5 shadow-sm">
-                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <span className="text-xs font-semibold text-amber-800">
-                            {t("لحملة الجنسية الفلسطينية فقط", "For Palestinian passport/ID holders only")}
-                        </span>
-                    </div>
                     <h1 className="text-3xl md:text-5xl font-medium text-[#111] leading-tight mb-4">
                         {t("الموافقات الأمنية وتأشيرات دخول مصر", "Security approvals & Egypt entry visas")}
                     </h1>
                     <p className="text-[#6B7280] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
                         {t(
-                            "نوفر خدمة استخراج الموافقات الأمنية لدخول مصر بسرعة وموثوقية، مع متابعة كاملة لجميع الإجراءات حتى صدور الموافقة ودخولك إلى مصر بسهولة وأمان.",
-                            "We help you obtain security approvals for entering Egypt quickly and reliably, with full follow‑up until approval is issued so you can enter Egypt smoothly and safely."
+                            "نوفر خدمة الموافقات الأمنية والتأشيرات لعدة جنسيات، مع متابعة كاملة لجميع الإجراءات وتحديد السعر حسب الجنسية وسرعة المعالجة التي تختارها.",
+                            "We provide security approvals and visa support for multiple nationalities, with full follow-up and pricing based on the selected nationality and processing speed."
                         )}
                     </p>
                 </div>
@@ -417,42 +422,42 @@ export default function AirportCoordination() {
                         <svg className="w-5 h-5 text-[#0284C7]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                         </svg>
-                        {t("من يحتاج إلى موافقة أمنية مسبقة لدخول مصر؟", "Who needs prior security approval to enter Egypt?")}
+                        {t("معلومات مهمة قبل تقديم الطلب", "Important information before submitting your request")}
                     </h3>
                     <div className="grid md:grid-cols-3 gap-6">
                         <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
                             <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
-                                {t("فئة الشباب", "Young travelers")}
+                                {t("خدمة متعددة الجنسيات", "Multi-nationality service")}
                             </h4>
                             <p className="text-sm text-[#475569] leading-relaxed">
                                 {t(
-                                    "حاملو جواز السفر الفلسطيني (السلطة الفلسطينية) من عمر 16 إلى 40 سنة.",
-                                    "Palestinian passport holders (Palestinian Authority) aged 16 to 40."
+                                    "الخدمة متاحة لعدة جنسيات، ويمكنك اختيار الجنسية المناسبة مباشرة من القائمة داخل النموذج.",
+                                    "The service supports multiple nationalities, and you can choose the correct nationality directly from the form list."
                                 )}
                             </p>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
                             <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
-                                {t("حاملو وثائق اللجوء الأوروبية", "European travel document holders")}
+                                {t("الأسعار حسب الجنسية", "Pricing by nationality")}
                             </h4>
                             <p className="text-sm text-[#475569] leading-relaxed">
                                 {t(
-                                    "جميع حاملي وثائق السفر للاجئين الصادرة من الدول الأوروبية، سواء طفل أو ذكر أو أنثى، بغض النظر عن العمر.",
-                                    "All refugee travel document holders issued by European countries, regardless of age or gender."
+                                    "السعر يتغير تلقائياً حسب الجنسية التي تختارها، مع وجود سعر مختلف لخدمة 24 ساعة وخدمة 72 ساعة.",
+                                    "Pricing updates automatically based on the selected nationality, with different rates for 24-hour and 72-hour processing."
                                 )}
                             </p>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-[#E0F2FE] shadow-sm">
                             <h4 className="font-bold text-[#0284C7] mb-2 text-sm flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]"></span>
-                                {t("حاملو الجوازات المصفرة", "Yellow passport holders")}
+                                {t("تجهيز الطلب", "Request preparation")}
                             </h4>
                             <p className="text-sm text-[#475569] leading-relaxed">
                                 {t(
-                                    "جميع من يحمل جواز سفر مصفراً، سواء ذكر أو أنثى، بغض النظر عن العمر.",
-                                    "Anyone holding a yellow passport, regardless of age or gender."
+                                    "اختر الجنسية ونوع الخدمة وارفع المستندات المطلوبة، وسنجهز لك الطلب مع المتابعة حتى إصدار الموافقة.",
+                                    "Choose the nationality, select the service type, upload the required document, and we will handle the follow-up until the approval is issued."
                                 )}
                             </p>
                         </div>
@@ -463,12 +468,12 @@ export default function AirportCoordination() {
                 <form id="airport-form" onSubmit={handleSubmit} noValidate>
                     <div className="flex flex-col lg:flex-row gap-8 items-stretch">
                         {/* ── Left: Form Sections ─────────────────────── */}
-                        <div className="flex-1 w-full space-y-6">
+                        <div className="flex-1 w-full flex flex-col gap-6">
 
                             {/* ─── 1. Service Type ──────────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-2 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">1</span>
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">2</span>
                                     {t("نوع الخدمة", "Service type")}
                                 </h2>
                                 <div className="grid sm:grid-cols-2 gap-4">
@@ -498,7 +503,9 @@ export default function AirportCoordination() {
                                                 "Urgent processing to issue the security approval and telex within one day."
                                             )}
                                         </p>
-                                        <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price24}</div>
+                                        <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
+                                            {selectedNationality ? `$${selectedNationality.price24}` : "—"}
+                                        </div>
                                     </button>
 
                                     {/* 72h card */}
@@ -527,83 +534,64 @@ export default function AirportCoordination() {
                                                 "Request processing and issuance of the security approval and telex within 48 to 72 hours."
                                             )}
                                         </p>
-                                        <div className="mt-3 text-xl font-bold text-[#0EA5E9]">${price72}</div>
+                                        <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
+                                            {selectedNationality ? `$${selectedNationality.price72}` : "—"}
+                                        </div>
                                     </button>
                                 </div>
                                 {errors.serviceType && <p className={errorClass}>{errors.serviceType}</p>}
                             </div>
 
                             {/* ─── 2. Document Type ─────────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-1 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">2</span>
-                                    {t("نوع الجواز أو الوثيقة", "Passport or document type")}
+                                    <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">1</span>
+                                    {t("الجنسية", "Nationality")}
                                 </h2>
-                                <div className="grid sm:grid-cols-3 gap-4">
-                                    {/* Palestinian */}
-                                    <button
-                                        type="button"
-                                        onClick={() => { setDocumentType("palestinian"); setErrors((p) => ({ ...p, documentType: undefined })); }}
-                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "palestinian" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
-                                    >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug">
-                                            {t("جواز السفر الفلسطيني", "Palestinian passport")}
-                                            <br />
-                                            <span className="text-xs font-normal text-[#6B7280] mt-1 block">
-                                                {t("(السلطة الفلسطينية)", "(Palestinian Authority)")}
-                                            </span>
-                                        </h3>
-                                    </button>
-                                    {/* European */}
-                                    <button
-                                        type="button"
-                                        onClick={() => { setDocumentType("european"); setErrors((p) => ({ ...p, documentType: undefined })); }}
-                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "european" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
-                                    >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug">
-                                            {t("وثائق السفر الأوروبية", "European travel documents")}
-                                            <br />
-                                            <span className="text-xs font-normal text-[#6B7280] mt-1 block">
-                                                {t("(اللاجئين)", "(Refugees)")}
-                                            </span>
-                                        </h3>
-                                    </button>
-                                    {/* Zeroed */}
-                                    <button
-                                        type="button"
-                                        onClick={() => { setDocumentType("zeroed"); setErrors((p) => ({ ...p, documentType: undefined })); }}
-                                        className={`relative rounded-xl border-2 p-4 text-center transition-all duration-200 cursor-pointer ${documentType === "zeroed" ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"}`}
-                                    >
-                                        <h3 className="font-bold text-[#111] text-sm leading-snug">
-                                            {t("جوازات السفر المصفرة", "Yellow passports")}
-                                            <br />
-                                            <span className="text-xs font-normal text-[#6B7280] mt-1 block">
-                                                {t("( بدون رقم هوية )", "(Without ID number)")}
-                                            </span>
-                                        </h3>
-                                    </button>
+                                <div>
+                                    <label className={labelClass}>{t("اختر الجنسية", "Choose nationality")} *</label>
+                                    <div className="relative">
+                                        <select
+                                            value={nationalityId ?? ""}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setNationalityId(value ? (value as NationalityId) : null);
+                                                setErrors((p) => ({ ...p, nationalityId: undefined }));
+                                            }}
+                                            className={`${inputClass} appearance-none ${choiceTextAlignClass} ${isAr ? "pl-10" : "pr-10"}`}
+                                        >
+                                            <option value="">{t("اختر الجنسية من القائمة", "Select nationality from the list")}</option>
+                                            {NATIONALITY_OPTIONS.map((option) => (
+                                                <option key={option.id} value={option.id}>
+                                                    {isAr ? option.labelAr : option.labelEn}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[#94A3B8] ${isAr ? "left-4" : "right-4"}`}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <p className="mt-3 text-sm text-[#6B7280]">
+                                        {t(
+                                            "سيتم تحديث السعر تلقائياً بعد اختيار الجنسية ونوع الخدمة.",
+                                            "Pricing updates automatically after you choose the nationality and service type."
+                                        )}
+                                    </p>
+                                    {errors.nationalityId && <p className={errorClass}>{errors.nationalityId}</p>}
                                 </div>
-
-                                {/* Note */}
-                                <div className="mt-4 flex items-center gap-2 text-sm text-amber-600 font-medium">
-                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                    <p>{t("خدمة الموافقات الأمنية للجوازات المصفرة متوقفة حالياً بشكل مؤقت.", "Security approval service for yellow passports is temporarily unavailable.")}</p>
-                                </div>
-
-                                {errors.documentType && <p className={errorClass}>{errors.documentType}</p>}
                             </div>
 
 
                             {/* ─── 3. Upload Document ───────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-3 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">3</span>
                                     {t("رفع المستند", "Upload document")}
                                 </h2>
                                 <p className="text-sm text-[#6B7280] mb-4">
-                                    {t("صورة جواز السفر أو وثيقة اللجوء الأوروبية", "Passport image or European travel document")}
+                                    {t("صورة جواز السفر أو وثيقة السفر", "Passport image or travel document")}
                                     {" "}
                                     <span className="text-[#94A3B8]">{t("(JPG, PNG, PDF — حد أقصى 10 ميغابايت)", "(JPG, PNG, PDF — maximum 10 MB)")}</span>
                                 </p>
@@ -646,7 +634,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 4. Arrival Details ───────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-4 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">4</span>
                                     {t("تفاصيل السفر", "Travel details")}
@@ -677,7 +665,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 5. Airline ────────────────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-5 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">5</span>
                                     {t("شركة الطيران", "Airline")}
@@ -767,7 +755,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 6. Contact Info ──────────────────────── */}
-                            <div className="bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-6 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">6</span>
                                     {t("معلومات التواصل", "Contact information")}
@@ -817,10 +805,16 @@ export default function AirportCoordination() {
                                     </h3>
 
                                     <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between items-center gap-4">
+                                            <span className="text-[#6B7280]">{t("الجنسية", "Nationality")}</span>
+                                            <span className={`font-bold text-[#111] ${textAlignClass}`}>
+                                                {selectedNationalityLabel || "—"}
+                                            </span>
+                                        </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[#6B7280]">{t("السعر الأساسي", "Base price")}</span>
                                             <span className="font-bold text-[#111]">
-                                                {serviceType ? `$${basePrice}` : "—"}
+                                                {selectedNationality && serviceType ? `$${basePrice}` : "—"}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
@@ -833,7 +827,7 @@ export default function AirportCoordination() {
                                         <div className="flex justify-between items-center">
                                             <span className="font-bold text-[#111] text-base">{t("الإجمالي", "Total")}</span>
                                             <span className="text-xl font-bold text-[#0EA5E9]">
-                                                {serviceType ? `$${total}` : "—"}
+                                                {selectedNationality && serviceType ? `$${total}` : "—"}
                                             </span>
                                         </div>
                                     </div>
