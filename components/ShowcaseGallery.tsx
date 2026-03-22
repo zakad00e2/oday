@@ -16,7 +16,8 @@ const cardImages = [
 ];
 
 export default function ShowcaseGallery() {
-  const { dict } = useI18n();
+  const { dict, lang } = useI18n();
+  const isAr = lang === "ar";
   const d = dict.gallery;
   const sectionRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -44,7 +45,14 @@ export default function ShowcaseGallery() {
     const el = scrollContainerRef.current;
     if (!el) return;
     const isRtl = getComputedStyle(el).direction === "rtl";
-    const amount = direction === "next" ? (isRtl ? -350 : 350) : (isRtl ? 350 : -350);
+    
+    // Standard scroll behavior:
+    // If RTL: next (left) is negative, prev (right) is positive
+    // If LTR: next (right) is positive, prev (left) is negative
+    const amount = direction === "next" 
+      ? (isRtl ? -350 : 350) 
+      : (isRtl ? 350 : -350);
+    
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
@@ -119,7 +127,15 @@ export default function ShowcaseGallery() {
               className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
               aria-label={d.prev}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2"
+                className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -131,7 +147,15 @@ export default function ShowcaseGallery() {
               className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
               aria-label={d.next}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2"
+                className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>

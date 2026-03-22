@@ -22,7 +22,7 @@ export default function HowItWorks() {
               {d.categories.map((cat, idx) => (
                 <div
                   key={idx}
-                  className={`flex items-center gap-2 text-[#6B7280] text-sm font-medium ${idx >= 4 ? "hidden md:flex" : ""}`}
+                  className={`flex items-center gap-2 text-[#6B7280] text-sm font-medium ${idx >= 3 ? "hidden md:flex" : ""}`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />

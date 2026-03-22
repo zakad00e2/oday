@@ -63,7 +63,7 @@ export default function Hero() {
           </h1>
 
           {/* Subtitle */}
-          <div className="flex flex-wrap justify-center items-center gap-x-2 md:gap-x-6 text-sm sm:text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <div className="flex flex-nowrap justify-center items-center gap-x-2 md:gap-x-6 text-xs sm:text-lg md:text-xl text-white/75 w-full mx-auto mb-10 leading-relaxed whitespace-nowrap">
             {d.subtitle.split("•").map((part, i, arr) => (
               <Fragment key={i}>
                 <span className="whitespace-nowrap">{part.trim()}</span>
