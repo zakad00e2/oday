@@ -28,10 +28,10 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
                         </p>
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
                             <a
-                                href={`/${lang}/package-builder`}
+                                href={`/${lang}/trips`}
                                 className="flex items-center gap-2 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg hover:scale-105 transition-all text-sm"
                             >
-                                Build your package
+                                View trips
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                                 </svg>
@@ -369,7 +369,7 @@ export default function AboutPage() {
                         </p>
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
                             <a
-                                href={`/${lang}/package-builder`}
+                                href={`/${lang}/trips`}
                                 className="flex items-center gap-2 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg  hover:scale-105 transition-all text-sm"
                             >
                                 احجز رحلتك الآن

@@ -87,7 +87,7 @@ export default function TripCartSidebar({
                 {/* Total */}
                 <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
                     <span className="text-sm font-bold text-[#0f172a]">السعر / شخص</span>
-                    <span className="text-2xl font-black text-[#2563EB]">
+                    <span className="text-2xl font-black text-[#0EA5E9]">
                         {totalPrice > 0
                             ? `$${totalPrice}`
                             : trip.startingPrice > 0
@@ -98,46 +98,39 @@ export default function TripCartSidebar({
 
                 {/* CTA */}
                 <div className="px-6 pb-6 pt-3 space-y-3">
-                    {isInCart ? (
-                        <>
-                            <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl py-3 flex items-center justify-center gap-2 text-[#16A34A] font-bold text-sm">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                    <button
+                        onClick={() => {
+                            if (isInCart) openCart();
+                            else handleAddToCart();
+                        }}
+                        className={`w-full font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all text-sm active:scale-[0.98] cursor-pointer ${
+                            isInCart
+                                ? 'bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]'
+                                : 'bg-[#0284C7] text-white hover:bg-[#0369A1] shadow-sm'
+                        }`}
+                    >
+                        {isInCart ? (
+                            <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                                 تمت الإضافة لبرنامجك
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => removeTrip(trip.slug)}
-                                    className="flex-1 py-2.5 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
-                                >
-                                    إزالة
-                                </button>
-                                <button
-                                    onClick={openCart}
-                                    className="flex-1 py-2.5 rounded-xl bg-[#0EA5E9] text-white text-sm font-bold hover:bg-[#0284C7] transition-colors cursor-pointer"
-                                >
-                                    عرض السلة
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <button
-                            onClick={handleAddToCart}
-                            className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all text-sm active:scale-[0.98] cursor-pointer"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                            أضف لبرنامجك
-                        </button>
-                    )}
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                أضف لبرنامجك
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
 
             <Link
                 href={`/${lang}/trips`}
-                className="block text-center text-xs text-[#94a3b8] hover:text-[#2563EB] transition-colors py-2"
+                className="block text-center text-xs text-[#94a3b8] hover:text-[#0EA5E9] transition-colors py-2"
             >
                 تصفح المزيد من الرحلات ←
             </Link>

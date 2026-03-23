@@ -114,7 +114,7 @@ export default function TripDetailPage() {
                 <div className="text-center">
                     <h1 className="text-4xl font-bold text-[#0f172a] mb-4">404</h1>
                     <p className="text-[#64748b] text-lg">{isAr ? "الرحلة غير موجودة" : "Trip not found"}</p>
-                    <Link href={`/${lang}/trips`} className="inline-block mt-6 bg-[#2563EB] text-white px-6 py-3 rounded-full font-bold hover:bg-[#1d4ed8] transition">
+                    <Link href={`/${lang}/trips`} className="inline-block mt-6 bg-[#0EA5E9] text-white px-6 py-3 rounded-full font-bold hover:bg-[#0284C7] transition">
                         {isAr ? "العودة للرحلات" : "Back to trips"}
                     </Link>
                 </div>
@@ -275,8 +275,8 @@ export default function TripDetailPage() {
 
                             {/* Header */}
                             <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
-                                <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-                                    <svg className="w-5 h-5 text-[#2563EB]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
@@ -312,14 +312,14 @@ export default function TripDetailPage() {
                                                         onKeyDown={(e) => e.key === "Enter" && toggleOptionId(option.id)}
                                                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                                                             isSelected
-                                                                ? "border-[#2563EB] bg-[#2563EB]/5"
-                                                                : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#2563EB]/40"
+                                                                ? "border-[#0EA5E9] bg-[#0EA5E9]/5"
+                                                                : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"
                                                         }`}
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="flex items-start gap-2.5 flex-1">
                                                                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                                                                    isSelected ? "border-[#2563EB] bg-[#2563EB]" : "border-[#cbd5e1]"
+                                                                    isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1]"
                                                                 }`}>
                                                                     {isSelected && (
                                                                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
@@ -331,14 +331,14 @@ export default function TripDetailPage() {
                                                                     <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? option.nameAr : option.nameEn}</p>
                                                                     {(isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn) && <p className="text-xs text-[#64748b] mt-0.5">{isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn}</p>}
                                                                     {(isAr ? option.capacityLabelAr : tripLocale?.options?.[option.id]?.capacityLabel ?? option.capacityLabelEn) && (
-                                                                        <span className="inline-block mt-1.5 text-xs bg-[#f0f9ff] text-[#2563EB] font-medium rounded-full px-2.5 py-0.5">
+                                                                        <span className="inline-block mt-1.5 text-xs bg-[#f0f9ff] text-[#0EA5E9] font-medium rounded-full px-2.5 py-0.5">
                                                                             {isAr ? option.capacityLabelAr : tripLocale?.options?.[option.id]?.capacityLabel ?? option.capacityLabelEn}
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${
-                                                                isSelected ? "text-[#2563EB]" : "text-[#0f172a]"
+                                                                isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"
                                                             }`}>
                                                                 {option.price > 0 ? `$${option.price}` : "—"}
                                                             </span>
@@ -355,7 +355,7 @@ export default function TripDetailPage() {
                                                                     <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: (prev[option.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">+</button>
                                                                 </div>
                                                                 {option.price > 0 && (personCounts[option.id] || 1) > 1 && (
-                                                                    <span className="text-xs font-bold text-[#2563EB]">= ${option.price * (personCounts[option.id] || 1)}</span>
+                                                                    <span className="text-xs font-bold text-[#0EA5E9]">= ${option.price * (personCounts[option.id] || 1)}</span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -434,19 +434,18 @@ export default function TripDetailPage() {
                             </div>
 
                             {/* Price Summary + CTA */}
-                            <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div>
+                            <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4">
+                                <div className="w-full flex flex-col items-center sm:items-start text-center sm:text-start">
                                     {(selectedOptions.length > 0 || selectedAddOns.length > 0) && (
-                                        <p className="text-xs text-[#64748b] mb-1 leading-relaxed">
+                                        <p className="text-xs text-[#64748b] mb-1 sm:mb-1 leading-relaxed">
                                             {(isAr ? selectedOptions.map((o) => o.nameAr) : selectedOptions.map((o) => o.nameEn)).join(" + ")}
                                             {selectedAddOns.length > 0 && (
                                                 <> + {(isAr ? selectedAddOns.map((a) => a.nameAr).join("، ") : selectedAddOns.map((a) => a.nameEn).join(", "))}</>
                                             )}
                                         </p>
                                     )}
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-xs text-[#94a3b8]">{isAr ? "الإجمالي" : "Total"}</span>
-                                        <span className="text-2xl font-black text-[#2563EB]">
+                                    <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-0.5 sm:gap-1.5">
+                                        <span className="text-2xl font-black text-[#0EA5E9]">
                                             {totalPriceGroup > 0
                                                 ? `$${totalPriceGroup}`
                                                 : trip.startingPrice > 0
@@ -459,20 +458,13 @@ export default function TripDetailPage() {
                                     </div>
                                 </div>
                                 {isInCart ? (
-                                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                                        <button
-                                            onClick={() => {
-                                                removeTrip(trip.slug);
-                                                setJustAdded(false);
-                                            }}
-                                            className="py-2.5 px-4 rounded-xl border border-[#e2e8f0] text-[#64748b] text-sm font-bold hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer"
-                                        >
-                                            {isAr ? "إزالة" : "Remove"}
-                                        </button>
+                                    <div className="flex items-center justify-center gap-2 shrink-0 flex-wrap w-full sm:w-auto">
                                         <button
                                             onClick={handleUpdateOrViewCart}
-                                            className={`py-3 px-5 rounded-2xl text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-[0.98] cursor-pointer ${
-                                                hasChanges ? 'bg-[#2563EB] hover:bg-[#1d4ed8]' : 'bg-[#10B981] hover:bg-[#059669]'
+                                            className={`w-full sm:w-auto shrink-0 font-bold py-3.5 px-8 rounded-2xl flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98] cursor-pointer ${
+                                                hasChanges
+                                                    ? 'bg-[#0284C7] text-white hover:bg-[#0369A1]'
+                                                    : 'bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]'
                                             }`}
                                         >
                                             {hasChanges ? (
@@ -484,10 +476,10 @@ export default function TripDetailPage() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
-                                                    {isAr ? "عرض السلة" : "View cart"}
+                                                    {isAr ? "تمت الإضافة لبرنامجك" : "Added to your plan"}
                                                 </>
                                             )}
                                         </button>
@@ -495,7 +487,7 @@ export default function TripDetailPage() {
                                 ) : (
                                     <button
                                         onClick={handleAddToCart}
-                                        className="shrink-0 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold py-3.5 px-8 rounded-2xl flex items-center gap-2 text-sm transition-all active:scale-[0.98] shadow-sm cursor-pointer"
+                                        className="w-full sm:w-auto shrink-0 bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold py-3.5 px-8 rounded-2xl flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98] shadow-sm cursor-pointer"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

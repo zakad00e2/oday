@@ -28,7 +28,7 @@ export default function HotelsHero() {
 
                     <ScrollReveal delay={100}>
                         <h1
-                            className={`text-4xl sm:text-5xl ${lang === "en" ? "md:text-5xl lg:text-5xl font-medium" : "md:text-6xl lg:text-7xl font-semibold"} text-white leading-tight mb-10`}
+                            className={`text-3xl sm:text-5xl ${lang === "en" ? "md:text-5xl lg:text-6xl font-semibold" : "md:text-5xl lg:text-5xl font-bold"} text-white leading-tight mb-10`}
                             style={{ textShadow: "0 2px 20px rgba(0,0,0,0.4)" }}
                         >
                             {d.heroTitle}

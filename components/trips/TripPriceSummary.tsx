@@ -18,7 +18,7 @@ export default function TripPriceSummary({ selectedOption, quantity, addOns, tot
 
     const handleCartAction = () => {
         if (isInCart) {
-            removeTrip(trip.slug);
+            openCart();
         } else {
             addTrip({
                 slug: trip.slug,
@@ -71,7 +71,7 @@ export default function TripPriceSummary({ selectedOption, quantity, addOns, tot
                     {/* Total */}
                     <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
                         <span className="text-base font-bold text-[#0f172a]">الإجمالي</span>
-                        <span className="text-2xl font-black text-[#2563EB]">
+                        <span className="text-2xl font-black text-[#0EA5E9]">
                             {total > 0 ? `$${total}` : "اسأل عن السعر"}
                         </span>
                     </div>
@@ -82,23 +82,23 @@ export default function TripPriceSummary({ selectedOption, quantity, addOns, tot
                             onClick={handleCartAction}
                             className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
                                 isInCart
-                                    ? "bg-[#0EA5E9] text-white hover:bg-[#0284C7]"
-                                    : "bg-[#F0F9FF] text-[#0EA5E9] border border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
+                                    ? "bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]"
+                                    : "bg-[#0284C7] text-white hover:bg-[#0369A1]"
                             }`}
                         >
                             {isInCart ? (
                                 <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
-                                    تم الإضافة للسلة
+                                    تمت الإضافة لبرنامجك
                                 </>
                             ) : (
                                 <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                     </svg>
-                                    أضف لسلة الحجوزات
+                                    أضف لبرنامجك
                                 </>
                             )}
                         </button>

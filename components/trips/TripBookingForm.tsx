@@ -44,7 +44,7 @@ export default function TripBookingForm({
 
     const handleCartAction = () => {
         if (isInCart) {
-            removeTrip(trip.slug);
+            openCart();
         } else {
             addTrip({
                 slug: trip.slug,
@@ -107,7 +107,7 @@ export default function TripBookingForm({
                     <p className="text-[#64748b] mb-6">سيتم التواصل معك عبر الواتساب لتأكيد الحجز.</p>
                     <button
                         onClick={() => setSubmitted(false)}
-                        className="text-[#2563EB] font-bold text-sm hover:underline cursor-pointer"
+                        className="text-[#0EA5E9] font-bold text-sm hover:underline cursor-pointer"
                     >
                         إرسال حجز آخر
                     </button>
@@ -117,14 +117,14 @@ export default function TripBookingForm({
     }
 
     const inputClass = (field: string) =>
-        `w-full bg-[#f8fafc] border ${errors[field] ? "border-red-400" : "border-[#e2e8f0]"} rounded-xl px-4 py-3.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] transition`;
+        `w-full bg-[#f8fafc] border ${errors[field] ? "border-red-400" : "border-[#e2e8f0]"} rounded-xl px-4 py-3.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/20 focus:border-[#0EA5E9] transition`;
 
     return (
         <section className="py-16 md:py-20">
             <ScrollReveal>
                 <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-[#2563EB]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </div>
@@ -286,7 +286,7 @@ export default function TripBookingForm({
                             </div>
                             <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-5 py-3 flex items-center justify-between">
                                 <span className="text-sm font-bold text-[#0f172a]">الإجمالي</span>
-                                <span className="text-xl font-black text-[#2563EB]">${totalPrice}</span>
+                                <span className="text-xl font-black text-[#0EA5E9]">${totalPrice}</span>
                             </div>
                         </div>
                     )}
@@ -297,10 +297,10 @@ export default function TripBookingForm({
                         <button
                             type="button"
                             onClick={handleCartAction}
-                            className={`w-full flex items-center justify-center gap-2 font-bold px-8 py-3.5 rounded-2xl border transition-all text-sm cursor-pointer ${
+                            className={`w-full flex items-center justify-center gap-2 font-bold px-8 py-3.5 rounded-2xl transition-all text-sm cursor-pointer ${
                                 isInCart
-                                    ? "bg-[#0EA5E9] text-white border-[#0EA5E9] hover:bg-[#0284C7]"
-                                    : "bg-[#F0F9FF] text-[#0EA5E9] border-[#BAE6FD] hover:bg-[#0EA5E9] hover:text-white hover:border-[#0EA5E9]"
+                                    ? "bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]"
+                                    : "bg-[#0284C7] text-white hover:bg-[#0369A1]"
                             }`}
                         >
                             {isInCart ? (
@@ -308,14 +308,14 @@ export default function TripBookingForm({
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
-                                    تم الإضافة لسلة الحجوزات
+                                    تمت الإضافة لبرنامجك
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                     </svg>
-                                    أضف لسلة الحجوزات
+                                    أضف لبرنامجك
                                 </>
                             )}
                         </button>

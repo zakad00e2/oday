@@ -95,28 +95,15 @@ export default function ShowcaseGallery() {
               <div
                 key={idx}
                 role="listitem"
-                className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden transition-all duration-500 cursor-pointer bg-white"
+                className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden bg-white"
                 style={{ aspectRatio: "3/4" }}
               >
                 <img
                   src={cardImages[idx]?.src || cardImages[0].src}
                   alt={card.title}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-all duration-500 group-hover:h-[80%] rounded-b-[20px] group-hover:rounded-b-[20px]"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-white p-4 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out pt-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[#111] font-medium text-sm mb-1">{card.title}</p>
-                      <p className="text-[#6B7280] text-xs leading-relaxed line-clamp-2">{card.desc}</p>
-                    </div>
-                    <span className="flex-shrink-0 w-8 h-8 rounded-full border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F9FAFB] transition-colors">
-                      <svg className="w-3.5 h-3.5 text-[#111]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
               </div>
             ))}
           </div>

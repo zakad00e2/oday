@@ -586,7 +586,7 @@ export default function HotelDetailPage() {
     const isAr = lang === "ar";
     const { setHotel, cart, openCart, setNights } = useCart();
     const isInCart = cart.hotel?.id === hotel?.id;
-    const hotelLocale = hotel && !isAr ? hotelDetailEn[hotel.slug] : null;
+    const hotelLocale = hotel ? hotelDetailEn[hotel.slug] : null;
     const localizedHotel = hotel
         ? {
             ...hotel,
@@ -1016,7 +1016,7 @@ export default function HotelDetailPage() {
                                             stars: hotel.stars,
                                             roomName: room.name,
                                             roomNameAr: hotel.rooms[selectedRoom]?.name,
-                                            roomNameEn: resolvedHotel.rooms[selectedRoom]?.name,
+                                            roomNameEn: hotelLocale?.rooms[selectedRoom]?.name ?? hotel.rooms[selectedRoom]?.name,
                                             roomsCount: roomsCount,
                                             selectedAddOns: selectedHotelAddOns,
                                            });

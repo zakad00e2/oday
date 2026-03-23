@@ -16,16 +16,16 @@ export default function TripsGrid() {
             <div className="max-w-300 mx-auto px-6 md:px-12">
                 <ScrollReveal>
                     <div className="text-center mb-12">
-                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563eb] bg-[#2563eb]/8 rounded-full px-4 py-1.5 mb-4">
+                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] bg-[#0EA5E9]/8 rounded-full px-4 py-1.5 mb-4">
                             {t("رحلاتنا المميزة", "Featured trips")}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-4">
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
                             {t(
                                 <>
-                                    اختر رحلتك <span className="text-[#2563eb]">المفضلة</span>
+                                    اختر رحلتك <span className="text-[#0f172a]">المفضلة</span>
                                 </>,
-                                <>
-                                    Pick your <span className="text-[#2563eb]">favorite</span> trip
+                                    <>
+                                        Pick your <span className="text-[#000000]">favorite</span> trip
                                 </>
                             )}
                         </h2>

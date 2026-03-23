@@ -440,7 +440,7 @@ export default function AdminTrips() {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       {trip.options.length > 0 && (
-                        <span className="bg-[#EFF6FF] text-[#3B82F6] text-[10px] font-medium px-2 py-0.5 rounded-full">{trip.options.length} خيار</span>
+                        <span className="bg-[#F0F9FF] text-[#0EA5E9] text-[10px] font-medium px-2 py-0.5 rounded-full">{trip.options.length} خيار</span>
                       )}
                       {trip.addOns.length > 0 && (
                         <span className="bg-[#F0FDF4] text-[#22C55E] text-[10px] font-medium px-2 py-0.5 rounded-full">{trip.addOns.length} إضافة</span>

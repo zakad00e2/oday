@@ -43,12 +43,12 @@ export default function Hero() {
             }`}
         >
           {/* Small Badge */}
-          <div
+          {/* <div
             className="inline-flex items-center gap-2 text-white/90 rounded-full px-5 py-2 text-sm font-medium my-8 bg-white/10 backdrop-blur-sm backdrop-saturate-150 border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
           >
 
             <span>{d.badge}</span>
-          </div>
+          </div> */}
 
           {/* Main Heading */}
           <h1
@@ -63,7 +63,9 @@ export default function Hero() {
           </h1>
 
           {/* Subtitle */}
-          <div className="flex flex-nowrap justify-center items-center gap-x-2 md:gap-x-6 text-xs sm:text-lg md:text-xl text-white/75 w-full mx-auto mb-10 leading-relaxed whitespace-nowrap">
+          <div className={`flex flex-nowrap justify-center items-center md:gap-x-6 sm:text-lg md:text-xl text-white/80 w-full px-1 md:px-0 mx-auto mb-10 leading-relaxed font-medium ${
+            lang === "en" ? "gap-x-1.5 text-[13.5px]" : "gap-x-1.5 text-[14.5px]"
+          }`}>
             {d.subtitle.split("•").map((part, i, arr) => (
               <Fragment key={i}>
                 <span className="whitespace-nowrap">{part.trim()}</span>
