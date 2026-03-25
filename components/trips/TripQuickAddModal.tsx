@@ -13,7 +13,10 @@ interface TripQuickAddModalProps {
 export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalProps) {
     const { addTrip, openCart } = useCart();
 
-    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
+    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(() => {
+        if (!trip || trip.options.length === 0) return new Set();
+        return new Set([trip.options[0].id]);
+    });
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
 
     const toggleOptionId = (id: string) => {

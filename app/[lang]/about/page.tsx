@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
 import Reviews from "@/components/Reviews";
+import { ABOUT_CONTENT_UPDATED_EVENT, cloneAboutContent, readAboutContent, type AboutFaq } from "@/lib/about-content";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
-function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
+function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en"; faqs: AboutFaq[] }) {
     return (
         <main className="bg-[#FAFAFA]">
             <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-28 md:pt-48 md:pb-28">
@@ -117,6 +118,21 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
             </section>
 
             <Reviews />
+
+            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
+                <div className="max-w-[700px] mx-auto">
+                    <ScrollReveal className="text-center mb-8">
+                        <h2 className="text-4xl md:text-[42px] font-black text-[#0f172a] mb-5">
+                            Frequently asked questions
+                        </h2>
+                        <p className="text-[17px] md:text-[19px] text-[#64748b] font-medium">
+                            Quick answers about bookings, transfers, and what to expect with Oday Tourism.
+                        </p>
+                    </ScrollReveal>
+
+                    <FAQList faqs={faqs} lang="en" />
+                </div>
+            </section>
         </main>
     );
 }
@@ -288,39 +304,24 @@ function FAQItem({ question, answer, delay, isOpen, onToggle }: { question: stri
     );
 }
 
-const faqsData = [
-    {
-        q: "كيف يمكنني حجز رحلة مع Oday Tourism؟",
-        a: "يمكنك بسهولة حجز رحلتك من خلال صفحة 'احجز رحلتك الآن' وتصميم البرنامج الذي يناسبك، أو عبر التواصل المباشر معنا على الواتساب."
-    },
-    {
-        q: "هل الأسعار تشمل تذاكر الطيران للوصول إلى شرم الشيخ؟",
-        a: "تختلف الباقات، بعض باقاتنا المتكاملة تشمل تذاكر الطيران، وأخرى تعتمد على حجز الفندق والانتقالات والرحلات الداخلية فقط. يرجى مراجعة تفاصيل كل باقة."
-    },
-    {
-        q: "هل توفرون خدمة الاستقبال من المطار؟",
-        a: "نعم! لدينا خدمة الاستقبال والتوديع من وإلى مطار القاهرة الدولي بسيارات حديثة ومجهزة لضمان راحتك منذ اللحظة الأولى."
-    },
-    {
-        q: "هل يمكنني إلغاء الحجز أو تعديل المواعيد؟",
-        a: "بالتأكيد. يمكن تعديل أو إلغاء الحجز وفقاً لسياسة الإلغاء الخاصة بنا والفنادق المتعاقد معها والتي يتم توضيحها عند إتمام عملية الحجز الأولية."
-    },
-    {
-        q: "ما هي الأنشطة المتاحة في رحلاتكم؟",
-        a: "نوفر رحلات بحرية (يخوت، سنوركلينج، غوص)، السفاري والمغامرات في الصحراء، العشاء البدوي، ورحلات لمحمية رأس محمد ودهب ومناطق الجذب الرئيسية."
-    }
-];
-
-function FAQList() {
+function FAQList({ faqs, lang }: { faqs: AboutFaq[]; lang: "ar" | "en" }) {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    if (faqs.length === 0) {
+        return (
+            <div className="rounded-3xl border border-dashed border-[#D1D5DB] bg-[#F8FAFC] px-6 py-10 text-center text-sm text-[#64748b]">
+                {lang === "ar" ? "لا توجد أسئلة منشورة حالياً." : "There are no published FAQs at the moment."}
+            </div>
+        );
+    }
 
     return (
         <div className="border-t border-[#e2e8f0] flex flex-col mt-4">
-            {faqsData.map((faq, index) => (
+            {faqs.map((faq, index) => (
                 <FAQItem
-                    key={index}
-                    question={faq.q}
-                    answer={faq.a}
+                    key={faq.id}
+                    question={lang === "ar" ? faq.questionAr : faq.questionEn}
+                    answer={lang === "ar" ? faq.answerAr : faq.answerEn}
                     delay={index * 100}
                     isOpen={openIndex === index}
                     onToggle={() => setOpenIndex(openIndex === index ? null : index)}
@@ -332,12 +333,30 @@ function FAQList() {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function AboutPage() {
-    const [loaded, setLoaded] = useState(false);
-    useEffect(() => { setLoaded(true); }, []);
+    const loaded = true;
+    const [aboutContent, setAboutContent] = useState(() => cloneAboutContent());
+
+    useEffect(() => {
+        const syncAboutContent = () => {
+            setAboutContent(readAboutContent());
+        };
+
+        const frame = window.requestAnimationFrame(syncAboutContent);
+        window.addEventListener("storage", syncAboutContent);
+        window.addEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncAboutContent);
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.removeEventListener("storage", syncAboutContent);
+            window.removeEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncAboutContent);
+        };
+    }, []);
+
     const { lang } = useI18n();
+    const publishedFaqs = aboutContent.faqs.filter((faq) => faq.isPublished);
 
     if (lang === "en") {
-        return <AboutPageEn loaded={loaded} lang={lang} />;
+        return <AboutPageEn loaded={loaded} lang={lang} faqs={publishedFaqs} />;
     }
 
     return (
@@ -595,7 +614,7 @@ export default function AboutPage() {
                         </p>
                     </ScrollReveal>
 
-                    <FAQList />
+                    <FAQList faqs={publishedFaqs} lang="ar" />
                 </div>
             </section>
 

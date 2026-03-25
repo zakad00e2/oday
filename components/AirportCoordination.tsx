@@ -327,7 +327,7 @@ export default function AirportCoordination() {
 
         if (!nationalityId) errs.nationalityId = t("يرجى اختيار الجنسية", "Please select a nationality");
         if (!serviceType) errs.serviceType = t("يرجى اختيار نوع الخدمة", "Please select the service type");
-        if (!file) errs.file = t("يرجى رفع صورة جواز السفر أو وثيقة السفر", "Please upload a passport or travel document image");
+        
         if (!country.trim()) errs.country = t("يرجى إدخال بلد المغادرة", "Please enter the departure country");
         if (!airport.trim()) errs.airport = t("يرجى إدخال مطار المغادرة", "Please enter the departure airport");
 
@@ -419,7 +419,7 @@ export default function AirportCoordination() {
                 {/* Who needs approval note */}
                 <div className={`mb-10 bg-[#F0F9FF] border border-[#BAE6FD] rounded-2xl p-6 lg:p-8 shadow-sm ${textAlignClass}`}>
                     <h3 className="text-lg font-bold text-[#0369A1] mb-5 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-[#0284C7]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <svg className="w-7 h-7 md:w-5 md:h-5 shrink-0 text-[#0284C7]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                         </svg>
                         {t("معلومات مهمة قبل تقديم الطلب", "Important information before submitting your request")}
@@ -486,11 +486,13 @@ export default function AirportCoordination() {
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
-                                        {serviceType === "24h" && (
-                                            <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full bg-[#0EA5E9] flex items-center justify-center`}>
+                                        <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                                            serviceType === "24h" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                        }`}>
+                                            {serviceType === "24h" && (
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                         <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4.5 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -517,11 +519,13 @@ export default function AirportCoordination() {
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
-                                        {serviceType === "72h" && (
-                                            <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full bg-[#0EA5E9] flex items-center justify-center`}>
+                                        <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                                            serviceType === "72h" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                        }`}>
+                                            {serviceType === "72h" && (
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                         <svg className="shrink-0 w-8 h-8 mb-3 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                         </svg>
@@ -584,53 +588,26 @@ export default function AirportCoordination() {
                             </div>
 
 
-                            {/* ─── 3. Upload Document ───────────────────── */}
+                            {/* ─── 3. Upload Document (Removed - Only WhatsApp) ───────────────────── */}
                             <div className="order-3 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">3</span>
-                                    {t("رفع المستند", "Upload document")}
+                                    {t("معلومات المستند", "Document information")}
                                 </h2>
                                 <p className="text-sm text-[#6B7280] mb-4">
                                     {t("صورة جواز السفر أو وثيقة السفر", "Passport image or travel document")}
-                                    {" "}
-                                    <span className="text-[#94A3B8]">{t("(JPG, PNG, PDF — حد أقصى 10 ميغابايت)", "(JPG, PNG, PDF — maximum 10 MB)")}</span>
                                 </p>
-
-                                {!file ? (
-                                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#CBD5E1] rounded-xl py-10 cursor-pointer hover:border-[#0EA5E9] hover:bg-[#F0F9FF]/50 transition-all">
-                                        <svg className="w-10 h-10 text-[#94A3B8] mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                <div className="mt-3 text-sm text-[#475569] leading-relaxed">
+                                    <div className="flex items-start gap-2 bg-[#F0F9FF] p-4 rounded-xl border border-[#BAE6FD]">
+                                        <svg className="w-5 h-5 text-[#0EA5E9] shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
-                                        <span className="text-sm font-medium text-[#6B7280]">{t("اضغط لاختيار الملف أو اسحبه هنا", "Click to choose a file or drag it here")}</span>
-                                        <input
-                                            ref={fileRef}
-                                            type="file"
-                                            accept={ACCEPTED_EXTENSIONS}
-                                            onChange={handleFileChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                ) : (
-                                    <div className="relative border border-[#E2E8F0] rounded-xl p-4 flex items-center gap-4 bg-[#F8FAFC]">
-                                        {filePreview ? (
-                                            <img src={filePreview} alt="Preview" className="w-20 h-20 rounded-lg object-cover border border-[#E2E8F0]" />
-                                        ) : (
-                                            <div className="w-20 h-20 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center">
-                                                <svg className="w-8 h-8 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-[#111] truncate">{file.name}</p>
-                                            <p className="text-xs text-[#94A3B8] mt-0.5">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                        </div>
-                                        <button type="button" onClick={removeFile} className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
+                                        <p>{t(
+                                            "سيُطلب منك إرسال صورة جواز السفر (أو وثيقة السفر) لاحقاً عبر محادثة الواتساب مع الموظف المختص بعد تقديم الطلب.",
+                                            "You will be asked to send a copy of your passport (or travel document) later via WhatsApp chat with the assigned agent after submitting the request."
+                                        )}</p>
                                     </div>
-                                )}
-                                {errors.file && <p className={errorClass}>{errors.file}</p>}
+                                </div>
                             </div>
 
                             {/* ─── 4. Arrival Details ───────────────────── */}
@@ -676,29 +653,51 @@ export default function AirportCoordination() {
                                     <button
                                         type="button"
                                         onClick={() => { setAirlineChoice("egyptair"); setErrors((p) => ({ ...p, airline: undefined, otherAirline: undefined })); }}
-                                        className={`rounded-xl border-2 p-4 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${airlineChoice === "egyptair"
+                                        className={`relative rounded-xl border-2 p-4 flex flex-col justify-center ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${airlineChoice === "egyptair"
                                             ? "border-[#0EA5E9] bg-[#F0F9FF]"
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
-                                        <h3 className="font-bold text-[#111] text-sm mb-0.5">{t("مصر للطيران (EgyptAir)", "EgyptAir")}</h3>
-                                        <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                                            {t("بدون رسوم إضافية", "No extra fee")}
-                                        </p>
+                                        <div className="flex items-center gap-3 w-full">
+                                            <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                                                airlineChoice === "egyptair" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                            }`}>
+                                                {airlineChoice === "egyptair" && (
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-[#111] text-sm">{t("مصر للطيران (EgyptAir)", "EgyptAir")}</h3>
+                                        </div>
+                                        <div className={`mt-2 ${isAr ? 'mr-8' : 'ml-8'}`}>
+                                            <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                                {t("بدون رسوم إضافية", "No extra fee")}
+                                            </p>
+                                        </div>
                                     </button>
 
                                     {/* Other */}
                                     <button
                                         type="button"
                                         onClick={() => { setAirlineChoice("other"); setErrors((p) => ({ ...p, airline: undefined })); }}
-                                        className={`rounded-xl border-2 p-4 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${airlineChoice === "other"
+                                        className={`relative rounded-xl border-2 p-4 flex flex-col justify-center ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${airlineChoice === "other"
                                             ? "border-[#0EA5E9] bg-[#F0F9FF]"
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
-                                        <h3 className="font-bold text-[#111] text-sm mb-0.5">{t("شركة طيران أخرى", "Other airline")}</h3>
-                                        <p className="text-xs text-amber-600 font-medium">{t("رسوم إضافية", "Extra fee")} ${EXTRA_AIRLINE_FEE} +</p>
+                                        <div className="flex items-center gap-3 w-full">
+                                            <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                                                airlineChoice === "other" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                            }`}>
+                                                {airlineChoice === "other" && (
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-[#111] text-sm">{t("شركة طيران أخرى", "Other airline")}</h3>
+                                        </div>
+                                        <div className={`mt-2 ${isAr ? 'mr-8' : 'ml-8'}`}>
+                                            <p className="text-xs text-amber-600 font-medium">{t("رسوم إضافية", "Extra fee")} ${EXTRA_AIRLINE_FEE} +</p>
+                                        </div>
                                     </button>
                                 </div>
 

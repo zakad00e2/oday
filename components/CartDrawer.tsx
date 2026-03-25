@@ -55,20 +55,20 @@ export default function CartDrawer() {
 
   const buildWhatsAppMsg = () => {
     const wa = d.whatsapp;
-    let msg = `🌟 *${wa.header}*\n\n`;
+    let msg = `*${wa.header}*\n\n`;
     if (cart.hotel) {
-      msg += `🏨 *${wa.hotel}* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
+      msg += `*${wa.hotel}* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
       if (getHotelRoomName(cart.hotel)) {
-        msg += `🛏️ *${wa.roomLabel}* ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
+        msg += `*${wa.roomLabel}* ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
       }
       if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
-        msg += `✨ *${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
+        msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
       }
-      msg += `🌙 ${wa.nightsLabel} ${cart.nights}\n`;
-      msg += `💰 ${wa.stayCost} $${hotelCost}\n\n`;
+      msg += `${wa.nightsLabel} ${cart.nights}\n`;
+      msg += `${wa.stayCost} $${hotelCost}\n\n`;
     }
     if (cart.trips.length > 0) {
-      msg += `🗺️ *${wa.tripsLabel}*\n`;
+      msg += `*${wa.tripsLabel}*\n`;
       cart.trips.forEach((t) => {
         msg += `  • ${getTripTitle(t)}`;
         if (t.selectedOptions && t.selectedOptions.length > 0) {
@@ -89,9 +89,9 @@ export default function CartDrawer() {
       });
       msg += "\n";
     }
-    msg += `👥 ${wa.guests} ${cart.guests.adults} ${wa.adults}، ${cart.guests.children} ${wa.children}\n`;
-    if (cart.travelDate) msg += `📅 ${wa.travelDate} ${cart.travelDate}\n`;
-    if (totalPrice > 0) msg += `\n💵 *${wa.estimatedTotal} $${totalPrice}*`;
+    msg += `${wa.guests} ${cart.guests.adults} ${wa.adults}، ${cart.guests.children} ${wa.children}\n`;
+    if (cart.travelDate) msg += `${wa.travelDate} ${cart.travelDate}\n`;
+    if (totalPrice > 0) msg += `\n*${wa.estimatedTotal} $${totalPrice}*`;
     return msg;
   };
 
@@ -155,7 +155,6 @@ export default function CartDrawer() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#FEF3C7] flex items-center justify-center text-base">✨</div>
               </div>
               <h3 className="font-extrabold text-[#0F172A] text-lg mb-1.5">{d.emptyTitle}</h3>
               <p className="text-sm text-[#94A3B8] leading-relaxed mb-8 max-w-[260px]">
@@ -167,14 +166,14 @@ export default function CartDrawer() {
                   onClick={closeCart}
                   className="bg-[#0F172A] text-white text-sm font-bold py-3 rounded-xl text-center hover:bg-[#1E293B] transition-colors flex items-center justify-center gap-2"
                 >
-                  <span>🏨</span> {d.browseHotels}
+                  {d.browseHotels}
                 </Link>
                 <Link
                   href={`/${lang}/trips`}
                   onClick={closeCart}
                   className="bg-white border border-[#E2E8F0] text-[#0F172A] text-sm font-bold py-3 rounded-xl text-center hover:bg-white hover:border-[#CBD5E1] transition-colors flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <span>🗺️</span> {d.browseTrips}
+                  {d.browseTrips}
                 </Link>
               </div>
             </div>

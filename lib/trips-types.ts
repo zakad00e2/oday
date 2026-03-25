@@ -27,8 +27,7 @@ export interface TripSchedule {
     endTime: string;         // e.g. "04:00 PM"
     durationAr: string;      // e.g. "8 ساعات"
     durationEn: string;      // e.g. "8 hours"
-    frequencyAr: string;     // e.g. "يومياً"
-    frequencyEn: string;     // e.g. "Daily"
+
 }
 
 export interface TripDetail {

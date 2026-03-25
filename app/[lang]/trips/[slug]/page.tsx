@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -20,7 +20,10 @@ export default function TripDetailPage() {
     const { lang } = useI18n();
     const isAr = lang === "ar";
 
-    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
+    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(() => {
+        if (!trip || trip.options.length === 0) return new Set();
+        return new Set([trip.options[0].id]);
+    });
     const [personCounts, setPersonCounts] = useState<Record<string, number>>(() => {
         if (!trip) return {};
         const p: Record<string, number> = {};
@@ -47,11 +50,6 @@ export default function TripDetailPage() {
         ? (isAr
             ? trip.schedule.durationAr
             : tripLocale?.duration ?? trip.schedule.durationEn)
-        : "";
-    const tripFrequency = trip
-        ? (isAr
-            ? trip.schedule.frequencyAr
-            : tripLocale?.frequency ?? trip.schedule.frequencyEn)
         : "";
 
     // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)
@@ -238,7 +236,6 @@ export default function TripDetailPage() {
                 kicker={isAr ? trip.titleEn : trip.titleAr}
                 tagline={isAr ? trip.taglineAr : tripLocale?.tagline ?? trip.taglineAr}
                 duration={tripDuration}
-                frequency={tripFrequency}
                 startingPrice={trip.startingPrice}
                 onBookNow={scrollToOptions}
                 isAr={isAr}
@@ -252,12 +249,10 @@ export default function TripDetailPage() {
                         startTime={trip.schedule.startTime}
                         endTime={trip.schedule.endTime}
                         duration={tripDuration}
-                        frequency={tripFrequency}
                         labels={{
                             start: isAr ? "بداية الرحلة" : "Start time",
                             end: isAr ? "نهاية الرحلة" : "End time",
                             duration: isAr ? "مدة الرحلة" : "Duration",
-                            frequency: isAr ? "التكرار" : "Availability",
                             heading: isAr ? "مواعيد الرحلة" : "Trip schedule",
                         }}
                     />
@@ -330,11 +325,6 @@ export default function TripDetailPage() {
                                                                 <div>
                                                                     <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? option.nameAr : option.nameEn}</p>
                                                                     {(isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn) && <p className="text-xs text-[#64748b] mt-0.5">{isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn}</p>}
-                                                                    {(isAr ? option.capacityLabelAr : tripLocale?.options?.[option.id]?.capacityLabel ?? option.capacityLabelEn) && (
-                                                                        <span className="inline-block mt-1.5 text-xs bg-[#f0f9ff] text-[#0EA5E9] font-medium rounded-full px-2.5 py-0.5">
-                                                                            {isAr ? option.capacityLabelAr : tripLocale?.options?.[option.id]?.capacityLabel ?? option.capacityLabelEn}
-                                                                        </span>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${
@@ -348,7 +338,7 @@ export default function TripDetailPage() {
                                                                 <svg className="w-4 h-4 text-[#64748b] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 </svg>
-                                                                <span className="text-xs text-[#64748b]">{isAr ? "عدد الأشخاص:" : "Guests:"}</span>
+                                                                <span className="text-xs text-[#64748b]">{isAr ? "الكمية:" : "Quantity:"}</span>
                                                                 <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
                                                                     <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: Math.max(1, (prev[option.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">−</button>
                                                                     <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-[28px] text-center">{personCounts[option.id] || 1}</span>
@@ -414,7 +404,7 @@ export default function TripDetailPage() {
                                                                 <svg className="w-4 h-4 text-[#64748b] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 </svg>
-                                                                <span className="text-xs text-[#64748b]">{isAr ? "عدد الأشخاص:" : "Guests:"}</span>
+                                                                <span className="text-xs text-[#64748b]">{isAr ? "الكمية:" : "Quantity:"}</span>
                                                                 <div className="flex items-center bg-white rounded-full border border-[#e2e8f0]">
                                                                     <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: Math.max(1, (prev[addOn.id] || 1) - 1) })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">−</button>
                                                                     <span className="px-3 py-1 text-sm font-bold text-[#0f172a] min-w-7 text-center">{addOnPersonCounts[addOn.id] || 1}</span>

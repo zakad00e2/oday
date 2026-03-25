@@ -1,0 +1,1 @@
+﻿const fs = require('fs'); let c = fs.readFileSync('components/trips/TripSchedule.tsx', 'utf8'); c = c.replace(/,\s*frequency/g, ''); c = c.replace(/\s*frequency:\s*string;/g, ''); c = c.replace(/\s*\{\s*label:\s*labels\.frequency,\s*value:\s*frequency,\s*icon:\s*\([\s\S]*?\)\s*},/g, ''); fs.writeFileSync('components/trips/TripSchedule.tsx', c, 'utf8');

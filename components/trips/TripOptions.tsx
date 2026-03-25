@@ -35,7 +35,6 @@ export default function TripOptions({
                 {options.map((option, i) => {
                     const isSelected = selectedOptionId === option.id;
                     const qty = quantities[option.id] || 1;
-                    const capacityLabel = option.capacityLabelAr ?? option.capacityLabelEn;
 
                     return (
                         <ScrollReveal key={option.id} delay={i * 80}>
@@ -61,11 +60,6 @@ export default function TripOptions({
                                         </div>
                                         <p className="text-xs text-[#94a3b8] font-medium mr-7 mb-1">{option.nameEn}</p>
                                         <p className="text-sm text-[#64748b] mr-7">{option.descriptionAr}</p>
-                                        {capacityLabel && (
-                                            <span className="inline-block mt-2 mr-7 text-xs bg-[#F0F9FF] text-[#0EA5E9] font-medium rounded-full px-3 py-1">
-                                                {capacityLabel}
-                                            </span>
-                                        )}
                                     </div>
 
                                     <div className="text-left shrink-0">
@@ -81,8 +75,8 @@ export default function TripOptions({
                                     </div>
                                 </div>
 
-                                {/* Quantity selector - only for options with maxQuantity */}
-                                {isSelected && option.maxQuantity && option.maxQuantity > 1 && (
+                                {/* Quantity selector */}
+                                {isSelected && (
                                     <div className="mt-4 mr-7 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                                         <span className="text-sm text-[#64748b]">الكمية:</span>
                                         <div className="flex items-center bg-white rounded-full border border-[#e2e8f0] overflow-hidden">
@@ -97,7 +91,7 @@ export default function TripOptions({
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onUpdateQuantity(option.id, qty + 1); }}
                                                 className="px-3 py-1.5 text-[#64748b] hover:bg-[#f8fafc] transition font-bold cursor-pointer"
-                                                disabled={qty >= (option.maxQuantity || 99)}
+                                                disabled={qty >= 99}
                                             >
                                                 +
                                             </button>
