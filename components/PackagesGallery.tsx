@@ -86,16 +86,20 @@ export default function PackagesGallery() {
   };
 
   return (
-    <section className="py-24 bg-[#FAFAFA]" id="packages-gallery">
+    <section className="py-24 bg-white" id="packages-gallery">
       <ScrollReveal>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
+              <span className="text-xs font-medium text-[#111]">{isAr ? "عروض سياحية مختارة" : "PROMOTED DESTINATIONS"}</span>
+            <svg className="w-4 h-4 text-[#111]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              </div>
             <h2 className="text-3xl md:text-5xl font-semibold text-[#111] tracking-tight mb-4">
-              {isAr ? "باقات سياحية مختارة لك" : "Explore Our Packages"}
+              {isAr ? "استكشف باقاتنا السياحية" : "Explore Our Packages"}
             </h2>
-            <p className="text-[#6B7280] text-base md:text-lg max-w-2xl mx-auto">
-              {isAr ? "اختر باقتك المثالية" : "Choose your perfect getaway"}
+            <p className="text-[#6B7280] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+              {isAr ? "باقات سفر متنوعة مصممة لتناسب اهتماماتك وميزانيتك، استمتع بتجربة متكاملة تجمع بين الراحة والمغامرة في كل رحلة." : "A variety of travel packages tailored to your interests and budget, combining comfort and adventure in every trip."}
             </p>
           </div>
 

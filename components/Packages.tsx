@@ -22,6 +22,10 @@ export default function Packages() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
+              <span className="text-xs font-medium text-[#111]">{d.badge}</span>
+            <svg className="w-4 h-4 text-[#111]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              </div>
             <h2 className="text-2xl md:text-4xl font-semibold text-[#111] leading-tight mb-3">
               {d.sectionTitle}
               <span className="font-semibold"> {d.sectionTitleBold}</span>

@@ -74,7 +74,8 @@ export default function ShowcaseGallery() {
         <div className={`text-center mb-12 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
             <span className="text-xs font-medium text-[#111]">{d.badge}</span>
-          </div>
+          <svg className="w-4 h-4 text-[#111]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            </div>
           <h2 id="showcase-heading" className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#111] leading-tight mb-4">
             {d.title}
             <span className="font-semibold"> {d.titleBold}</span>

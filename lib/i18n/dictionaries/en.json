@@ -48,7 +48,12 @@
         "price": "2,499",
         "currency": "EGP",
         "duration": "3 Nights / 4 Days",
-        "services": ["5-Star Hotel", "Airport Pickup", "Sea Activities", "Daily Breakfast"]
+        "services": [
+          "5-Star Hotel",
+          "Airport Pickup",
+          "Sea Activities",
+          "Daily Breakfast"
+        ]
       },
       {
         "destination": "Hurghada",
@@ -58,7 +63,12 @@
         "price": "1,999",
         "currency": "EGP",
         "duration": "3 Nights / 4 Days",
-        "services": ["4-Star Resort", "Smooth Transfers", "Snorkeling", "Breakfast & Dinner"]
+        "services": [
+          "4-Star Resort",
+          "Smooth Transfers",
+          "Snorkeling",
+          "Breakfast & Dinner"
+        ]
       },
       {
         "destination": "Dahab",
@@ -68,7 +78,12 @@
         "price": "1,599",
         "currency": "EGP",
         "duration": "3 Nights / 4 Days",
-        "services": ["Boutique Stay", "Safari Adventures", "Mountain Activities", "Daily Breakfast"]
+        "services": [
+          "Boutique Stay",
+          "Safari Adventures",
+          "Mountain Activities",
+          "Daily Breakfast"
+        ]
       }
     ]
   },
@@ -100,7 +115,8 @@
         "description": "Our team is ready to help you plan your perfect trip via WhatsApp.",
         "label": "Contact Now"
       }
-    ]
+    ],
+    "badge": "What We Offer"
   },
   "gallery": {
     "badge": "Photo Gallery",
@@ -110,33 +126,85 @@
     "prev": "Previous",
     "next": "Next",
     "cards": [
-      { "title": "Sunset in Sharm El Sheikh", "desc": "Stunning view of the Red Sea" },
-      { "title": "Diving in Dahab", "desc": "Discover the underwater world" },
-      { "title": "Safari Adventure", "desc": "Adventure in the heart of the desert" },
-      { "title": "Nile Cruise in Luxor", "desc": "A journey through history" },
-      { "title": "Hurghada Beach", "desc": "Relaxation on white sands" },
-      { "title": "Abu Simbel Temples", "desc": "Wonders of ancient civilization" },
-      { "title": "Siwa Oasis", "desc": "Paradise in the desert" },
-      { "title": "Boat Trip", "desc": "A full day at sea" },
-      { "title": "Luxury Resort", "desc": "An unmatched stay" }
+      {
+        "title": "Sunset in Sharm El Sheikh",
+        "desc": "Stunning view of the Red Sea"
+      },
+      {
+        "title": "Diving in Dahab",
+        "desc": "Discover the underwater world"
+      },
+      {
+        "title": "Safari Adventure",
+        "desc": "Adventure in the heart of the desert"
+      },
+      {
+        "title": "Nile Cruise in Luxor",
+        "desc": "A journey through history"
+      },
+      {
+        "title": "Hurghada Beach",
+        "desc": "Relaxation on white sands"
+      },
+      {
+        "title": "Abu Simbel Temples",
+        "desc": "Wonders of ancient civilization"
+      },
+      {
+        "title": "Siwa Oasis",
+        "desc": "Paradise in the desert"
+      },
+      {
+        "title": "Boat Trip",
+        "desc": "A full day at sea"
+      },
+      {
+        "title": "Luxury Resort",
+        "desc": "An unmatched stay"
+      }
     ]
   },
   "howItWorks": {
     "sectionTitle": "How to Book Your Trip?",
-    "categories": ["Explore", "Trips", "Hotels", "Adventures", "Honeymoon", "Private Tours"],
-    "subtitle": "How We Work",
+    "categories": [
+      "Explore",
+      "Trips",
+      "Hotels",
+      "Adventures",
+      "Honeymoon",
+      "Private Tours"
+    ],
+    "subtitle": "Booking Process",
     "stepsTitle": "Book your trip in 4 easy steps",
     "tripImageAlt": "Tourist trip",
     "steps": [
-      { "number": "1", "title": "Start by choosing the right hotel", "description": "Browse our featured hotels in Sharm El Sheikh and choose your preferred accommodation." },
-      { "number": "2", "title": "Choose trips and activities that fit your experience", "description": "Add boat tours, safaris, and activities you'd like to enjoy." },
-      { "number": "3", "title": "Add extra services for greater comfort", "description": "Select additional services like airport pickup to ensure your comfort." },
-      { "number": "4", "title": "Review booking details and final cost", "description": "Review the final cost details and submit your booking request." }
-    ]
+      {
+        "number": "1",
+        "title": "Start by choosing the right hotel",
+        "description": "Browse our featured hotels in Sharm El Sheikh and choose your preferred accommodation."
+      },
+      {
+        "number": "2",
+        "title": "Choose trips and activities that fit your experience",
+        "description": "Add boat tours, safaris, and activities you'd like to enjoy."
+      },
+      {
+        "number": "3",
+        "title": "Add extra services for greater comfort",
+        "description": "Select additional services like airport pickup to ensure your comfort."
+      },
+      {
+        "number": "4",
+        "title": "Review booking details and final cost",
+        "description": "Review the final cost details and submit your booking request."
+      }
+    ],
+    "badge": "Booking Process"
   },
   "cta": {
     "title": "Start Your Journey with",
-    "brandName": "Oday Tourism"
+    "brandName": "Oday Tourism",
+    "badge": "Contact Us"
   },
   "reviews": {
     "badge": "Customer Reviews",
@@ -227,24 +295,23 @@
   },
   "langSwitcher": {
     "ar": "عربي",
-    "en": "English"
-  ,
-  "tripsPage": {
-    "badge": "Featured Trips",
-    "heading": {
-      "title": "Discover Trips",
-      "subtitle": "Choose your next adventure from our curated list"
+    "en": "English",
+    "tripsPage": {
+      "badge": "Featured Trips",
+      "heading": {
+        "title": "Discover Trips",
+        "subtitle": "Choose your next adventure from our curated list"
+      },
+      "grid": {
+        "title": "Trips",
+        "subtitle": "Pick the trip that suits you"
+      }
     },
-    "grid": {
-      "title": "Trips",
-      "subtitle": "Pick the trip that suits you"
+    "tripDetail": {
+      "title": "Trip Details",
+      "schedule": "Schedule",
+      "includes": "Includes",
+      "booking": "Booking"
     }
-  },
-  "tripDetail": {
-    "title": "Trip Details",
-    "schedule": "Schedule",
-    "includes": "Includes",
-    "booking": "Booking"
   }
-}
 }

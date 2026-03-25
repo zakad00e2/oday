@@ -13,6 +13,10 @@ export default function HowItWorks() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Section Title */}
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
+              <span className="text-xs font-medium text-[#111]">{d.badge}</span>
+            <svg className="w-4 h-4 text-[#111]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+              </div>
             <h2 className="text-4xl md:text-5xl font-semibold text-[#111] mb-8 tracking-tight">
               {d.sectionTitle}
             </h2>

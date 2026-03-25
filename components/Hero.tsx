@@ -43,12 +43,10 @@ export default function Hero() {
             }`}
         >
           {/* Small Badge */}
-          {/* <div
-            className="inline-flex items-center gap-2 text-white/90 rounded-full px-5 py-2 text-sm font-medium my-8 bg-white/10 backdrop-blur-sm backdrop-saturate-150 border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
-          >
-
-            <span>{d.badge}</span>
-          </div> */}
+          {/* <div className="inline-flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full px-4 py-1.5 mb-6">
+            <span className="text-xs font-medium text-[#111]">{d.badge}</span>
+          <svg className="w-4 h-4 text-[#111]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.93 0 5 1 7 2a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div> */}
 
           {/* Main Heading */}
           <h1
