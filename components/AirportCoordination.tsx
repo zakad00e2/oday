@@ -33,6 +33,7 @@ interface FormErrors {
     customAirlineName?: string;
     fullName?: string;
     whatsapp?: string;
+    agreement?: string;
 }
 
 function parseIsoDate(value: string): Date | null {
