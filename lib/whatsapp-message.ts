@@ -62,6 +62,11 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
         lines.push(`${isAr ? "• *ملاحظات:*" : "• *Notes:*"} ${data.notes}`);
     }
 
+    lines.push(
+        ``,
+        `✅ ${isAr ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد" : "Agreed to Terms & Conditions and Refund Policy"}`
+    );
+
     return lines.join("\n");
 }
 

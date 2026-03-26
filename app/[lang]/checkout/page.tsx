@@ -17,6 +17,7 @@ export default function CheckoutPage() {
     const [notes, setNotes] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
     const guestsTotal = cart.guests.adults + cart.guests.children;
     const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
             perPerson: isAr ? "/شخص" : "/person",
             estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
             notes: isAr ? "ملاحظات" : "Notes",
+            agreementConfirmed: isAr ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد" : "Agreed to Terms & Conditions and Refund Policy",
         },
         submitted: {
             title: isAr ? "تم إرسال طلبك بنجاح!" : "Your request was sent successfully!",
@@ -77,6 +79,12 @@ export default function CheckoutPage() {
             notesPlaceholder: isAr ? "أي ملاحظات أو طلبات خاصة..." : "Any notes or special requests...",
             submit: isAr ? "أرسل طلب الحجز عبر واتساب" : "Send booking request via WhatsApp",
         },
+        legal: {
+            agreementLabel: isAr ? "قرأت وأوافق على" : "I have read and agree to",
+            termsLabel: isAr ? "الشروط والأحكام" : "Terms & Conditions",
+            refundLabel: isAr ? "سياسة الاسترداد" : "Refund Policy",
+            agreementError: isAr ? "يجب الموافقة على الشروط والأحكام للاستمرار" : "You must agree to the terms to continue",
+        },
         summary: {
             title: isAr ? "ملخص الطلب" : "Order summary",
             item: isAr ? "عنصر" : "item",
@@ -99,6 +107,7 @@ export default function CheckoutPage() {
         const errs: Record<string, string> = {};
         if (!name.trim()) errs.name = t.errors.name;
         if (!phone.trim()) errs.phone = t.errors.phone;
+        if (!agreedToPolicies) errs.agreement = t.legal.agreementError;
         return errs;
     };
 
@@ -151,6 +160,8 @@ export default function CheckoutPage() {
 
         if (totalPrice > 0) msg += `💵 *${t.whatsapp.estimatedTotal}: $${totalPrice}*\n`;
         if (notes.trim()) msg += `\n📝 ${t.whatsapp.notes}: ${notes}\n`;
+        
+        msg += `\n✅ ${t.whatsapp.agreementConfirmed}\n`;
 
         const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
         window.open(whatsappUrl, "_blank");
@@ -167,11 +178,11 @@ export default function CheckoutPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h3 className="text-2xl font-bold text-[#0f172a] mb-3">{t.submitted.title}</h3>
+                        <h3 className="text-2xl font-semibold text-[#0f172a] mb-3">{t.submitted.title}</h3>
                         <p className="text-[#64748b] mb-6">{t.submitted.desc}</p>
                         <Link
                             href={`/${lang}/trips`}
-                            className="bg-[#2563EB] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1d4ed8] transition inline-block"
+                            className="bg-[#0EA5E9] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#0284c7] transition inline-block"
                         >
                             {t.submitted.cta}
                         </Link>
@@ -191,13 +202,13 @@ export default function CheckoutPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                         </div>
-                        <h3 className="text-xl font-bold text-[#0f172a] mb-3">{t.empty.title}</h3>
+                        <h3 className="text-xl font-semibold text-[#0f172a] mb-3">{t.empty.title}</h3>
                         <p className="text-[#64748b] mb-6">{t.empty.desc}</p>
                         <div className="flex flex-col gap-2">
-                            <Link href={`/${lang}/trips`} className="bg-[#2563EB] text-white py-3 rounded-xl font-bold text-center">
+                            <Link href={`/${lang}/trips`} className="bg-[#0EA5E9] text-white py-3 rounded-xl font-semibold text-center">
                                 {t.empty.trips}
                             </Link>
-                            <Link href={`/${lang}/hotels`} className="border border-[#e2e8f0] text-[#0f172a] py-3 rounded-xl font-bold text-center hover:bg-[#f8fafc] transition-colors">
+                            <Link href={`/${lang}/hotels`} className="border border-[#e2e8f0] text-[#0f172a] py-3 rounded-xl font-semibold text-center hover:bg-[#f8fafc] transition-colors">
                                 {t.empty.hotels}
                             </Link>
                         </div>
@@ -208,7 +219,7 @@ export default function CheckoutPage() {
     }
 
     const inputClass = (field: string) =>
-        `w-full bg-[#f8fafc] border ${errors[field] ? "border-red-400" : "border-[#e2e8f0]"} rounded-xl px-4 py-3.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] transition`;
+        `w-full bg-[#f8fafc] border ${errors[field] ? "border-red-400" : "border-[#e2e8f0]"} rounded-xl px-4 py-3.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/20 focus:border-[#0EA5E9] transition`;
 
     return (
         <main className="min-h-screen bg-[#FAFAFA] pt-24 pb-20" dir={isAr ? "rtl" : "ltr"}>
@@ -279,11 +290,30 @@ export default function CheckoutPage() {
                                     className={`${inputClass("notes")} resize-none`}
                                 />
                             </div>
+                            {/* Agreement Checkbox */}
+                            <div className="md:col-span-2 flex items-center mt-2 gap-2">
+                                <input
+                                    id="agreement"
+                                    type="checkbox"
+                                    checked={agreedToPolicies}
+                                    onChange={(e) => setAgreedToPolicies(e.target.checked)}
+                                    className="w-5 h-5 text-[#0EA5E9] border-gray-300 rounded focus:ring-[#0EA5E9]"
+                                />
+                                <label htmlFor="agreement" className="ml-3 text-sm font-semibold text-[#0f172a]">
+                                    {t.legal.agreementLabel}
+                                    &nbsp;
+                                    <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank">{t.legal.termsLabel}</Link>
+                                    &nbsp;{isAr ? "و" : "and"}&nbsp;
+                                    <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank">{t.legal.refundLabel}</Link>
+                                </label>
+                            </div>
+                            {errors.agreement && <p className="md:col-span-2 text-sm font-semibold text-red-500 mt-1">{errors.agreement}</p>}
                         </div>
 
                         <button
                             type="submit"
-                            className="mt-6 w-full bg-[#25D366] hover:bg-[#20BE5C] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-base transition-all active:scale-[0.98]"
+                            disabled={!agreedToPolicies}
+                            className={`mt-6 w-full ${agreedToPolicies ? "bg-[#25D366] hover:bg-[#20BE5C] cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-base transition-all active:scale-[0.98]`}
                         >
                             {t.form.submit}
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -309,7 +339,7 @@ export default function CheckoutPage() {
                                     <FlexibleImage src={cart.hotel.image} alt={getHotelName(cart.hotel)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.hotelStay}</p>
-                                        <p className="text-sm font-bold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
+                                        <p className="text-sm font-semibold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
                                         <p className="text-xs text-[#64748b]">
                                             {cart.nights} {t.summary.nights}
                                             {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} ${t.summary.rooms}` : ''}
@@ -321,7 +351,7 @@ export default function CheckoutPage() {
                                             </p>
                                         )}
                                     </div>
-                                    <span className="text-sm font-bold text-[#0f172a] shrink-0">${hotelCost}</span>
+                                    <span className="text-sm font-semibold text-[#0f172a] shrink-0">${hotelCost}</span>
                                 </div>
                             )}
 
@@ -335,7 +365,7 @@ export default function CheckoutPage() {
                                         <FlexibleImage src={trip.heroImage} alt={getTripTitle(trip)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.trip}</p>
-                                            <p className="text-sm font-bold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
+                                            <p className="text-sm font-semibold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
                                             {trip.selectedOptions && trip.selectedOptions.length > 0 && (
                                                 <p className="text-xs text-[#64748b]">{trip.selectedOptions.map((o) => getTripOptionName(o)).join(isAr ? "، " : ", ")}</p>
                                             )}
@@ -345,7 +375,7 @@ export default function CheckoutPage() {
                                                 </p>
                                             )}
                                         </div>
-                                        <span className="text-sm font-bold text-[#0f172a] shrink-0">
+                                        <span className="text-sm font-semibold text-[#0f172a] shrink-0">
                                             {tripCost > 0 ? `$${tripCost}` : "—"}
                                         </span>
                                     </div>
@@ -355,22 +385,22 @@ export default function CheckoutPage() {
                             {/* Guests */}
                             <div className="flex items-center justify-between text-sm pt-2">
                                 <span className="text-[#64748b]">{t.summary.guests}</span>
-                                <span className="font-bold text-[#0f172a]">
+                                <span className="font-semibold text-[#0f172a]">
                                     {cart.guests.adults} {t.summary.adults}{cart.guests.children > 0 ? `${isAr ? "،" : ","} ${cart.guests.children} ${t.summary.children}` : ""}
                                 </span>
                             </div>
                             {cart.travelDate && (
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-[#64748b]">{t.summary.travelDate}</span>
-                                    <span className="font-bold text-[#0f172a]">{cart.travelDate}</span>
+                                    <span className="font-semibold text-[#0f172a]">{cart.travelDate}</span>
                                 </div>
                             )}
                         </div>
 
                         {/* Total */}
                         <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
-                            <span className="font-bold text-[#0f172a]">{t.summary.estimatedTotal}</span>
-                            <span className="text-2xl font-black text-[#2563EB]">
+                            <span className="font-semibold text-[#0f172a]">{t.summary.estimatedTotal}</span>
+                            <span className="text-2xl font-semibold text-[#0EA5E9]">
                                 {totalPrice > 0 ? `$${totalPrice}` : t.summary.onRequest}
                             </span>
                         </div>

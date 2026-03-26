@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
+import Link from "next/link";
 import {
     NATIONALITY_OPTIONS,
     EXTRA_AIRLINE_FEE,
@@ -248,7 +249,8 @@ export default function AirportCoordination() {
     const [notes, setNotes] = useState("");
 
     // ── State
-    const [errors, setErrors] = useState<FormErrors>({});
+    const [agreedToPolicies, setAgreedToPolicies] = useState(false);
+    const [errors, setErrors] = useState<FormErrors & { agreement?: string }>({});
     const [loading, setLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [whatsappUrl, setWhatsappUrl] = useState("");
@@ -341,10 +343,11 @@ export default function AirportCoordination() {
 
         if (!fullName.trim()) errs.fullName = t("يرجى إدخال الاسم الكامل", "Please enter your full name");
         if (!whatsapp.trim()) errs.whatsapp = t("يرجى إدخال رقم الواتساب", "Please enter your WhatsApp number");
+        if (!agreedToPolicies) errs.agreement = t("يجب الموافقة على الشروط والأحكام للاستمرار", "You must agree to the terms to continue");
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [airlineChoice, country, customAirlineName, nationalityId, file, fullName, otherAirlineId, airport, serviceType, t, whatsapp]);
+    }, [airlineChoice, country, customAirlineName, nationalityId, file, fullName, otherAirlineId, airport, serviceType, t, whatsapp, agreedToPolicies]);
 
     /* ─── Submit ───────────────────────────────────────────────── */
     const handleSubmit = useCallback(
@@ -830,11 +833,35 @@ export default function AirportCoordination() {
                                             </span>
                                         </div>
                                     </div>
+                                    
+                                    <div className="pt-3">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                id="agreement"
+                                                type="checkbox"
+                                                checked={agreedToPolicies}
+                                                onChange={(e) => setAgreedToPolicies(e.target.checked)}
+                                                className="w-4 h-4 text-[#0EA5E9] border-gray-300 rounded focus:ring-[#0EA5E9]"
+                                            />
+                                            <label htmlFor="agreement" className="text-xs text-[#0F172A] leading-tight font-medium">
+                                                {t("قرأت وأوافق على", "I have read and agree to")}
+                                                &nbsp;
+                                                <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
+                                                &nbsp;{isAr ? "و" : "and"}&nbsp;
+                                                <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank">{t("سياسة الاسترداد", "Refund Policy")}</Link>
+                                            </label>
+                                        </div>
+                                        {errors.agreement && <p className="text-xs text-red-500 mt-1.5 font-bold">{errors.agreement}</p>}
+                                    </div>
 
                                     <button
                                         type="submit"
-                                        disabled={loading}
-                                        className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white rounded-xl px-6 py-3 text-sm font-bold hover:bg-[#1da851] active:scale-[0.98] transition-all duration-200 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                                        disabled={loading || !agreedToPolicies}
+                                        className={`w-full flex items-center justify-center gap-2.5 text-white rounded-xl px-6 py-3 text-sm font-bold shadow-md transition-all duration-200 ${
+                                            agreedToPolicies
+                                                ? "bg-[#25D366] hover:bg-[#1da851] active:scale-[0.98] cursor-pointer"
+                                                : "bg-gray-400 cursor-not-allowed"
+                                        } disabled:opacity-60`}
                                     >
                                         {loading ? (
                                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -862,28 +889,28 @@ export default function AirportCoordination() {
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
                                                 "الموافقة الأمنية صالحة للسفر لمرة واحدة فقط خلال مدة أقصاها 3 أشهر من تاريخ إصدارها.",
-                                                "The security approval is valid for one trip only, within a maximum of 3 months from the issue date."
+                                                "The security approval is valid for one trip only and up to 3 months from the issue date."
                                             )}
                                         </li>
                                         <li className={`relative ${noteItemPaddingClass}`}>
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
                                                 "بعد تقديم طلب الموافقة الأمنية وبدء الإجراءات لا يمكن إلغاء الطلب.",
-                                                "Once the security approval request is submitted and processing starts, the request cannot be cancelled."
+                                                "Once submitted, the request cannot be cancelled."
                                             )}
                                         </li>
                                         <li className={`relative ${noteItemPaddingClass}`}>
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
                                                 "في حال رفض الطلب أمنياً يتم خصم 40$ كمصاريف إدارية واسترجاع باقي المبلغ خلال 5 إلى 15 يوم عمل.",
-                                                "If the request is rejected for security reasons, $40 will be deducted as an administrative fee and the remaining amount will be refunded within 5 to 15 business days."
+                                                "If rejected, $40 will be deducted and the remaining amount refunded within 5–15 business days."
                                             )}
                                         </li>
                                         <li className={`relative ${noteItemPaddingClass}`}>
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
                                                 "أي تعديل بعد صدور الموافقة الأمنية قد يترتب عليه رسوم إضافية.",
-                                                "Any modification after the security approval is issued may result in additional fees."
+                                                "Any changes after approval may incur additional fees."
                                             )}
                                         </li>
                                     </ul>

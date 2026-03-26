@@ -42,6 +42,8 @@ export default function Footer() {
         { label: dict.nav.airportCoordination, href: `/${lang}/airport-coordination` },
 
     { label: dict.nav.about, href: `/${lang}/about` },
+    { label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', href: `/${lang}/terms` },
+    { label: lang === 'ar' ? 'سياسة الاسترداد' : 'Refund Policy', href: `/${lang}/refund-policy` },
   ];
 
   const contactInfo = [
