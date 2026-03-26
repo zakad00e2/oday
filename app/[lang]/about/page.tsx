@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
 import Reviews from "@/components/Reviews";
@@ -10,21 +11,21 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
     return (
         <main className="bg-[#FAFAFA]">
             <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-28 md:pt-48 md:pb-28">
-                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#60A5FA] opacity-5 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#93C5FD] opacity-5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#38BDF8] opacity-5 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#7DD3FC] opacity-5 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10 max-w-[1100px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className={`space-y-6 order-1 lg:order-2 flex flex-col items-center text-center lg:items-start lg:text-start transition-all duration-1000 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563EB] border border-[#2563EB]/20 bg-[#2563EB]/5 rounded-full px-4 py-1.5">
+                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] border border-[#0EA5E9]/20 bg-[#0EA5E9]/5 rounded-full px-4 py-1.5">
                             About us
                         </span>
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0f172a] leading-tight">
                             Oday{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#2563EB] to-[#60A5FA]">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#0EA5E9] to-[#38BDF8]">
                                 Tourism
                             </span>
                         </h1>
-                        <p className="text-[#64748b] text-base md:text-lg leading-relaxed max-w-lg">
+                        <p className="text-[#64748b] text-sm md:text-base leading-relaxed max-w-lg">
                             We craft unforgettable travel experiences in Egypt — from the Red Sea to the golden desert. Our team supports you from planning to your safe return.
                         </p>
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2 w-full">
@@ -45,18 +46,18 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                             </a>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center lg:justify-start pt-8 mt-4 border-t border-[#e2e8f0] w-full">
+                        <div className="flex items-center justify-between lg:justify-start pt-8 mt-4 border-t border-[#e2e8f0] w-full divide-x divide-[#e2e8f0]">
                             {[
                                 { number: "500+", label: "Trips organized" },
                                 { number: "10+", label: "Years of experience" },
                                 { number: "1000+", label: "Happy customers" },
                             ].map((stat, index) => (
-                                <div key={stat.label} className={`flex flex-col items-center lg:items-start px-4 sm:px-6 md:px-8 ${index !== 2 ? "border-l border-[#e2e8f0]" : ""} ${index === 0 ? "lg:pr-0 pl-4 sm:pl-6 md:pl-8" : ""}`}>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl md:text-4xl font-black text-[#0f172a]">{stat.number.replace("+", "")}</span>
-                                        <span className="text-xl md:text-2xl font-bold text-[#0f172a]">+</span>
+                                <div key={stat.label} className={`flex flex-col items-center lg:items-start flex-1 lg:flex-none px-1 sm:px-5 md:px-8 ${index === 0 ? "lg:pl-0" : ""}`}>
+                                    <div className="flex items-baseline gap-1" dir="ltr">
+                                        <span className="text-xl sm:text-2xl md:text-4xl font-black text-[#0f172a]">{stat.number.replace("+", "")}</span>
+                                        <span className="text-lg md:text-2xl font-bold text-[#0f172a]">+</span>
                                     </div>
-                                    <p className="text-xs sm:text-sm font-medium text-[#64748b] mt-1">{stat.label}</p>
+                                    <p className="text-[10px] sm:text-xs md:text-sm font-medium text-[#64748b] mt-1 text-center lg:text-left whitespace-nowrap">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -64,17 +65,21 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
 
                     <div className={`order-2 lg:order-1 relative transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
                         <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)] rotate-1">
-                            <img
-                                src="/WhatsApp Image 2026-02-27 at 8.28.18 PM (1).jpeg"
+                            <Image
+                                src="/optimized/sharm-activities.webp"
                                 alt="Sharm El‑Sheikh activities"
+                                width={1200}
+                                height={900}
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                quality={62}
                                 className="w-full h-[450px] object-cover"
-                                loading="eager"
+                                priority
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/60 to-transparent" />
                         </div>
                         <div className="absolute -bottom-5 -right-4 bg-white rounded-2xl shadow-xl px-5 py-4 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
-                                <svg className="w-5 h-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <div className="w-10 h-10 rounded-full bg-[#0EA5E9]/10 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -87,9 +92,58 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                 </div>
             </section>
 
+            <section className="py-16 md:py-24 px-6 md:px-12">
+                <div className="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-6 order-2 lg:order-1">
+                        <ScrollReveal>
+                            <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-1 block">
+                                Get to know us
+                            </span>
+                            <h2 className="text-3xl md:text-4xl font-bold text-[#111] leading-tight">
+                                Who we are
+                            </h2>
+                        </ScrollReveal>
+
+                        <ScrollReveal delay={100}>
+                            <p className="text-[#444] text-base md:text-lg leading-[1.9]">
+                                Oday Tourism is a travel company focused on delivering complete tourism services across Egypt, with a special focus on Sharm El-Sheikh, one of the Red Sea&apos;s top destinations.
+                            </p>
+                        </ScrollReveal>
+
+                        <ScrollReveal delay={200}>
+                            <p className="text-[#444] text-base md:text-lg leading-[1.9]">
+                                We believe travel is more than booking a hotel or choosing an excursion. It is a full experience that starts with planning and continues through every detail of the journey.
+                            </p>
+                        </ScrollReveal>
+
+                        <ScrollReveal delay={300}>
+                            <p className="text-[#555] text-base md:text-lg leading-[1.9] font-medium border-l-4 border-[#0EA5E9] pl-5 py-1">
+                                Our goal is to give every traveler a smooth, safe, and memorable trip from start to finish.
+                            </p>
+                        </ScrollReveal>
+                    </div>
+
+                    <ScrollReveal delay={150} className="order-1 lg:order-2">
+                        <div className="relative">
+                            <Image
+                                src="/optimized/about-team.avif"
+                                alt="Oday Tourism team"
+                                width={1200}
+                                height={900}
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                quality={58}
+                                className="w-full rounded-3xl shadow-xl object-cover aspect-[4/3]"
+                            />
+                            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl bg-[#0EA5E9]/10 -z-10" />
+                            <div className="absolute -top-4 -left-4 w-20 h-20 rounded-2xl bg-[#F5E6D3]/60 -z-10" />
+                        </div>
+                    </ScrollReveal>
+                </div>
+            </section>
+
             <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
                 <ScrollReveal className="text-center mb-14">
-                    <span className="text-xs font-semibold tracking-widest uppercase text-[#2563EB] mb-2 block">
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-2 block">
                         What we do
                     </span>
                     <h2 className="text-3xl md:text-4xl font-bold text-[#111]">Our services</h2>
@@ -105,8 +159,8 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                         { title: "Complete packages", desc: "Bundle accommodation, transfers, and activities for a smooth trip.", icon: <SuitcaseIcon /> },
                     ].map((s, i) => (
                         <ScrollReveal key={s.title} delay={i * 100}>
-                            <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#2563EB]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
-                                <div className="text-[#2563EB] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
+                            <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#0EA5E9]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
+                                <div className="text-[#0EA5E9] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
                                     {s.icon}
                                 </div>
                                 <h3 className="text-lg font-bold text-[#111] mb-3">{s.title}</h3>
@@ -114,6 +168,58 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                             </div>
                         </ScrollReveal>
                     ))}
+                </div>
+            </section>
+
+            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
+                <div className="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <ScrollReveal className="order-2 lg:order-2 relative">
+                        <Image
+                            src="/optimized/about-activities.avif"
+                            alt="Travel activities in Sharm El-Sheikh"
+                            width={1200}
+                            height={1600}
+                            sizes="(max-width: 1024px) 100vw, 50vw"
+                            quality={55}
+                            className="w-full h-[400px] lg:h-[600px] object-cover rounded-[2rem] shadow-2xl"
+                        />
+                        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-[2rem] bg-[#0EA5E9]/10 -z-10" />
+                        <div className="absolute top-12 -left-6 w-24 h-24 rounded-[1.5rem] bg-[#111]/5 -z-10" />
+                    </ScrollReveal>
+
+                    <div className="order-1 lg:order-1 space-y-10">
+                        <ScrollReveal>
+                            <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-2 block">
+                                Why us
+                            </span>
+                            <h2 className="text-3xl md:text-4xl font-bold text-[#111] mb-4">
+                                Why choose Oday Tourism?
+                            </h2>
+                            <p className="text-[#6B7280] text-base md:text-lg leading-relaxed">
+                                Choosing the right travel company is the first step toward a successful trip. We combine quality, planning, and value to make every journey feel effortless.
+                            </p>
+                        </ScrollReveal>
+
+                        <div className="space-y-6">
+                            {advantagesEn.map((a, i) => (
+                                <ScrollReveal key={a.title} delay={100 + i * 50}>
+                                    <div className="flex items-start gap-4 group">
+                                        <div className="shrink-0 mt-1 w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] flex items-center justify-center text-[#0EA5E9] group-hover:bg-[#0EA5E9] group-hover:text-white transition-colors duration-300">
+                                            {a.icon}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-[17px] font-bold text-[#111] mb-1 group-hover:text-[#0EA5E9] transition-colors">
+                                                {a.title}
+                                            </h3>
+                                            <p className="text-[#6B7280] text-sm leading-relaxed">
+                                                {a.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </ScrollReveal>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -131,6 +237,30 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                     </ScrollReveal>
 
                     <FAQList faqs={faqs} lang="en" />
+                </div>
+            </section>
+
+            <section className="relative overflow-hidden">
+                <Image
+                    src="/optimized/about-experience.webp"
+                    alt="Discover Sharm El-Sheikh"
+                    width={1600}
+                    height={420}
+                    sizes="100vw"
+                    quality={60}
+                    className="w-full h-[340px] md:h-[420px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
+
+                <div className="absolute inset-0 flex items-center justify-center px-6">
+                    <ScrollReveal className="text-center max-w-2xl">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Discover the magic of Sharm El-Sheikh
+                        </h2>
+                        <p className="text-white/85 text-base md:text-lg leading-relaxed">
+                            From colorful coral reefs to golden desert landscapes, Sharm El-Sheikh offers endless adventures. Let Oday Tourism turn it into a trip you will always remember.
+                        </p>
+                    </ScrollReveal>
                 </div>
             </section>
         </main>
@@ -266,6 +396,34 @@ const advantages = [
     },
 ];
 
+const advantagesEn = [
+    {
+        title: "Professional travel expertise",
+        desc: "Our team brings deep destination knowledge and practical experience to every itinerary we organize.",
+        icon: <MapPinIcon />,
+    },
+    {
+        title: "Carefully planned trips",
+        desc: "Every booking is arranged with attention to timing, logistics, and comfort so your trip runs smoothly.",
+        icon: <ClipboardCheckIcon />,
+    },
+    {
+        title: "Competitive pricing",
+        desc: "We work to deliver strong value without compromising on the quality of service or the overall experience.",
+        icon: <CurrencyIcon />,
+    },
+    {
+        title: "Reliable customer support",
+        desc: "We stay available before, during, and after your trip to help with questions, updates, and peace of mind.",
+        icon: <ChatBubbleIcon />,
+    },
+    {
+        title: "Unique Sharm experiences",
+        desc: "We know the destination well and help you enjoy standout experiences that go beyond the usual tourist plan.",
+        icon: <SparklesIcon />,
+    },
+];
+
 /* ── FAQ Accrodion Component ────────────────────────────── */
 function ChevronDownIcon({ className = "" }: { className?: string }) {
     return (
@@ -275,17 +433,17 @@ function ChevronDownIcon({ className = "" }: { className?: string }) {
     );
 }
 
-function FAQItem({ question, answer, delay, isOpen, onToggle }: { question: string; answer: string; delay: number; isOpen: boolean; onToggle: () => void }) {
+function FAQItem({ question, answer, delay, isOpen, onToggle, lang }: { question: string; answer: string; delay: number; isOpen: boolean; onToggle: () => void; lang: "ar" | "en" }) {
     return (
         <ScrollReveal delay={delay}>
             <div className="border-b border-[#e2e8f0]">
                 <button
                     onClick={onToggle}
-                    className="w-full text-right py-6 flex items-center justify-between focus:outline-none group"
+                    className={`w-full py-6 flex items-center justify-between focus:outline-none group ${lang === "ar" ? "text-right" : "text-left"}`}
                     aria-expanded={isOpen}
                 >
-                    <span className={`text-[18px] md:text-[20px] font-bold transition-colors pl-4 ${isOpen ? "text-[#2563EB]" : "text-[#0f172a] group-hover:text-[#2563EB]"}`}>{question}</span>
-                    <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#2563EB]" : "rotate-0 text-[#64748b]"}`}>
+                    <span className={`text-[18px] md:text-[20px] font-bold transition-colors ${lang === "ar" ? "pl-4" : "pr-4"} ${isOpen ? "text-[#0EA5E9]" : "text-[#0f172a] group-hover:text-[#0EA5E9]"}`}>{question}</span>
+                    <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#0EA5E9]" : "rotate-0 text-[#64748b]"}`}>
                         <ChevronDownIcon />
                     </div>
                 </button>
@@ -294,7 +452,7 @@ function FAQItem({ question, answer, delay, isOpen, onToggle }: { question: stri
                         }`}
                 >
                     <div className="overflow-hidden">
-                        <div className="pb-6 pt-0 text-[#64748b] text-[15px] md:text-[17px] leading-[1.8] pl-8">
+                        <div className={`pb-6 pt-0 text-[#64748b] text-[15px] md:text-[17px] leading-[1.8] ${lang === "ar" ? "pr-8 text-right" : "pl-8 text-left"}`}>
                             {answer}
                         </div>
                     </div>
@@ -322,6 +480,7 @@ function FAQList({ faqs, lang }: { faqs: AboutFaq[]; lang: "ar" | "en" }) {
                     key={faq.id}
                     question={lang === "ar" ? faq.questionAr : faq.questionEn}
                     answer={lang === "ar" ? faq.answerAr : faq.answerEn}
+                    lang={lang}
                     delay={index * 100}
                     isOpen={openIndex === index}
                     onToggle={() => setOpenIndex(openIndex === index ? null : index)}
@@ -367,19 +526,19 @@ export default function AboutPage() {
             ════════════════════════════════════════════════════ */}
             <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-36 md:pt-48 md:pb-36">
                 {/* decorative circles */}
-                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#60A5FA] opacity-5 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#93C5FD] opacity-5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-[#38BDF8] opacity-5 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-[#7DD3FC] opacity-5 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10 max-w-[1100px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
                     {/* ─── Right: Text ─── */}
                     <div className={`space-y-6 order-1 lg:order-2 flex flex-col items-center text-center lg:items-start lg:text-start transition-all duration-1000 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#2563EB] border border-[#2563EB]/20 bg-[#2563EB]/5 rounded-full px-4 py-1.5">
+                        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] border border-[#0EA5E9]/20 bg-[#0EA5E9]/5 rounded-full px-4 py-1.5">
                             من نحن
                         </span>
                         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-tight">
                             Oday{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#2563EB] to-[#60A5FA]">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#0EA5E9] to-[#38BDF8]">
                                 Tourism
                             </span>
                         </h1>
@@ -426,18 +585,22 @@ export default function AboutPage() {
                     <div className={`order-2 lg:order-1 relative transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
                         {/* Main image */}
                         <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)] rotate-1">
-                            <img
-                                src="/WhatsApp Image 2026-02-27 at 8.28.18 PM (1).jpeg"
+                            <Image
+                                src="/optimized/sharm-activities.webp"
                                 alt="نشاطات شرم الشيخ"
+                                width={1200}
+                                height={900}
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                quality={62}
                                 className="w-full h-[450px] object-cover"
-                                loading="eager"
+                                priority
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/60 to-transparent" />
                         </div>
                         {/* Floating badge */}
                         <div className="absolute -bottom-5 -right-4 bg-white rounded-2xl shadow-xl px-5 py-4 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
-                                <svg className="w-5 h-5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <div className="w-10 h-10 rounded-full bg-[#0EA5E9]/10 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -463,7 +626,7 @@ export default function AboutPage() {
                     {/* text */}
                     <div className="space-y-6 order-2 lg:order-1">
                         <ScrollReveal>
-                            <span className="text-xs font-semibold tracking-widest uppercase text-[#2563EB] mb-1 block">
+                            <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-1 block">
                                 تعرّف علينا
                             </span>
                             <h2 className="text-3xl md:text-4xl font-bold text-[#111] leading-tight">
@@ -484,7 +647,7 @@ export default function AboutPage() {
                         </ScrollReveal>
 
                         <ScrollReveal delay={300}>
-                            <p className="text-[#555] text-base md:text-lg leading-[1.9] font-medium border-r-4 border-[#2563EB] pr-5 py-1">
+                            <p className="text-[#555] text-base md:text-lg leading-[1.9] font-medium border-r-4 border-[#0EA5E9] pr-5 py-1">
                                 هدفنا هو أن يحصل كل مسافر على تجربة سياحية مريحة وآمنة مليئة بالذكريات الجميلة.
                             </p>
                         </ScrollReveal>
@@ -493,14 +656,17 @@ export default function AboutPage() {
                     {/* image */}
                     <ScrollReveal delay={150} className="order-1 lg:order-2">
                         <div className="relative">
-                            <img
-                                src="/images/about/team.png"
+                            <Image
+                                src="/optimized/about-team.avif"
                                 alt="فريق عدي توريزم"
+                                width={1200}
+                                height={900}
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                quality={58}
                                 className="w-full rounded-3xl shadow-xl object-cover aspect-[4/3]"
-                                loading="lazy"
                             />
                             {/* decorative accents */}
-                            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl bg-[#2563EB]/10 -z-10" />
+                            <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl bg-[#0EA5E9]/10 -z-10" />
                             <div className="absolute -top-4 -left-4 w-20 h-20 rounded-2xl bg-[#F5E6D3]/60 -z-10" />
                         </div>
                     </ScrollReveal>
@@ -513,7 +679,7 @@ export default function AboutPage() {
             ════════════════════════════════════════════════════ */}
             <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
                 <ScrollReveal className="text-center mb-14">
-                    <span className="text-xs font-semibold tracking-widest uppercase text-[#2563EB] mb-2 block">
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-2 block">
                         ماذا نقدم
                     </span>
                     <h2 className="text-3xl md:text-4xl font-bold text-[#111]">خدماتنا</h2>
@@ -525,8 +691,8 @@ export default function AboutPage() {
                 <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {services.map((s, i) => (
                         <ScrollReveal key={s.title} delay={i * 100}>
-                            <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#2563EB]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
-                                <div className="text-[#2563EB] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
+                            <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#0EA5E9]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
+                                <div className="text-[#0EA5E9] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
                                     {s.icon}
                                 </div>
                                 <h3 className="text-lg font-bold text-[#111] mb-3">{s.title}</h3>
@@ -546,21 +712,24 @@ export default function AboutPage() {
 
                     {/* Left: Image (on Desktop, it's the second item in RTL -> left) */}
                     <ScrollReveal className="order-2 lg:order-2 relative">
-                        <img
-                            src="/images/about/activities.png"
+                        <Image
+                            src="/optimized/about-activities.avif"
                             alt="الأنشطة السياحية في شرم الشيخ"
+                            width={1200}
+                            height={1600}
+                            sizes="(max-width: 1024px) 100vw, 50vw"
+                            quality={55}
                             className="w-full h-[400px] lg:h-[600px] object-cover rounded-[2rem] shadow-2xl"
-                            loading="lazy"
                         />
                         {/* decorative accents */}
-                        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-[2rem] bg-[#2563EB]/10 -z-10" />
+                        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-[2rem] bg-[#0EA5E9]/10 -z-10" />
                         <div className="absolute top-12 -left-6 w-24 h-24 rounded-[1.5rem] bg-[#111]/5 -z-10" />
                     </ScrollReveal>
 
                     {/* Right: Text & Features (on Desktop, it's the first item in RTL -> right) */}
                     <div className="order-1 lg:order-1 space-y-10">
                         <ScrollReveal>
-                            <span className="text-xs font-semibold tracking-widest uppercase text-[#2563EB] mb-2 block">
+                            <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-2 block">
                                 لماذا نحن
                             </span>
                             <h2 className="text-3xl md:text-4xl font-bold text-[#111] mb-4">
@@ -575,11 +744,11 @@ export default function AboutPage() {
                             {advantages.map((a, i) => (
                                 <ScrollReveal key={a.title} delay={100 + i * 50}>
                                     <div className="flex items-start gap-4 group">
-                                        <div className="shrink-0 mt-1 w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] flex items-center justify-center text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white transition-colors duration-300">
+                                        <div className="shrink-0 mt-1 w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] flex items-center justify-center text-[#0EA5E9] group-hover:bg-[#0EA5E9] group-hover:text-white transition-colors duration-300">
                                             {a.icon}
                                         </div>
                                         <div>
-                                            <h3 className="text-[17px] font-bold text-[#111] mb-1 group-hover:text-[#2563EB] transition-colors">
+                                            <h3 className="text-[17px] font-bold text-[#111] mb-1 group-hover:text-[#0EA5E9] transition-colors">
                                                 {a.title}
                                             </h3>
                                             <p className="text-[#6B7280] text-sm leading-relaxed">
@@ -622,11 +791,14 @@ export default function AboutPage() {
                 ██  6. EXPERIENCE SECTION
             ════════════════════════════════════════════════════ */}
             <section className="relative overflow-hidden">
-                <img
-                    src="/about2.jpeg"
+                <Image
+                    src="/optimized/about-experience.webp"
                     alt="استكشف شرم الشيخ"
+                    width={1600}
+                    height={420}
+                    sizes="100vw"
+                    quality={60}
                     className="w-full h-[340px] md:h-[420px] object-cover"
-                    loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
 

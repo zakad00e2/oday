@@ -25,7 +25,7 @@ export default async function LangLayout({
 
   return (
     <DictionaryProvider dictionary={dictionary} lang={lang as Locale}>
-      <LayoutWrapper>{children}</LayoutWrapper>
+      <LayoutWrapper lang={lang as Locale}>{children}</LayoutWrapper>
     </DictionaryProvider>
   );
 }

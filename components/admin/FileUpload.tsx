@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import FlexibleImage from "@/components/FlexibleImage";
 
 interface FileUploadProps {
   label: string;
@@ -61,8 +62,7 @@ export default function FileUpload({
           {isVideo ? (
             <video src={value} className="w-full h-full object-cover" controls muted />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={value} alt="preview" className="w-full h-full object-cover" />
+            <FlexibleImage src={value} alt="preview" fill sizes="(max-width: 768px) 100vw, 320px" className="w-full h-full object-cover" />
           )}
           <button
             type="button"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "./ScrollReveal";
 
 const photos = [
@@ -36,6 +37,7 @@ export default function TravelGallery() {
   }, []);
 
   const currentIdx = lightbox !== null ? filtered.findIndex((p) => p.id === lightbox) : -1;
+  const activePhoto = lightbox !== null ? filtered.find((p) => p.id === lightbox) ?? null : null;
 
   const navLightbox = (dir: "prev" | "next") => {
     if (currentIdx === -1) return;
@@ -48,7 +50,6 @@ export default function TravelGallery() {
 
   // Track image loaded state for fade-in
   const [imgLoaded, setImgLoaded] = useState(false);
-  const handleImgLoad = useCallback(() => setImgLoaded(true), []);
 
   // Preload adjacent images
   const prevIdx = currentIdx > 0 ? currentIdx - 1 : filtered.length - 1;
@@ -109,10 +110,12 @@ export default function TravelGallery() {
                 onClick={() => { setImgLoaded(false); setLightbox(photo.id); }}
               >
                 <div className="aspect-[3/4]">
-                  <img
+                  <Image
                     src={photo.src}
                     alt={photo.alt}
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={65}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
@@ -153,10 +156,10 @@ export default function TravelGallery() {
             </button>
 
             {/* Preload adjacent images */}
-            {lightbox !== null && prevIdx >= 0 && (
+            {lightbox !== null && prevIdx >= 0 && filtered[prevIdx]?.src && (
               <link rel="preload" as="image" href={filtered[prevIdx]?.src} />
             )}
-            {lightbox !== null && nextIdx >= 0 && (
+            {lightbox !== null && nextIdx >= 0 && filtered[nextIdx]?.src && (
               <link rel="preload" as="image" href={filtered[nextIdx]?.src} />
             )}
 
@@ -167,13 +170,19 @@ export default function TravelGallery() {
               </div>
             )}
 
-            <img
-              key={lightbox}
-              src={filtered.find((p) => p.id === lightbox)?.src}
-              alt={filtered.find((p) => p.id === lightbox)?.alt}
-              onLoad={handleImgLoad}
-              className={`w-full rounded-2xl object-contain max-h-[80vh] transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-            />
+            {activePhoto && (
+              <Image
+                key={lightbox}
+                src={activePhoto.src}
+                alt={activePhoto.alt}
+                width={1600}
+                height={1200}
+                sizes="100vw"
+                quality={75}
+                onLoad={() => setImgLoaded(true)}
+                className={`w-full rounded-2xl object-contain max-h-[80vh] transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              />
+            )}
 
             {/* Nav arrows */}
             <div className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-16">

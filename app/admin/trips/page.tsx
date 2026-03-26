@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload from "@/components/admin/FileUpload";
 import { allTrips } from "@/lib/trips-data";
 import type { TripAddOn, TripDetail, TripOption, TripSchedule } from "@/lib/trips-types";
@@ -299,8 +300,7 @@ export default function AdminTrips() {
               {trips.map((trip) => (
                 <tr key={trip.id} className="border-b border-[#F9FAFB] hover:bg-[#FAFBFC] transition-colors align-top">
                   <td className="px-5 py-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={trip.heroImage} alt={trip.titleAr} className="w-16 h-12 rounded-lg object-cover bg-[#F3F4F6]" />
+                    <FlexibleImage src={trip.heroImage} alt={trip.titleAr} width={64} height={48} sizes="64px" className="w-16 h-12 rounded-lg object-cover bg-[#F3F4F6]" />
                   </td>
                   <td className="px-5 py-3">
                     <p className="font-medium text-[#111]">{trip.titleAr}</p>
@@ -428,8 +428,7 @@ export default function AdminTrips() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                         {form.galleryImages.map((image, index) => (
                           <div key={`${image}-${index}`} className="relative h-24 rounded-xl overflow-hidden bg-[#F3F4F6]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} alt={`gallery-${index}`} className="w-full h-full object-cover" />
+                            <FlexibleImage src={image} alt={`gallery-${index}`} fill sizes="96px" className="w-full h-full object-cover" />
                             <button type="button" onClick={() => setForm((current) => ({ ...current, galleryImages: current.galleryImages.filter((_, itemIndex) => itemIndex !== index) }))} className="absolute top-1 left-1 w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xs transition-colors">
                               ×
                             </button>

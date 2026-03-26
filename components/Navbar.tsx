@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
@@ -62,10 +63,15 @@ export default function Navbar() {
     >
       {/* ── Logo ─────────────────────────────────────── */}
       <Link href={`/${lang}`} className="flex items-center gap-1 group">
-        <img
-          src="/logo.png"
+        <Image
+          src="/optimized/logo.webp"
           alt="Oday Tourism Logo"
-          className="h-12 md:h-15 w-auto object-contain drop-shadow-sm"
+          width={180}
+          height={72}
+          priority
+          sizes="(max-width: 768px) 120px, 180px"
+          quality={75}
+          className="h-12 md:h-[60px] w-auto object-contain drop-shadow-sm"
         />
         <div className="flex flex-col pt-2.5">
           <span className={`text-base md:text-lg leading-none ${useDark ? "text-[#111]" : "text-white"}`} style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}>Oday Tourism</span>

@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import ScrollReveal from "./ScrollReveal";
 
@@ -134,16 +135,20 @@ export default function GalleryCarousel() {
               key={i}
               style={{ zIndex: i }}
               className={`relative flex-shrink-0 w-[220px] md:w-[240px] snap-center group cursor-pointer transition-all duration-500 hover:scale-[1.04] hover:z-50 ${review.rotation} hover:rotate-0`}
-            >
-              {/* Image card */}
-              <div className="rounded-t-2xl overflow-hidden shadow-lg" style={{ aspectRatio: "3/4" }}>
-                <img
-                  src={review.image}
-                  alt={`صورة من رحلة ${review.name}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-              </div>
+              >
+                {/* Image card */}
+                <div className="rounded-t-2xl overflow-hidden shadow-lg" style={{ aspectRatio: "3/4" }}>
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={review.image}
+                      alt={`صورة من رحلة ${review.name}`}
+                      fill
+                      sizes="(max-width: 768px) 220px, 240px"
+                      quality={65}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                </div>
 
               {/* Testimonial box */}
               <div className=" bg-white rounded-b-xl px-4 py-3 shadow-md border border-[#F3F4F6]">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
@@ -39,7 +40,7 @@ export default function PackagesGallery() {
       id: 1,
       title: isAr ? "ملاذ جزر المالديف" : "Maldives Escape",
       subtitle: isAr ? "٧ ليالٍ في فيلا مائية" : "7 Nights in a Water Villa",
-      image: "/pakg.jpeg",
+      image: "/optimized/package-card.webp",
       label: isAr ? "شهر العسل" : "Honeymoon",
       href: "/trips",
     },
@@ -47,7 +48,7 @@ export default function PackagesGallery() {
       id: 2,
       title: isAr ? "مغامرة جبال الألب السويسرية" : "Swiss Alps Adventure",
       subtitle: isAr ? "٥ أيام من المشي الجبلي" : "5 Days of Mountain Hiking",
-      image: "/pakg.jpeg",
+      image: "/optimized/package-card.webp",
       label: isAr ? "مغامرة" : "Adventure",
       href: "/trips",
     },
@@ -55,7 +56,7 @@ export default function PackagesGallery() {
       id: 3,
       title: isAr ? "إقامة فاخرة في دبي" : "Dubai Luxury Stay",
       subtitle: isAr ? "استمتع بأسلوب حياة فاخر" : "Experience Premium Lifestyle",
-      image: "/pakg.jpeg",
+      image: "/optimized/package-card.webp",
       label: isAr ? "فخامة" : "Luxury",
       href: "/hotels",
     },
@@ -63,7 +64,7 @@ export default function PackagesGallery() {
       id: 4,
       title: isAr ? "منتجع بالي" : "Bali Retreat",
       subtitle: isAr ? "استرخِ في جنة استوائية" : "Relax in Tropical Paradise",
-      image: "/pakg.jpeg",
+      image: "/optimized/package-card.webp",
       label: isAr ? "استرخاء" : "Relaxation",
       href: "/trips",
     }
@@ -86,7 +87,7 @@ export default function PackagesGallery() {
   };
 
   return (
-    <section className="py-24 bg-white" id="packages-gallery">
+    <section className="pt-24 pb-10 bg-white" id="packages-gallery">
       <ScrollReveal>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {/* Section Header */}
@@ -120,7 +121,7 @@ export default function PackagesGallery() {
                   <div
                     className="absolute inset-0 z-10 block w-full h-full"
                     aria-label={`View ${pkg.title} package`}
-                    onClick={(event) => {
+                      onClick={() => {
                       if (window.innerWidth >= 640) return;
 
                       if (activeMobileCard !== pkg.id) {
@@ -132,10 +133,12 @@ export default function PackagesGallery() {
                     }}
                   >
                     {/* Background Image */}
-                    <img
+                    <Image
                       src={pkg.image}
                       alt={pkg.title}
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 85vw, (max-width: 1024px) 50vw, 33vw"
+                      quality={60}
                       className="absolute inset-0 h-full w-full object-cover bg-[#F3F4F6] transition-transform duration-700 ease-out group-hover:scale-105 sm:bg-transparent"
                     />
                     

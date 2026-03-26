@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import FlexibleImage from "@/components/FlexibleImage";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripGallery({
@@ -174,9 +175,12 @@ export default function TripGallery({
                         </svg>
                     </button>
 
-                    <img
+                    <FlexibleImage
                         src={images[lightboxIdx]}
                         alt={`${tripTitle} - ${imageLabel} ${lightboxIdx + 1}`}
+                        width={1600}
+                        height={1200}
+                        sizes="100vw"
                         className="max-w-full max-h-[85vh] object-contain rounded-2xl"
                         onClick={(e) => e.stopPropagation()}
                     />

@@ -13,11 +13,12 @@ export default function TripsHero() {
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
 
                 <Image
-                    src="/clear.png"
+                    src="/optimized/clear-hero.avif"
                     alt={t("رحلات سياحية فاخرة", "Luxury trips")}
                     fill
                     priority
                     sizes="100vw"
+                    quality={45}
                     className="object-cover"
                 />
 

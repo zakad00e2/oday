@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "./ScrollReveal";
 
@@ -101,10 +102,12 @@ export default function LocalTrips() {
               >
                 {/* Image */}
                 <div className="relative overflow-hidden aspect-[4/3]">
-                  <img
+                  <Image
                     src={trip.image}
                     alt={trip.title}
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={65}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>

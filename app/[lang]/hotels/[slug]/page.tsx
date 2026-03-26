@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
+import FlexibleImage from "@/components/FlexibleImage";
 import { getHotelBySlug } from "@/lib/hotels-data";
 import { useCart } from "@/lib/cart-context";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -297,9 +298,12 @@ function HotelGallery({
                         </svg>
                     </button>
 
-                    <img
+                    <FlexibleImage
                         src={images[lightboxIdx]}
                         alt={`${name} - ${imageLabel} ${lightboxIdx + 1}`}
+                        width={1600}
+                        height={1200}
+                        sizes="100vw"
                         className="max-w-full max-h-[85vh] object-contain rounded-2xl"
                         onClick={(e) => e.stopPropagation()}
                     />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload from "@/components/admin/FileUpload";
 
 interface Room {
@@ -436,7 +437,7 @@ export default function AdminHotels() {
             <div key={hotel.id} className="bg-white rounded-2xl border border-[#F3F4F6] overflow-hidden group hover:shadow-lg transition-all duration-300">
               <div className="relative h-44 overflow-hidden bg-[#F3F4F6]">
                 {coverImage ? (
-                  <img src={coverImage} alt={hotel.nameAr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <FlexibleImage src={coverImage} alt={hotel.nameAr} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-sm text-[#9CA3AF]">لا توجد صورة</div>
                 )}
@@ -622,7 +623,7 @@ export default function AdminHotels() {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
                         {form.mainImages.map((image, index) => (
                           <div key={`${image}-${index}`} className="relative h-24 rounded-xl overflow-hidden bg-[#F3F4F6]">
-                            <img src={image} alt={`main-${index}`} className="w-full h-full object-cover" />
+                            <FlexibleImage src={image} alt={`main-${index}`} fill sizes="96px" className="w-full h-full object-cover" />
                             <button type="button" onClick={() => setForm((current) => ({ ...current, mainImages: current.mainImages.filter((_, itemIndex) => itemIndex !== index) }))} className="absolute top-1 left-1 w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xs transition-colors">×</button>
                           </div>
                         ))}
@@ -661,7 +662,7 @@ export default function AdminHotels() {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
                         {form.gallery.map((image, index) => (
                           <div key={`${image}-${index}`} className="relative h-24 rounded-xl overflow-hidden bg-[#F3F4F6]">
-                            <img src={image} alt={`gallery-${index}`} className="w-full h-full object-cover" />
+                            <FlexibleImage src={image} alt={`gallery-${index}`} fill sizes="96px" className="w-full h-full object-cover" />
                             <button type="button" onClick={() => setForm((current) => ({ ...current, gallery: current.gallery.filter((_, itemIndex) => itemIndex !== index) }))} className="absolute top-1 left-1 w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xs transition-colors">×</button>
                           </div>
                         ))}

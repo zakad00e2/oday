@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const socials = [
@@ -34,7 +34,6 @@ const socials = [
 
 export default function Footer() {
   const { dict, lang } = useI18n();
-  const [email, setEmail] = useState("");
 
   const quickLinks = [
     { label: dict.nav.home, href: `/${lang}` },
@@ -61,7 +60,15 @@ export default function Footer() {
           {/* Col 1 — Brand */}
           <div className="lg:col-span-5">
             <Link href={`/${lang}`} className="flex items-center gap-1 mb-6">
-              <img src="/logo.png" alt="Oday Tourism Logo" className="h-16 w-auto object-contain" />
+              <Image
+                src="/optimized/logo.webp"
+                alt="Oday Tourism Logo"
+                width={200}
+                height={80}
+                sizes="(max-width: 768px) 140px, 200px"
+                quality={75}
+                className="h-16 w-auto object-contain"
+              />
               <div className="flex flex-col pt-1">
                 <span className="text-xl font-bold leading-none text-[#111]">Oday Tourism</span>
                 <span className="text-[10px] font-medium uppercase tracking-[2.7px] text-[#6B7280]">Travel Services</span>

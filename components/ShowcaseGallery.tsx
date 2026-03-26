@@ -1,18 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const cardImages = [
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.18%20PM.jpeg", alt: "gallery-1" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.18%20PM%20(1).jpeg", alt: "gallery-2" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.18%20PM%20(2).jpeg", alt: "gallery-3" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM.jpeg", alt: "gallery-4" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(1).jpeg", alt: "gallery-5" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(2).jpeg", alt: "gallery-6" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(3).jpeg", alt: "gallery-7" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.19%20PM%20(4).jpeg", alt: "gallery-8" },
-  { src: "/WhatsApp%20Image%202026-02-27%20at%208.28.20%20PM.jpeg", alt: "gallery-9" },
+  { src: "/optimized/gallery-1.webp", alt: "gallery-1" },
+  { src: "/optimized/gallery-2.webp", alt: "gallery-2" },
+  { src: "/optimized/gallery-3.webp", alt: "gallery-3" },
+  { src: "/optimized/gallery-4.webp", alt: "gallery-4" },
+  { src: "/optimized/gallery-5.webp", alt: "gallery-5" },
+  { src: "/optimized/gallery-6.webp", alt: "gallery-6" },
+  { src: "/optimized/gallery-7.webp", alt: "gallery-7" },
+  { src: "/optimized/gallery-8.webp", alt: "gallery-8" },
+  { src: "/optimized/gallery-9.webp", alt: "gallery-9" },
 ];
 
 export default function ShowcaseGallery() {
@@ -34,11 +35,21 @@ export default function ShowcaseGallery() {
     return () => observer.disconnect();
   }, []);
 
+  const updateProgress = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const tw = Math.max(10, Math.min(70, (el.clientWidth / el.scrollWidth) * 100));
+    const isRtl = getComputedStyle(el).direction === "rtl";
+    const scrolled = isRtl ? max - Math.abs(el.scrollLeft) : el.scrollLeft;
+    setThumbWidth(tw);
+    setProgress(max > 0 ? (scrolled / max) * (100 - tw) : 0);
+  };
+
   useEffect(() => {
     const timeout = setTimeout(updateProgress, 300);
     window.addEventListener("resize", updateProgress);
     return () => { clearTimeout(timeout); window.removeEventListener("resize", updateProgress); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scroll = (direction: "prev" | "next") => {
@@ -54,17 +65,6 @@ export default function ShowcaseGallery() {
       : (isRtl ? 350 : -350);
     
     el.scrollBy({ left: amount, behavior: "smooth" });
-  };
-
-  const updateProgress = () => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    const tw = Math.max(10, Math.min(70, (el.clientWidth / el.scrollWidth) * 100));
-    const isRtl = getComputedStyle(el).direction === "rtl";
-    const scrolled = isRtl ? max - Math.abs(el.scrollLeft) : el.scrollLeft;
-    setThumbWidth(tw);
-    setProgress(max > 0 ? (scrolled / max) * (100 - tw) : 0);
   };
 
   return (
@@ -99,10 +99,12 @@ export default function ShowcaseGallery() {
                 className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden bg-white"
                 style={{ aspectRatio: "3/4" }}
               >
-                <img
+                <Image
                   src={cardImages[idx]?.src || cardImages[0].src}
                   alt={card.title}
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 768px) 256px, 288px"
+                  quality={60}
                   className="w-full h-full object-cover"
                 />
               </div>

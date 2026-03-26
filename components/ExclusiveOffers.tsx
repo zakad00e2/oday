@@ -1,15 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-
-function CheckIcon() {
-  return (
-    <svg className="w-4 h-4 text-[#0EA5E9] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 // Keep image URLs static (not translatable)
 const offerImages = [
@@ -58,10 +51,12 @@ export default function ExclusiveOffers() {
                 >
                   {/* Image Section */}
                   <div className="relative h-56 rounded-3xl overflow-hidden shadow-md">
-                    <img
+                    <Image
                       src={offerImages[idx]}
                       alt={offer.destination}
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      quality={65}
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
                     {/* Subtle dark gradient overlay at top for badges */}

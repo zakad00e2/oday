@@ -1,5 +1,18 @@
 import type { Metadata } from "next";
+import { Cairo, Manrope } from "next/font/google";
 import "./globals.css";
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  display: "swap",
+  variable: "--font-cairo",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+});
 
 export const metadata: Metadata = {
   title: "Oday Tourism | عدي للسياحة",
@@ -15,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${cairo.variable} ${manrope.variable} antialiased`}>
         {children}
       </body>
     </html>

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import FlexibleImage from "@/components/FlexibleImage";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
@@ -183,10 +184,12 @@ export default function CartDrawer() {
               {cart.hotel && (
                 <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0]/60 overflow-hidden">
                   <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <FlexibleImage
                       src={cart.hotel.image}
                       alt={getHotelName(cart.hotel)}
+                      width={480}
+                      height={224}
+                      sizes="448px"
                       className="w-full h-28 object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -278,10 +281,12 @@ export default function CartDrawer() {
                       <div key={trip.slug} className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0]/60 overflow-hidden">
                         {/* Trip header */}
                         <div className="flex gap-3 p-3.5">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <FlexibleImage
                             src={trip.heroImage}
                             alt={getTripTitle(trip)}
+                            width={60}
+                            height={60}
+                            sizes="60px"
                             className="w-[60px] h-[60px] rounded-xl object-cover shrink-0"
                           />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">

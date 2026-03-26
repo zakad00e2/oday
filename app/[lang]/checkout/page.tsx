@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import FlexibleImage from "@/components/FlexibleImage";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
@@ -305,7 +306,7 @@ export default function CheckoutPage() {
                             {/* Hotel */}
                             {cart.hotel && (
                                 <div className="flex gap-3 pb-4 border-b border-[#f1f5f9]">
-                                    <img src={cart.hotel.image} alt={getHotelName(cart.hotel)} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                                    <FlexibleImage src={cart.hotel.image} alt={getHotelName(cart.hotel)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.hotelStay}</p>
                                         <p className="text-sm font-bold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
@@ -331,7 +332,7 @@ export default function CheckoutPage() {
                                     : trip.startingPrice > 0 ? trip.startingPrice * guestsTotal : 0;
                                 return (
                                     <div key={trip.slug} className="flex gap-3 pb-4 border-b border-[#f1f5f9] last:border-0 last:pb-0">
-                                        <img src={trip.heroImage} alt={getTripTitle(trip)} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                                        <FlexibleImage src={trip.heroImage} alt={getTripTitle(trip)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.trip}</p>
                                             <p className="text-sm font-bold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
