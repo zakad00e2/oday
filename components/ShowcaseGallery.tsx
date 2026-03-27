@@ -1,20 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import FlexibleImage from "@/components/FlexibleImage";
+import {
+  HOME_GALLERY_UPDATED_EVENT,
+  cloneHomeGalleryContent,
+  defaultHomeGalleryContent,
+  readHomeGalleryContent,
+} from "@/lib/home-gallery-content";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-
-const cardImages = [
-  { src: "/optimized/gallery-1.webp", alt: "gallery-1" },
-  { src: "/optimized/gallery-2.webp", alt: "gallery-2" },
-  { src: "/optimized/gallery-3.webp", alt: "gallery-3" },
-  { src: "/optimized/gallery-4.webp", alt: "gallery-4" },
-  { src: "/optimized/gallery-5.webp", alt: "gallery-5" },
-  { src: "/optimized/gallery-6.webp", alt: "gallery-6" },
-  { src: "/optimized/gallery-7.webp", alt: "gallery-7" },
-  { src: "/optimized/gallery-8.webp", alt: "gallery-8" },
-  { src: "/optimized/gallery-9.webp", alt: "gallery-9" },
-];
 
 export default function ShowcaseGallery() {
   const { dict, lang } = useI18n();
@@ -25,6 +19,7 @@ export default function ShowcaseGallery() {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const [thumbWidth, setThumbWidth] = useState(30);
+  const [showcaseImages, setShowcaseImages] = useState(() => cloneHomeGalleryContent().showcaseGallery);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -33,6 +28,21 @@ export default function ShowcaseGallery() {
     );
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const syncShowcaseImages = () => {
+      setShowcaseImages(readHomeGalleryContent().showcaseGallery);
+    };
+
+    syncShowcaseImages();
+    window.addEventListener("storage", syncShowcaseImages);
+    window.addEventListener(HOME_GALLERY_UPDATED_EVENT, syncShowcaseImages);
+
+    return () => {
+      window.removeEventListener("storage", syncShowcaseImages);
+      window.removeEventListener(HOME_GALLERY_UPDATED_EVENT, syncShowcaseImages);
+    };
   }, []);
 
   const updateProgress = () => {
@@ -52,6 +62,11 @@ export default function ShowcaseGallery() {
     return () => { clearTimeout(timeout); window.removeEventListener("resize", updateProgress); };
   }, []);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(updateProgress);
+    return () => window.cancelAnimationFrame(frame);
+  }, [showcaseImages, lang]);
+
   const scroll = (direction: "prev" | "next") => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -66,6 +81,16 @@ export default function ShowcaseGallery() {
     
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
+
+  const galleryCards = (showcaseImages.length > 0 ? showcaseImages : defaultHomeGalleryContent.showcaseGallery).map((image, index) => ({
+    id: image.id || `showcase-${index + 1}`,
+    src:
+      image.image ||
+      defaultHomeGalleryContent.showcaseGallery[index]?.image ||
+      defaultHomeGalleryContent.showcaseGallery[0]?.image ||
+      "",
+    alt: d.cards[index]?.title || (isAr ? `صورة المعرض ${index + 1}` : `Gallery image ${index + 1}`),
+  }));
 
   return (
     <section id="showcase" ref={sectionRef} aria-labelledby="showcase-heading" className="bg-white pt-16 pb-24 px-6">
@@ -92,16 +117,16 @@ export default function ShowcaseGallery() {
             role="list"
             dir={isAr ? "rtl" : "ltr"}
           >
-            {d.cards.map((card, idx) => (
+            {galleryCards.map((card) => (
               <div
-                key={idx}
+                key={card.id}
                 role="listitem"
                 className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden bg-white"
                 style={{ aspectRatio: "3/4" }}
               >
-                <Image
-                  src={cardImages[idx]?.src || cardImages[0].src}
-                  alt={card.title}
+                <FlexibleImage
+                  src={card.src}
+                  alt={card.alt}
                   fill
                   sizes="(max-width: 768px) 256px, 288px"
                   quality={60}

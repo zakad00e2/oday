@@ -34,6 +34,17 @@ const sidebarLinks = [
     ),
   },
   {
+    label: "الرئيسية",
+    href: "/admin/homepage",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 3l9 7.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 9.75v9A2.25 2.25 0 007.5 21h9a2.25 2.25 0 002.25-2.25v-9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 21v-6.75h4.5V21" />
+      </svg>
+    ),
+  },
+  {
     label: "من نحن",
     href: "/admin/about",
     icon: (

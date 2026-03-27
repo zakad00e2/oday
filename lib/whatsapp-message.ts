@@ -64,7 +64,7 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
 
     lines.push(
         ``,
-        `✅ ${isAr ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد" : "Agreed to Terms & Conditions and Refund Policy"}`
+        `${isAr ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد" : "Agreed to Terms & Conditions and Refund Policy"}`
     );
 
     return lines.join("\n");

@@ -117,27 +117,27 @@ export default function CheckoutPage() {
         setErrors(errs);
         if (Object.keys(errs).length > 0) return;
 
-        let msg = `🌟 *${t.whatsapp.header}*\n\n`;
-        msg += `👤 ${t.whatsapp.name}: ${name}\n`;
-        msg += `📞 ${t.whatsapp.phone}: ${phone}\n`;
-        if (email.trim()) msg += `📧 ${t.whatsapp.email}: ${email}\n`;
-        msg += `👥 ${t.whatsapp.guests}: ${cart.guests.adults} ${t.whatsapp.adults}${cart.guests.children > 0 ? `${isAr ? "،" : ","} ${cart.guests.children} ${t.whatsapp.children}` : ""}\n`;
-        if (cart.travelDate) msg += `📅 ${t.whatsapp.travelDate}: ${cart.travelDate}\n`;
+        let msg = `*${t.whatsapp.header}*\n\n`;
+        msg += `${t.whatsapp.name}: ${name}\n`;
+        msg += `${t.whatsapp.phone}: ${phone}\n`;
+        if (email.trim()) msg += `${t.whatsapp.email}: ${email}\n`;
+        msg += `${t.whatsapp.guests}: ${cart.guests.adults} ${t.whatsapp.adults}${cart.guests.children > 0 ? `${isAr ? "،" : ","} ${cart.guests.children} ${t.whatsapp.children}` : ""}\n`;
+        if (cart.travelDate) msg += `${t.whatsapp.travelDate}: ${cart.travelDate}\n`;
         msg += "\n";
 
         if (cart.hotel) {
-            msg += `🏨 *${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} — ${isAr ? (cart.hotel.cityAr ?? cart.hotel.city) : (cart.hotel.cityEn ?? cart.hotel.city)}\n`;
-            if (getHotelRoomName(cart.hotel)) msg += `🛏️ ${t.whatsapp.room}: ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
-            if (cart.hotel.selectedAddOns?.length) msg += `✨ ${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
+            msg += `*${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} — ${isAr ? (cart.hotel.cityAr ?? cart.hotel.city) : (cart.hotel.cityEn ?? cart.hotel.city)}\n`;
+            if (getHotelRoomName(cart.hotel)) msg += `${t.whatsapp.room}: ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
+            if (cart.hotel.selectedAddOns?.length) msg += `${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
             msg += `   ${t.whatsapp.nights}: ${cart.nights} | ${t.whatsapp.cost}: $${hotelCost}\n\n`;
         }
 
         if (hotelName.trim() && !cart.hotel) {
-            msg += `🏨 ${t.whatsapp.requestedHotel}: ${hotelName}\n\n`;
+            msg += `${t.whatsapp.requestedHotel}: ${hotelName}\n\n`;
         }
 
         if (cart.trips.length > 0) {
-            msg += `🗺️ *${t.whatsapp.trips}:*\n`;
+            msg += `*${t.whatsapp.trips}:*\n`;
             cart.trips.forEach((trip) => {
                 msg += `  • ${getTripTitle(trip)}`;
                 if (trip.selectedOptions && trip.selectedOptions.length > 0) {
@@ -158,10 +158,10 @@ export default function CheckoutPage() {
             msg += "\n";
         }
 
-        if (totalPrice > 0) msg += `💵 *${t.whatsapp.estimatedTotal}: $${totalPrice}*\n`;
-        if (notes.trim()) msg += `\n📝 ${t.whatsapp.notes}: ${notes}\n`;
+        if (totalPrice > 0) msg += `*${t.whatsapp.estimatedTotal}: $${totalPrice}*\n`;
+        if (notes.trim()) msg += `\n${t.whatsapp.notes}: ${notes}\n`;
         
-        msg += `\n✅ ${t.whatsapp.agreementConfirmed}\n`;
+        msg += `\n${t.whatsapp.agreementConfirmed}\n`;
 
         const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
         window.open(whatsappUrl, "_blank");

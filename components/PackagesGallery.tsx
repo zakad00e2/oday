@@ -1,7 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import FlexibleImage from "@/components/FlexibleImage";
+import {
+  HOME_GALLERY_UPDATED_EVENT,
+  cloneHomeGalleryContent,
+  defaultHomeGalleryContent,
+  readHomeGalleryContent,
+} from "@/lib/home-gallery-content";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -11,6 +17,22 @@ export default function PackagesGallery() {
   const isAr = lang === "ar";
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [activeMobileCard, setActiveMobileCard] = useState<number | null>(null);
+  const [packageImages, setPackageImages] = useState(() => cloneHomeGalleryContent().packagesGallery);
+
+  useEffect(() => {
+    const syncPackageImages = () => {
+      setPackageImages(readHomeGalleryContent().packagesGallery);
+    };
+
+    syncPackageImages();
+    window.addEventListener("storage", syncPackageImages);
+    window.addEventListener(HOME_GALLERY_UPDATED_EVENT, syncPackageImages);
+
+    return () => {
+      window.removeEventListener("storage", syncPackageImages);
+      window.removeEventListener(HOME_GALLERY_UPDATED_EVENT, syncPackageImages);
+    };
+  }, []);
 
   useEffect(() => {
     if (activeMobileCard === null) return;
@@ -34,41 +56,51 @@ export default function PackagesGallery() {
     };
   }, [activeMobileCard]);
 
-  // High-quality image data to create the premium look
-  const galleryPackages = [
+  const packageTemplates = [
     {
-      id: 1,
       title: isAr ? "ملاذ جزر المالديف" : "Maldives Escape",
       subtitle: isAr ? "٧ ليالٍ في فيلا مائية" : "7 Nights in a Water Villa",
-      image: "/optimized/package-card.webp",
       label: isAr ? "شهر العسل" : "Honeymoon",
       href: "/trips",
     },
     {
-      id: 2,
       title: isAr ? "مغامرة جبال الألب السويسرية" : "Swiss Alps Adventure",
       subtitle: isAr ? "٥ أيام من المشي الجبلي" : "5 Days of Mountain Hiking",
-      image: "/optimized/package-card.webp",
       label: isAr ? "مغامرة" : "Adventure",
       href: "/trips",
     },
     {
-      id: 3,
       title: isAr ? "إقامة فاخرة في دبي" : "Dubai Luxury Stay",
       subtitle: isAr ? "استمتع بأسلوب حياة فاخر" : "Experience Premium Lifestyle",
-      image: "/optimized/package-card.webp",
       label: isAr ? "فخامة" : "Luxury",
       href: "/hotels",
     },
     {
-      id: 4,
       title: isAr ? "منتجع بالي" : "Bali Retreat",
       subtitle: isAr ? "استرخِ في جنة استوائية" : "Relax in Tropical Paradise",
-      image: "/optimized/package-card.webp",
       label: isAr ? "استرخاء" : "Relaxation",
       href: "/trips",
-    }
+    },
   ];
+
+  const galleryPackages = packageImages.map((image, index) => {
+    const template = packageTemplates[index] || {
+      title: isAr ? `باقة سياحية ${index + 1}` : `Travel Package ${index + 1}`,
+      subtitle: isAr ? "اكتشف تجربة سفر جديدة" : "Discover a new travel experience",
+      label: isAr ? "مميزة" : "Featured",
+      href: "/trips",
+    };
+
+    return {
+      id: index + 1,
+      ...template,
+      image:
+        image.image ||
+        defaultHomeGalleryContent.packagesGallery[index]?.image ||
+        defaultHomeGalleryContent.packagesGallery[0]?.image ||
+        "/optimized/package-card.webp",
+    };
+  });
 
   const scrollNext = () => {
     if (scrollContainerRef.current) {
@@ -133,10 +165,10 @@ export default function PackagesGallery() {
                     }}
                   >
                     {/* Background Image */}
-                    <Image
-                      src={pkg.image}
-                      alt={pkg.title}
-                      fill
+                     <FlexibleImage
+                       src={pkg.image}
+                       alt={pkg.title}
+                       fill
                       sizes="(max-width: 640px) 85vw, (max-width: 1024px) 50vw, 33vw"
                       quality={60}
                       className="absolute inset-0 h-full w-full object-cover bg-[#F3F4F6] transition-transform duration-700 ease-out group-hover:scale-105 sm:bg-transparent"

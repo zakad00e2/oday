@@ -5,6 +5,7 @@ import Link from "next/link";
 const stats = [
   { label: "الفنادق", value: "4", change: "+1", href: "/admin/hotels", color: "from-[#8B5CF6] to-[#A78BFA]", icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 7.5h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" /></svg> },
   { label: "الرحلات", value: "6", change: "0", href: "/admin/trips", color: "from-[#F59E0B] to-[#FBBF24]", icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg> },
+  { label: "الرئيسية", value: "2", change: "0", href: "/admin/homepage", color: "from-[#0EA5E9] to-[#38BDF8]", icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 3l9 7.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 9.75v9A2.25 2.25 0 007.5 21h9a2.25 2.25 0 002.25-2.25v-9" /><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 21v-6.75h4.5V21" /></svg> },
 ];
 
 const recentActivity = [
@@ -81,12 +82,13 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl border border-[#F3F4F6] p-6">
           <h2 className="text-lg font-bold text-[#111] mb-6">إجراءات سريعة</h2>
           <div className="space-y-3">
-            {[
-              { label: "إضافة فندق", href: "/admin/hotels", color: "bg-[#8B5CF6]" },
-              { label: "إضافة رحلة", href: "/admin/trips", color: "bg-[#F59E0B]" },
-            ].map((item) => (
-              <Link
-                key={item.label}
+              {[
+                { label: "إضافة فندق", href: "/admin/hotels", color: "bg-[#8B5CF6]" },
+                { label: "إضافة رحلة", href: "/admin/trips", color: "bg-[#F59E0B]" },
+                { label: "تحرير صور الرئيسية", href: "/admin/homepage", color: "bg-[#0EA5E9]" },
+              ].map((item) => (
+                <Link
+                  key={item.label}
                 href={item.href}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[#F3F4F6] hover:border-[#E5E7EB] hover:shadow-sm transition-all duration-200"
               >

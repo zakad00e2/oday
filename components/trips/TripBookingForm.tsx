@@ -77,17 +77,17 @@ export default function TripBookingForm({
         const selectedOption = trip.options.find((o) => o.id === selectedOptionId);
         const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
 
-        let msg = `🌊 *حجز جديد — ${trip.titleAr}*\n\n`;
-        msg += `👤 الاسم: ${name}\n`;
-        msg += `👥 عدد الأشخاص: ${guestCount}\n`;
-        if (fields.includes("childrenUnder5")) msg += `👶 أطفال تحت 5 سنوات: ${childrenCount}\n`;
-        if (hotel) msg += `🏨 الفندق: ${hotel}\n`;
-        if (date) msg += `📅 التاريخ: ${date}\n`;
-        if (time) msg += `🕐 الموعد: ${time}\n`;
-        if (selectedOption) msg += `📋 الخيار: ${selectedOption.nameAr}\n`;
-        if (selectedAddOns.length > 0) msg += `➕ الإضافات: ${selectedAddOns.map((a) => a.nameAr).join("، ")}\n`;
-        if (totalPrice > 0) msg += `💰 الإجمالي: $${totalPrice}\n`;
-        if (notes) msg += `📝 ملاحظات: ${notes}\n`;
+        let msg = `*حجز جديد — ${trip.titleAr}*\n\n`;
+        msg += `الاسم: ${name}\n`;
+        msg += `عدد الأشخاص: ${guestCount}\n`;
+        if (fields.includes("childrenUnder5")) msg += `أطفال تحت 5 سنوات: ${childrenCount}\n`;
+        if (hotel) msg += `الفندق: ${hotel}\n`;
+        if (date) msg += `التاريخ: ${date}\n`;
+        if (time) msg += `الموعد: ${time}\n`;
+        if (selectedOption) msg += `الخيار: ${selectedOption.nameAr}\n`;
+        if (selectedAddOns.length > 0) msg += `الإضافات: ${selectedAddOns.map((a) => a.nameAr).join("، ")}\n`;
+        if (totalPrice > 0) msg += `الإجمالي: $${totalPrice}\n`;
+        if (notes) msg += `ملاحظات: ${notes}\n`;
 
         const whatsappUrl = `https://wa.me/201234567890?text=${encodeURIComponent(msg)}`;
         window.open(whatsappUrl, "_blank");
