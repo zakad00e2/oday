@@ -120,9 +120,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <span className="text-[15px] leading-none text-[#111]" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}>
                 Oday Tourism
               </span>
-              <span className="mt-0.5 text-[9px] leading-none text-[#6B7280]">
-                جملة تعريفية قصيرة بالعربي
-              </span>
             </div>
           </div>
           <span className="text-[10px] text-[#9CA3AF] bg-[#F3F4F6] px-2 py-1 rounded-lg">لوحة التحكم</span>
