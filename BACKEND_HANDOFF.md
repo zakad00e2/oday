@@ -224,6 +224,14 @@ insert into site_settings (key, value) values
 | POST | `/api/admin/hotels` | إضافة فندق |
 | PUT | `/api/admin/hotels/:id` | تعديل فندق |
 | DELETE | `/api/admin/hotels/:id` | حذف فندق |
+| POST | `/api/admin/hotels/:id/images` | رفع صور جديدة للفندق |
+| DELETE | `/api/admin/hotels/:hotelId/images/:assetId` | حذف صورة من الفندق |
+| PATCH | `/api/admin/hotels/:hotelId/images/:assetId/set-main` | تعيين صورة رئيسية |
+| PATCH | `/api/admin/hotels/:hotelId/images/reorder` | إعادة ترتيب صور المعرض |
+
+مهم:
+- تعديل صور الفنادق له عقد backend مستقل ومفصل في الملف [HOTEL_IMAGE_BACKEND_SPEC.md](./HOTEL_IMAGE_BACKEND_SPEC.md)
+- لا تعتمد على append-only داخل `PATCH /hotel/:id` لأن هذا يسبب تراكم الصور بدل استبدالها أو حذفها بشكل صحيح
 
 #### Trips
 | Method | Endpoint | Description |

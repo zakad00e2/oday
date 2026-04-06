@@ -1,571 +1,1030 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
-  cloneAboutContent,
-  saveAboutContent,
-  type AboutContent,
-  type AboutFaq,
-  type AboutReview,
-  readAboutContent,
-} from "@/lib/about-content";
+  listFaqs,
+  createFaq,
+  updateFaq,
+  deleteFaq,
+  type FaqRecord,
+  type FaqMutationInput,
+} from "@/lib/faq-service";
+import {
+  listComments,
+  createComment,
+  updateComment,
+  deleteComment,
+  type CommentRecord,
+  type CommentMutationInput,
+} from "@/lib/comment-service";
 
-type EditorTab = "reviews" | "faqs";
+type EditorTab = "faqs" | "comments";
 
-function createReview(): AboutReview {
-  const id = `review-${Date.now()}`;
+/* ── Toast types ───────────────────────────────────── */
 
-  return {
-    id,
-    nameAr: "مراجعة جديدة",
-    nameEn: "New review",
-    locationAr: "",
-    locationEn: "",
-    serviceAr: "",
-    serviceEn: "",
-    rating: 5,
-    textAr: "",
-    textEn: "",
-    isPublished: false,
-    isFeatured: false,
-  };
+interface Toast {
+  id: number;
+  message: string;
+  type: "success" | "error";
 }
 
-function createFaq(): AboutFaq {
-  const id = `faq-${Date.now()}`;
+let toastCounter = 0;
 
-  return {
-    id,
-    questionAr: "سؤال جديد",
-    questionEn: "New question",
-    answerAr: "",
-    answerEn: "",
-    isPublished: false,
-  };
-}
+/* ── Inline SVG icons ──────────────────────────────── */
 
-function moveItem<T>(items: T[], fromIndex: number, direction: -1 | 1) {
-  if (fromIndex < 0) {
-    return items;
-  }
+const ChevronDown = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+  </svg>
+);
 
-  const nextIndex = fromIndex + direction;
+const PlusIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+);
 
-  if (nextIndex < 0 || nextIndex >= items.length) {
-    return items;
-  }
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+  </svg>
+);
 
-  const nextItems = [...items];
-  const [item] = nextItems.splice(fromIndex, 1);
-  nextItems.splice(nextIndex, 0, item);
-  return nextItems;
-}
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+  </svg>
+);
 
-function StatCard({
-  label,
-  value,
-  note,
-  tone,
-}: {
-  label: string;
-  value: string;
-  note: string;
-  tone: string;
-}) {
+const SpinnerIcon = () => (
+  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+  </svg>
+);
+
+/* ── Star Rating ───────────────────────────────────── */
+
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5">
-      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${tone} text-white flex items-center justify-center shadow-sm mb-4`}>
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3h5.25m-6.375 8.25h11.25A2.25 2.25 0 0019.875 17.25V6.75A2.25 2.25 0 0017.625 4.5H6.375A2.25 2.25 0 004.125 6.75v10.5A2.25 2.25 0 006.375 19.5z" />
-        </svg>
-      </div>
-      <p className="text-sm text-[#6B7280] mb-1">{label}</p>
-      <p className="text-3xl font-bold text-[#111]">{value}</p>
-      <p className="text-xs text-[#9CA3AF] mt-2">{note}</p>
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className={`transition-colors ${star <= value ? "text-[#F59E0B]" : "text-[#D1D5DB] hover:text-[#FCD34D]"}`}
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        </button>
+      ))}
     </div>
   );
 }
 
-function TabButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
+/* ── Form Field ────────────────────────────────────── */
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        active ? "bg-[#111] text-white shadow-sm" : "bg-[#F8F9FB] text-[#6B7280] hover:text-[#111]"
-      }`}
-    >
-      {label}
-    </button>
+    <div>
+      <label className="block text-xs font-medium text-[#374151] mb-1.5">{label}</label>
+      {children}
+      {error && <p className="text-xs text-[#DC2626] mt-1">{error}</p>}
+    </div>
   );
 }
 
-function ToggleButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-        active ? "bg-[#ECFDF5] text-[#047857]" : "bg-[#F3F4F6] text-[#6B7280]"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
+const inputClass = "w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors bg-white";
+const inputErrorClass = "w-full border border-[#FCA5A5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#DC2626] transition-colors bg-white";
 
-function RatingInput({ value, onChange }: { value: number; onChange: (value: number) => void }) {
-  return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, index) => {
-        const filled = index < value;
+/* ── Toast Component ──────────────────────────────── */
 
-        return (
-          <button
-            key={index}
-            type="button"
-            onClick={() => onChange(index + 1)}
-            className={filled ? "text-[#F59E0B]" : "text-[#D1D5DB]"}
-            aria-label={`تقييم ${index + 1}`}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  return (
+    <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-slide-up ${
+            toast.type === "success"
+              ? "bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]"
+              : "bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button onClick={() => onDismiss(toast.id)} className="mr-auto text-current opacity-50 hover:opacity-100">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        );
-      })}
-      <span className="text-xs text-[#9CA3AF] mr-2">{value}/5</span>
+        </div>
+      ))}
     </div>
   );
 }
 
-export default function AdminAboutPage() {
-  const [content, setContent] = useState<AboutContent>(() => cloneAboutContent());
-  const [activeTab, setActiveTab] = useState<EditorTab>("reviews");
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
-  const [selectedFaqId, setSelectedFaqId] = useState<string | null>(null);
-  const [saved, setSaved] = useState(true);
+/* ── Confirm Dialog ───────────────────────────────── */
+
+function ConfirmDialog({ message, onConfirm, onCancel, loading }: { message: string; onConfirm: () => void; onCancel: () => void; loading?: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-full bg-[#FEF2F2] flex items-center justify-center">
+            <svg className="w-5 h-5 text-[#DC2626]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[#111]">تأكيد الحذف</h3>
+            <p className="text-sm text-[#6B7280] mt-1">{message}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors disabled:opacity-50"
+          >
+            إلغاء
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#DC2626] text-white text-sm font-medium hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
+          >
+            {loading && <SpinnerIcon />}
+            حذف
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Loading Skeleton ─────────────────────────────── */
+
+function CardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-48 bg-[#E5E7EB] rounded" />
+          <div className="h-3 w-32 bg-[#F3F4F6] rounded" />
+        </div>
+        <div className="h-4 w-4 bg-[#E5E7EB] rounded" />
+      </div>
+    </div>
+  );
+}
+
+/* ── FAQ Admin Card ───────────────────────────────── */
+
+function AdminFaqCard({
+  faq,
+  isOpen,
+  onToggle,
+  onSave,
+  onDelete,
+  saving,
+}: {
+  faq: FaqRecord;
+  isOpen: boolean;
+  onToggle: () => void;
+  onSave: (input: FaqMutationInput) => Promise<void>;
+  onDelete: () => void;
+  saving: boolean;
+}) {
+  const [form, setForm] = useState<FaqMutationInput>({
+    questionAr: faq.questionAr,
+    questionEn: faq.questionEn,
+    answerAr: faq.answerAr,
+    answerEn: faq.answerEn,
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof FaqMutationInput, string>>>({});
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const stored = readAboutContent();
-      setContent(stored);
-      setSelectedReviewId(stored.reviews[0]?.id ?? null);
-      setSelectedFaqId(stored.faqs[0]?.id ?? null);
+    setForm({
+      questionAr: faq.questionAr,
+      questionEn: faq.questionEn,
+      answerAr: faq.answerAr,
+      answerEn: faq.answerEn,
     });
+    setDirty(false);
+    setErrors({});
+  }, [faq]);
 
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  const publishedReviews = useMemo(
-    () => content.reviews.filter((review) => review.isPublished),
-    [content.reviews],
-  );
-  const featuredReviews = useMemo(
-    () => content.reviews.filter((review) => review.isPublished && review.isFeatured),
-    [content.reviews],
-  );
-  const publishedFaqs = useMemo(() => content.faqs.filter((faq) => faq.isPublished), [content.faqs]);
-  const averageRating = publishedReviews.length
-    ? (publishedReviews.reduce((sum, review) => sum + review.rating, 0) / publishedReviews.length).toFixed(1)
-    : "0.0";
-
-  const selectedReview = content.reviews.find((review) => review.id === selectedReviewId) ?? null;
-  const selectedFaq = content.faqs.find((faq) => faq.id === selectedFaqId) ?? null;
-
-  const updateReviews = (updater: (reviews: AboutReview[]) => AboutReview[]) => {
-    setContent((current) => ({ ...current, reviews: updater(current.reviews) }));
-    setSaved(false);
-  };
-
-  const updateFaqs = (updater: (faqs: AboutFaq[]) => AboutFaq[]) => {
-    setContent((current) => ({ ...current, faqs: updater(current.faqs) }));
-    setSaved(false);
-  };
-
-  const updateReviewField = <K extends keyof AboutReview>(key: K, value: AboutReview[K]) => {
-    if (!selectedReviewId) return;
-
-    updateReviews((reviews) =>
-      reviews.map((review) => (review.id === selectedReviewId ? { ...review, [key]: value } : review)),
-    );
-  };
-
-  const updateFaqField = <K extends keyof AboutFaq>(key: K, value: AboutFaq[K]) => {
-    if (!selectedFaqId) return;
-
-    updateFaqs((faqs) => faqs.map((faq) => (faq.id === selectedFaqId ? { ...faq, [key]: value } : faq)));
-  };
-
-  const addReview = () => {
-    const nextReview = createReview();
-    updateReviews((reviews) => [nextReview, ...reviews]);
-    setActiveTab("reviews");
-    setSelectedReviewId(nextReview.id);
-  };
-
-  const addFaq = () => {
-    const nextFaq = createFaq();
-    updateFaqs((faqs) => [nextFaq, ...faqs]);
-    setActiveTab("faqs");
-    setSelectedFaqId(nextFaq.id);
-  };
-
-  const deleteReview = (id: string) => {
-    const filtered = content.reviews.filter((review) => review.id !== id);
-    updateReviews(() => filtered);
-
-    if (selectedReviewId === id) {
-      setSelectedReviewId(filtered[0]?.id ?? null);
+  const set = <K extends keyof FaqMutationInput>(key: K, value: FaqMutationInput[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setDirty(true);
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   };
 
-  const deleteFaq = (id: string) => {
-    const filtered = content.faqs.filter((faq) => faq.id !== id);
-    updateFaqs(() => filtered);
-
-    if (selectedFaqId === id) {
-      setSelectedFaqId(filtered[0]?.id ?? null);
-    }
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof FaqMutationInput, string>> = {};
+    if (!form.questionAr.trim()) newErrors.questionAr = "السؤال بالعربي مطلوب";
+    if (!form.questionEn.trim()) newErrors.questionEn = "السؤال بالإنجليزي مطلوب";
+    if (!form.answerAr.trim()) newErrors.answerAr = "الإجابة بالعربي مطلوبة";
+    if (!form.answerEn.trim()) newErrors.answerEn = "الإجابة بالإنجليزي مطلوبة";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const moveReview = (id: string, direction: -1 | 1) => {
-    updateReviews((reviews) => {
-      const currentIndex = reviews.findIndex((review) => review.id === id);
-      return moveItem(reviews, currentIndex, direction);
-    });
-  };
-
-  const moveFaq = (id: string, direction: -1 | 1) => {
-    updateFaqs((faqs) => {
-      const currentIndex = faqs.findIndex((faq) => faq.id === id);
-      return moveItem(faqs, currentIndex, direction);
-    });
-  };
-
-  const handleSave = () => {
-    saveAboutContent(content);
-    setSaved(true);
-  };
-
-  const restoreDefaults = () => {
-    const defaults = cloneAboutContent();
-    setContent(defaults);
-    setSelectedReviewId(defaults.reviews[0]?.id ?? null);
-    setSelectedFaqId(defaults.faqs[0]?.id ?? null);
-    saveAboutContent(defaults);
-    setSaved(true);
+  const handleSave = async () => {
+    if (!validate()) return;
+    await onSave(form);
+    setDirty(false);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className={`rounded-2xl border transition-all ${isOpen ? "border-[#111] bg-white shadow-sm" : "border-[#E5E7EB] bg-white hover:border-[#D1D5DB]"}`}>
+      <button type="button" onClick={onToggle} className="w-full flex items-center gap-3 p-4 text-right">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-[#111] truncate">{faq.questionAr || "سؤال جديد"}</p>
+          <p className="text-xs text-[#9CA3AF] mt-1 truncate">{faq.questionEn || "New question"}</p>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-[#9CA3AF] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="px-4 pb-5 space-y-4 border-t border-[#F3F4F6]">
+          <div className="grid sm:grid-cols-2 gap-3 pt-4">
+            <Field label="السؤال (عربي)" error={errors.questionAr}>
+              <input value={form.questionAr} onChange={(e) => set("questionAr", e.target.value)} className={errors.questionAr ? inputErrorClass : inputClass} />
+            </Field>
+            <Field label="السؤال (إنجليزي)" error={errors.questionEn}>
+              <input value={form.questionEn} onChange={(e) => set("questionEn", e.target.value)} className={errors.questionEn ? inputErrorClass : inputClass} dir="ltr" />
+            </Field>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="الإجابة (عربي)" error={errors.answerAr}>
+              <textarea value={form.answerAr} onChange={(e) => set("answerAr", e.target.value)} rows={4} className={`${errors.answerAr ? inputErrorClass : inputClass} resize-none`} />
+            </Field>
+            <Field label="الإجابة (إنجليزي)" error={errors.answerEn}>
+              <textarea value={form.answerEn} onChange={(e) => set("answerEn", e.target.value)} rows={4} className={`${errors.answerEn ? inputErrorClass : inputClass} resize-none`} dir="ltr" />
+            </Field>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-40"
+            >
+              {saving && <SpinnerIcon />}
+              حفظ التغييرات
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-2 rounded-xl bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2] transition-colors mr-auto"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Comment Admin Card ───────────────────────────── */
+
+function AdminCommentCard({
+  comment,
+  isOpen,
+  onToggle,
+  onSave,
+  onDelete,
+  saving,
+}: {
+  comment: CommentRecord;
+  isOpen: boolean;
+  onToggle: () => void;
+  onSave: (input: CommentMutationInput) => Promise<void>;
+  onDelete: () => void;
+  saving: boolean;
+}) {
+  const [form, setForm] = useState<CommentMutationInput>({
+    clientNameAr: comment.clientNameAr,
+    clientNameEn: comment.clientNameEn,
+    stars: comment.rating,
+    commentAr: comment.commentAr,
+    commentEn: comment.commentEn,
+    tripNameAr: comment.tripNameAr,
+    tripNameEn: comment.tripNameEn,
+    cityAr: comment.cityAr,
+    cityEn: comment.cityEn,
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof CommentMutationInput, string>>>({});
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      clientNameAr: comment.clientNameAr,
+      clientNameEn: comment.clientNameEn,
+      stars: comment.rating,
+      commentAr: comment.commentAr,
+      commentEn: comment.commentEn,
+      tripNameAr: comment.tripNameAr,
+      tripNameEn: comment.tripNameEn,
+      cityAr: comment.cityAr,
+      cityEn: comment.cityEn,
+    });
+    setDirty(false);
+    setErrors({});
+  }, [comment]);
+
+  const set = <K extends keyof CommentMutationInput>(key: K, value: CommentMutationInput[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setDirty(true);
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof CommentMutationInput, string>> = {};
+    if (!form.clientNameAr.trim()) newErrors.clientNameAr = "اسم العميل بالعربي مطلوب";
+    if (!form.clientNameEn.trim()) newErrors.clientNameEn = "اسم العميل بالإنجليزي مطلوب";
+    if (!form.commentAr.trim()) newErrors.commentAr = "نص التعليق بالعربي مطلوب";
+    if (!form.commentEn.trim()) newErrors.commentEn = "نص التعليق بالإنجليزي مطلوب";
+    if (!form.tripNameAr.trim()) newErrors.tripNameAr = "اسم الرحلة بالعربي مطلوب";
+    if (!form.tripNameEn.trim()) newErrors.tripNameEn = "اسم الرحلة بالإنجليزي مطلوب";
+    if (!form.cityAr.trim()) newErrors.cityAr = "المدينة بالعربي مطلوبة";
+    if (!form.cityEn.trim()) newErrors.cityEn = "المدينة بالإنجليزي مطلوبة";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+    await onSave(form);
+    setDirty(false);
+  };
+
+  return (
+    <div className={`rounded-2xl border transition-all ${isOpen ? "border-[#111] bg-white shadow-sm" : "border-[#E5E7EB] bg-white hover:border-[#D1D5DB]"}`}>
+      <button type="button" onClick={onToggle} className="w-full flex items-center gap-3 p-4 text-right">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-bold text-[#111] truncate">{comment.clientNameAr || "تعليق جديد"}</p>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mt-1 truncate">{[comment.tripNameAr, comment.cityAr].filter(Boolean).join(" - ") || "بدون وصف"}</p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <svg key={s} className={`w-3 h-3 ${s <= comment.rating ? "text-[#F59E0B]" : "text-[#E5E7EB]"}`} fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+        </div>
+        <ChevronDown className={`w-4 h-4 text-[#9CA3AF] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="px-4 pb-5 space-y-4 border-t border-[#F3F4F6]">
+          <div className="grid sm:grid-cols-2 gap-3 pt-4">
+            <Field label="اسم العميل (عربي)" error={errors.clientNameAr}>
+              <input value={form.clientNameAr} onChange={(e) => set("clientNameAr", e.target.value)} className={errors.clientNameAr ? inputErrorClass : inputClass} />
+            </Field>
+            <Field label="اسم العميل (إنجليزي)" error={errors.clientNameEn}>
+              <input value={form.clientNameEn} onChange={(e) => set("clientNameEn", e.target.value)} className={errors.clientNameEn ? inputErrorClass : inputClass} dir="ltr" />
+            </Field>
+          </div>
+
+          <Field label="التقييم">
+            <StarRating value={form.stars} onChange={(v) => set("stars", v)} />
+          </Field>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="اسم الرحلة (عربي)" error={errors.tripNameAr}>
+              <input value={form.tripNameAr} onChange={(e) => set("tripNameAr", e.target.value)} className={errors.tripNameAr ? inputErrorClass : inputClass} />
+            </Field>
+            <Field label="اسم الرحلة (إنجليزي)" error={errors.tripNameEn}>
+              <input value={form.tripNameEn} onChange={(e) => set("tripNameEn", e.target.value)} className={errors.tripNameEn ? inputErrorClass : inputClass} dir="ltr" />
+            </Field>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="المدينة (عربي)" error={errors.cityAr}>
+              <input value={form.cityAr} onChange={(e) => set("cityAr", e.target.value)} className={errors.cityAr ? inputErrorClass : inputClass} />
+            </Field>
+            <Field label="المدينة (إنجليزي)" error={errors.cityEn}>
+              <input value={form.cityEn} onChange={(e) => set("cityEn", e.target.value)} className={errors.cityEn ? inputErrorClass : inputClass} dir="ltr" />
+            </Field>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="نص التعليق (عربي)" error={errors.commentAr}>
+              <textarea value={form.commentAr} onChange={(e) => set("commentAr", e.target.value)} rows={4} className={`${errors.commentAr ? inputErrorClass : inputClass} resize-none`} />
+            </Field>
+            <Field label="نص التعليق (إنجليزي)" error={errors.commentEn}>
+              <textarea value={form.commentEn} onChange={(e) => set("commentEn", e.target.value)} rows={4} className={`${errors.commentEn ? inputErrorClass : inputClass} resize-none`} dir="ltr" />
+            </Field>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-40"
+            >
+              {saving && <SpinnerIcon />}
+              حفظ التغييرات
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-2 rounded-xl bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2] transition-colors mr-auto"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── New FAQ Form ─────────────────────────────────── */
+
+function NewFaqForm({ onSubmit, onCancel, submitting }: { onSubmit: (input: FaqMutationInput) => Promise<void>; onCancel: () => void; submitting: boolean }) {
+  const [form, setForm] = useState<FaqMutationInput>({
+    questionAr: "",
+    questionEn: "",
+    answerAr: "",
+    answerEn: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof FaqMutationInput, string>>>({});
+
+  const set = <K extends keyof FaqMutationInput>(key: K, value: FaqMutationInput[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof FaqMutationInput, string>> = {};
+    if (!form.questionAr.trim()) newErrors.questionAr = "السؤال بالعربي مطلوب";
+    if (!form.questionEn.trim()) newErrors.questionEn = "السؤال بالإنجليزي مطلوب";
+    if (!form.answerAr.trim()) newErrors.answerAr = "الإجابة بالعربي مطلوبة";
+    if (!form.answerEn.trim()) newErrors.answerEn = "الإجابة بالإنجليزي مطلوبة";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    await onSubmit(form);
+  };
+
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-[#0EA5E9]/30 bg-[#F0F9FF] p-5 space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-[#0EA5E9]/10 flex items-center justify-center">
+          <PlusIcon />
+        </div>
+        <h3 className="text-sm font-bold text-[#111]">إضافة سؤال جديد</h3>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="السؤال (عربي)" error={errors.questionAr}>
+          <input value={form.questionAr} onChange={(e) => set("questionAr", e.target.value)} className={errors.questionAr ? inputErrorClass : inputClass} placeholder="ما هي مدة الرحلة؟" />
+        </Field>
+        <Field label="السؤال (إنجليزي)" error={errors.questionEn}>
+          <input value={form.questionEn} onChange={(e) => set("questionEn", e.target.value)} className={errors.questionEn ? inputErrorClass : inputClass} dir="ltr" placeholder="What is the trip duration?" />
+        </Field>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="الإجابة (عربي)" error={errors.answerAr}>
+          <textarea value={form.answerAr} onChange={(e) => set("answerAr", e.target.value)} rows={3} className={`${errors.answerAr ? inputErrorClass : inputClass} resize-none`} placeholder="الإجابة بالعربي..." />
+        </Field>
+        <Field label="الإجابة (إنجليزي)" error={errors.answerEn}>
+          <textarea value={form.answerEn} onChange={(e) => set("answerEn", e.target.value)} rows={3} className={`${errors.answerEn ? inputErrorClass : inputClass} resize-none`} dir="ltr" placeholder="Answer in English..." />
+        </Field>
+      </div>
+
+      <div className="flex items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-50"
+        >
+          {submitting && <SpinnerIcon />}
+          إضافة السؤال
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-white transition-colors"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── New Comment Form ─────────────────────────────── */
+
+function NewCommentForm({ onSubmit, onCancel, submitting }: { onSubmit: (input: CommentMutationInput) => Promise<void>; onCancel: () => void; submitting: boolean }) {
+  const [form, setForm] = useState<CommentMutationInput>({
+    clientNameAr: "",
+    clientNameEn: "",
+    stars: 5,
+    commentAr: "",
+    commentEn: "",
+    tripNameAr: "",
+    tripNameEn: "",
+    cityAr: "",
+    cityEn: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof CommentMutationInput, string>>>({});
+
+  const set = <K extends keyof CommentMutationInput>(key: K, value: CommentMutationInput[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof CommentMutationInput, string>> = {};
+    if (!form.clientNameAr.trim()) newErrors.clientNameAr = "اسم العميل بالعربي مطلوب";
+    if (!form.clientNameEn.trim()) newErrors.clientNameEn = "اسم العميل بالإنجليزي مطلوب";
+    if (!form.commentAr.trim()) newErrors.commentAr = "نص التعليق بالعربي مطلوب";
+    if (!form.commentEn.trim()) newErrors.commentEn = "نص التعليق بالإنجليزي مطلوب";
+    if (!form.tripNameAr.trim()) newErrors.tripNameAr = "اسم الرحلة بالعربي مطلوب";
+    if (!form.tripNameEn.trim()) newErrors.tripNameEn = "اسم الرحلة بالإنجليزي مطلوب";
+    if (!form.cityAr.trim()) newErrors.cityAr = "المدينة بالعربي مطلوبة";
+    if (!form.cityEn.trim()) newErrors.cityEn = "المدينة بالإنجليزي مطلوبة";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    await onSubmit(form);
+  };
+
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-[#0EA5E9]/30 bg-[#F0F9FF] p-5 space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-[#0EA5E9]/10 flex items-center justify-center">
+          <PlusIcon />
+        </div>
+        <h3 className="text-sm font-bold text-[#111]">إضافة تعليق جديد</h3>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="اسم العميل (عربي)" error={errors.clientNameAr}>
+          <input value={form.clientNameAr} onChange={(e) => set("clientNameAr", e.target.value)} className={errors.clientNameAr ? inputErrorClass : inputClass} placeholder="أحمد محمد" />
+        </Field>
+        <Field label="اسم العميل (إنجليزي)" error={errors.clientNameEn}>
+          <input value={form.clientNameEn} onChange={(e) => set("clientNameEn", e.target.value)} className={errors.clientNameEn ? inputErrorClass : inputClass} dir="ltr" placeholder="Ahmed Mohamed" />
+        </Field>
+      </div>
+
+      <Field label="التقييم">
+        <StarRating value={form.stars} onChange={(v) => set("stars", v)} />
+      </Field>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="اسم الرحلة (عربي)" error={errors.tripNameAr}>
+          <input value={form.tripNameAr} onChange={(e) => set("tripNameAr", e.target.value)} className={errors.tripNameAr ? inputErrorClass : inputClass} placeholder="رحلة شرم الشيخ" />
+        </Field>
+        <Field label="اسم الرحلة (إنجليزي)" error={errors.tripNameEn}>
+          <input value={form.tripNameEn} onChange={(e) => set("tripNameEn", e.target.value)} className={errors.tripNameEn ? inputErrorClass : inputClass} dir="ltr" placeholder="Sharm El-Sheikh Trip" />
+        </Field>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="المدينة (عربي)" error={errors.cityAr}>
+          <input value={form.cityAr} onChange={(e) => set("cityAr", e.target.value)} className={errors.cityAr ? inputErrorClass : inputClass} placeholder="شرم الشيخ" />
+        </Field>
+        <Field label="المدينة (إنجليزي)" error={errors.cityEn}>
+          <input value={form.cityEn} onChange={(e) => set("cityEn", e.target.value)} className={errors.cityEn ? inputErrorClass : inputClass} dir="ltr" placeholder="Sharm El-Sheikh" />
+        </Field>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="نص التعليق (عربي)" error={errors.commentAr}>
+          <textarea value={form.commentAr} onChange={(e) => set("commentAr", e.target.value)} rows={3} className={`${errors.commentAr ? inputErrorClass : inputClass} resize-none`} placeholder="رحلة رائعة وخدمة ممتازة!" />
+        </Field>
+        <Field label="نص التعليق (إنجليزي)" error={errors.commentEn}>
+          <textarea value={form.commentEn} onChange={(e) => set("commentEn", e.target.value)} rows={3} className={`${errors.commentEn ? inputErrorClass : inputClass} resize-none`} dir="ltr" placeholder="Amazing trip and excellent service!" />
+        </Field>
+      </div>
+
+      <div className="flex items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-50"
+        >
+          {submitting && <SpinnerIcon />}
+          إضافة التعليق
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-white transition-colors"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Page ─────────────────────────────────────── */
+
+export default function AdminAboutPage() {
+  const [activeTab, setActiveTab] = useState<EditorTab>("faqs");
+
+  // ── FAQ State ──────────────────────────────────────
+  const [faqs, setFaqs] = useState<FaqRecord[]>([]);
+  const [faqsLoading, setFaqsLoading] = useState(true);
+  const [faqsError, setFaqsError] = useState<string | null>(null);
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const [showNewFaq, setShowNewFaq] = useState(false);
+  const [faqSaving, setFaqSaving] = useState(false);
+
+  // ── Comment State ──────────────────────────────────
+  const [comments, setComments] = useState<CommentRecord[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+  const [showNewComment, setShowNewComment] = useState(false);
+  const [commentSaving, setCommentSaving] = useState(false);
+
+  // ── Dialog State ───────────────────────────────────
+  const [deleteDialog, setDeleteDialog] = useState<{ type: "faq" | "comment"; id: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ── Toast State ────────────────────────────────────
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = useCallback((message: string, type: "success" | "error") => {
+    const id = ++toastCounter;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // ── Fetch FAQs ─────────────────────────────────────
+  const fetchFaqs = useCallback(async () => {
+    try {
+      setFaqsLoading(true);
+      setFaqsError(null);
+      const result = await listFaqs({ limit: 100 });
+      setFaqs(result.faqs);
+    } catch (err) {
+      setFaqsError(err instanceof Error ? err.message : "فشل تحميل الأسئلة");
+    } finally {
+      setFaqsLoading(false);
+    }
+  }, []);
+
+  // ── Fetch Comments ─────────────────────────────────
+  const fetchComments = useCallback(async () => {
+    try {
+      setCommentsLoading(true);
+      setCommentsError(null);
+      const result = await listComments({ limit: 100 });
+      setComments(result.comments);
+    } catch (err) {
+      setCommentsError(err instanceof Error ? err.message : "فشل تحميل التعليقات");
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFaqs();
+    fetchComments();
+  }, [fetchFaqs, fetchComments]);
+
+  // ── FAQ Handlers ───────────────────────────────────
+
+  const handleCreateFaq = async (input: FaqMutationInput) => {
+    try {
+      setFaqSaving(true);
+      await createFaq(input);
+      await fetchFaqs();
+      setShowNewFaq(false);
+      addToast("تم إضافة السؤال بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل إضافة السؤال", "error");
+    } finally {
+      setFaqSaving(false);
+    }
+  };
+
+  const handleUpdateFaq = async (id: string, input: FaqMutationInput) => {
+    try {
+      setFaqSaving(true);
+      await updateFaq(id, input);
+      await fetchFaqs();
+      addToast("تم تحديث السؤال بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل تحديث السؤال", "error");
+    } finally {
+      setFaqSaving(false);
+    }
+  };
+
+  const handleDeleteFaq = async (id: string) => {
+    try {
+      setDeleteLoading(true);
+      await deleteFaq(id);
+      await fetchFaqs();
+      setDeleteDialog(null);
+      if (openFaqId === id) setOpenFaqId(null);
+      addToast("تم حذف السؤال بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل حذف السؤال", "error");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // ── Comment Handlers ───────────────────────────────
+
+  const handleCreateComment = async (input: CommentMutationInput) => {
+    try {
+      setCommentSaving(true);
+      await createComment(input);
+      await fetchComments();
+      setShowNewComment(false);
+      addToast("تم إضافة التعليق بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل إضافة التعليق", "error");
+    } finally {
+      setCommentSaving(false);
+    }
+  };
+
+  const handleUpdateComment = async (id: string, input: CommentMutationInput) => {
+    try {
+      setCommentSaving(true);
+      await updateComment(id, input);
+      await fetchComments();
+      addToast("تم تحديث التعليق بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل تحديث التعليق", "error");
+    } finally {
+      setCommentSaving(false);
+    }
+  };
+
+  const handleDeleteComment = async (id: string) => {
+    try {
+      setDeleteLoading(true);
+      await deleteComment(id);
+      await fetchComments();
+      setDeleteDialog(null);
+      if (openCommentId === id) setOpenCommentId(null);
+      addToast("تم حذف التعليق بنجاح", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "فشل حذف التعليق", "error");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  /* ── Render ────────────────────────────────────── */
+
+  return (
+    <div className="space-y-6 max-w-4xl">
+      {/* Toasts */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog && (
+        <ConfirmDialog
+          message={deleteDialog.type === "faq" ? "هل أنت متأكد من حذف هذا السؤال؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء."}
+          loading={deleteLoading}
+          onConfirm={() => {
+            if (deleteDialog.type === "faq") {
+              handleDeleteFaq(deleteDialog.id);
+            } else {
+              handleDeleteComment(deleteDialog.id);
+            }
+          }}
+          onCancel={() => setDeleteDialog(null)}
+        />
+      )}
+
+      {/* Page header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#111]">صفحة من نحن</h1>
-          <p className="text-sm text-[#6B7280] mt-1">إدارة مراجعات العملاء والأسئلة الشائعة الظاهرة في صفحة من نحن.</p>
+          <p className="text-sm text-[#6B7280] mt-1">إدارة الأسئلة الشائعة والتعليقات عبر API.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             href="/ar/about"
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2.5 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-white transition-colors"
+            className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-white transition-colors"
           >
-            معاينة الصفحة
+            معاينة
           </Link>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-2xl border border-[#F3F4F6] p-1.5 flex gap-1.5 w-fit">
+        {(["faqs", "comments"] as const).map((tab) => (
           <button
+            key={tab}
             type="button"
-            onClick={restoreDefaults}
-            className="px-4 py-2.5 rounded-xl border border-[#E5E7EB] text-sm font-medium text-[#374151] hover:bg-white transition-colors"
-          >
-            استعادة الافتراضي
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              saved ? "bg-[#10B981] text-white" : "bg-[#111] text-white hover:bg-[#333]"
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              activeTab === tab ? "bg-[#111] text-white shadow-sm" : "text-[#6B7280] hover:text-[#111] hover:bg-[#F9FAFB]"
             }`}
           >
-            {saved ? "تم الحفظ" : "حفظ التغييرات"}
+            {tab === "faqs"
+              ? `الأسئلة الشائعة (${faqsLoading ? "..." : faqs.length})`
+              : `التعليقات (${commentsLoading ? "..." : comments.length})`}
           </button>
-        </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <StatCard label="مراجعات منشورة" value={String(publishedReviews.length)} note="البطاقات الظاهرة في قسم التقييمات" tone="from-[#0EA5E9] to-[#38BDF8]" />
-        <StatCard label="متوسط التقييم" value={averageRating} note="يُحتسب من المراجعات المنشورة فقط" tone="from-[#F59E0B] to-[#FBBF24]" />
-        <StatCard label="مراجعات مميزة" value={String(featuredReviews.length)} note="لإبراز أفضل الانطباعات عن الخدمة" tone="from-[#8B5CF6] to-[#A78BFA]" />
-        <StatCard label="أسئلة منشورة" value={String(publishedFaqs.length)} note="الأسئلة الظاهرة في الأكورديون العام" tone="from-[#10B981] to-[#34D399]" />
-      </div>
-
-      <div className="bg-[#FFF7ED] border border-[#FDE68A]/40 rounded-2xl p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-2">
-          <svg className="w-5 h-5 text-[#F59E0B] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <p className="text-xs font-bold text-[#92400E]">طريقة الحفظ الحالية</p>
-            <p className="text-[11px] text-[#B45309] mt-0.5 leading-relaxed">
-              التغييرات تُحفَظ مؤقتاً في <code className="bg-white/60 px-1 rounded font-mono">localStorage</code> لتنعكس مباشرة على صفحة من نحن داخل المتصفح الحالي.
+      {/* Content */}
+      {activeTab === "faqs" ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#9CA3AF]">
+              {faqsLoading ? "جاري التحميل..." : faqsError ? "حدث خطأ" : "اضغط على أي سؤال للتعديل"}
             </p>
+            <button
+              type="button"
+              onClick={() => setShowNewFaq(true)}
+              disabled={showNewFaq}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-50"
+            >
+              <PlusIcon />
+              إضافة سؤال
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-[#92400E]">
-          <span className={`w-2 h-2 rounded-full ${saved ? "bg-[#10B981]" : "bg-[#F59E0B]"}`} />
-          {saved ? "كل شيء محفوظ" : "هناك تغييرات غير محفوظة"}
-        </div>
-      </div>
 
-      <div className="bg-white rounded-2xl border border-[#F3F4F6] p-2 flex flex-wrap gap-2">
-        <TabButton active={activeTab === "reviews"} label="مراجعات العملاء" onClick={() => setActiveTab("reviews")} />
-        <TabButton active={activeTab === "faqs"} label="الأسئلة الشائعة" onClick={() => setActiveTab("faqs")} />
-      </div>
+          {showNewFaq && (
+            <NewFaqForm
+              onSubmit={handleCreateFaq}
+              onCancel={() => setShowNewFaq(false)}
+              submitting={faqSaving}
+            />
+          )}
 
-      {activeTab === "reviews" ? (
-        <div className="grid xl:grid-cols-[360px,minmax(0,1fr)] gap-6">
-          <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5 space-y-4 h-fit">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-[#111]">المراجعات</h2>
-                <p className="text-xs text-[#9CA3AF] mt-1">رتّب، انشر، أو أخفِ أي مراجعة.</p>
-              </div>
-              <button type="button" onClick={addReview} className="px-3 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors">
-                إضافة مراجعة
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-[720px] overflow-y-auto pr-1">
-              {content.reviews.map((review, index) => (
-                <div
-                  key={review.id}
-                  className={`w-full text-right rounded-2xl border p-4 transition-all ${
-                    selectedReviewId === review.id ? "border-[#111] bg-[#F9FAFB] shadow-sm" : "border-[#F3F4F6] hover:border-[#E5E7EB]"
-                  }`}
-                >
-                  <button type="button" onClick={() => setSelectedReviewId(review.id)} className="w-full text-right">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-bold text-[#111]">{review.nameAr || "بدون اسم"}</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-1 line-clamp-1">{review.serviceAr || "بدون تصنيف خدمة"}</p>
-                      </div>
-                      <span className="text-[11px] text-[#9CA3AF]">#{index + 1}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 mt-3 mb-2">
-                      {Array.from({ length: 5 }).map((_, starIndex) => (
-                        <svg key={starIndex} className={`w-3.5 h-3.5 ${starIndex < review.rating ? "text-[#F59E0B]" : "text-[#E5E7EB]"}`} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-
-                    <p className="text-xs text-[#6B7280] leading-relaxed line-clamp-2">{review.textAr || "أضف نص المراجعة هنا..."}</p>
-                  </button>
-
-                  <div className="flex flex-wrap items-center gap-2 mt-4">
-                    <ToggleButton active={review.isPublished} label={review.isPublished ? "منشور" : "مخفي"} onClick={() => updateReviews((reviews) => reviews.map((item) => item.id === review.id ? { ...item, isPublished: !item.isPublished } : item))} />
-                    <ToggleButton active={review.isFeatured} label={review.isFeatured ? "مميز" : "عادي"} onClick={() => updateReviews((reviews) => reviews.map((item) => item.id === review.id ? { ...item, isFeatured: !item.isFeatured } : item))} />
-                    <button type="button" onClick={() => moveReview(review.id, -1)} className="px-2.5 py-1.5 rounded-full bg-[#F3F4F6] text-[#6B7280] text-xs">رفع</button>
-                    <button type="button" onClick={() => moveReview(review.id, 1)} className="px-2.5 py-1.5 rounded-full bg-[#F3F4F6] text-[#6B7280] text-xs">خفض</button>
-                    <button type="button" onClick={() => deleteReview(review.id)} className="px-2.5 py-1.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-xs mr-auto">حذف</button>
-                  </div>
-                </div>
+          {faqsLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <CardSkeleton key={i} />
               ))}
             </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-[#F3F4F6] p-6">
-            {selectedReview ? (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-[#111]">تحرير المراجعة</h2>
-                    <p className="text-xs text-[#9CA3AF] mt-1">المحتوى العربي والإنجليزي يُستخدم مباشرة في الواجهة العامة.</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <ToggleButton active={selectedReview.isPublished} label={selectedReview.isPublished ? "المراجعة منشورة" : "المراجعة مخفية"} onClick={() => updateReviewField("isPublished", !selectedReview.isPublished)} />
-                    <ToggleButton active={selectedReview.isFeatured} label={selectedReview.isFeatured ? "مراجعة مميزة" : "ليست مميزة"} onClick={() => updateReviewField("isFeatured", !selectedReview.isFeatured)} />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">اسم العميل (عربي)</label>
-                    <input value={selectedReview.nameAr} onChange={(event) => updateReviewField("nameAr", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">اسم العميل (إنجليزي)</label>
-                    <input value={selectedReview.nameEn} onChange={(event) => updateReviewField("nameEn", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">المدينة أو السوق المستهدف (عربي)</label>
-                    <input value={selectedReview.locationAr} onChange={(event) => updateReviewField("locationAr", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">المدينة أو السوق المستهدف (إنجليزي)</label>
-                    <input value={selectedReview.locationEn} onChange={(event) => updateReviewField("locationEn", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">الخدمة أو الرحلة (عربي)</label>
-                    <input value={selectedReview.serviceAr} onChange={(event) => updateReviewField("serviceAr", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">الخدمة أو الرحلة (إنجليزي)</label>
-                    <input value={selectedReview.serviceEn} onChange={(event) => updateReviewField("serviceEn", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" dir="ltr" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-2">التقييم</label>
-                  <RatingInput value={selectedReview.rating} onChange={(value) => updateReviewField("rating", value)} />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">نص المراجعة (عربي)</label>
-                    <textarea value={selectedReview.textAr} onChange={(event) => updateReviewField("textAr", event.target.value)} rows={6} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">نص المراجعة (إنجليزي)</label>
-                    <textarea value={selectedReview.textEn} onChange={(event) => updateReviewField("textEn", event.target.value)} rows={6} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" dir="ltr" />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] p-5">
-                  <p className="text-[11px] font-medium text-[#9CA3AF] uppercase tracking-[0.2em] mb-3">معاينة سريعة</p>
-                  <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5 shadow-sm">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div>
-                        <h3 className="text-sm font-bold text-[#111]">{selectedReview.nameAr || "اسم العميل"}</h3>
-                        <p className="text-[11px] text-[#9CA3AF] mt-1">{[selectedReview.serviceAr, selectedReview.locationAr].filter(Boolean).join(" - ") || "الخدمة - المدينة"}</p>
-                      </div>
-                      <RatingInput value={selectedReview.rating} onChange={(value) => updateReviewField("rating", value)} />
-                    </div>
-                    <p className="text-sm text-[#374151] leading-relaxed mt-4">{selectedReview.textAr || "سيظهر نص المراجعة هنا بعد كتابته."}</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-10 text-center text-sm text-[#6B7280]">
-                اختر مراجعة من القائمة أو أضف مراجعة جديدة للبدء.
-              </div>
-            )}
-          </div>
+          ) : faqsError ? (
+            <div className="rounded-2xl border border-dashed border-[#FCA5A5] bg-[#FEF2F2] p-8 text-center space-y-3">
+              <p className="text-sm text-[#DC2626]">{faqsError}</p>
+              <button
+                type="button"
+                onClick={fetchFaqs}
+                className="px-4 py-2 rounded-xl bg-[#DC2626] text-white text-sm font-medium hover:bg-[#B91C1C] transition-colors"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : faqs.length === 0 && !showNewFaq ? (
+            <div className="rounded-2xl border border-dashed border-[#D1D5DB] bg-white p-12 text-center text-sm text-[#6B7280]">
+              لا توجد أسئلة بعد. أضف سؤالاً جديداً للبدء.
+            </div>
+          ) : (
+            faqs.map((faq) => (
+              <AdminFaqCard
+                key={faq.id}
+                faq={faq}
+                isOpen={openFaqId === faq.id}
+                onToggle={() => setOpenFaqId(openFaqId === faq.id ? null : faq.id)}
+                onSave={(input) => handleUpdateFaq(faq.id, input)}
+                onDelete={() => setDeleteDialog({ type: "faq", id: faq.id })}
+                saving={faqSaving}
+              />
+            ))
+          )}
         </div>
       ) : (
-        <div className="grid xl:grid-cols-[360px,minmax(0,1fr)] gap-6">
-          <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5 space-y-4 h-fit">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-[#111]">الأسئلة الشائعة</h2>
-                <p className="text-xs text-[#9CA3AF] mt-1">رتّب الأسئلة المنشورة بحسب الأولوية.</p>
-              </div>
-              <button type="button" onClick={addFaq} className="px-3 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors">
-                إضافة سؤال
-              </button>
-            </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#9CA3AF]">
+              {commentsLoading ? "جاري التحميل..." : commentsError ? "حدث خطأ" : "اضغط على أي تعليق للتعديل"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowNewComment(true)}
+              disabled={showNewComment}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#111] text-white text-sm font-medium hover:bg-[#333] transition-colors disabled:opacity-50"
+            >
+              <PlusIcon />
+              إضافة تعليق
+            </button>
+          </div>
 
-            <div className="space-y-3 max-h-[720px] overflow-y-auto pr-1">
-              {content.faqs.map((faq, index) => (
-                <div
-                  key={faq.id}
-                  className={`w-full text-right rounded-2xl border p-4 transition-all ${
-                    selectedFaqId === faq.id ? "border-[#111] bg-[#F9FAFB] shadow-sm" : "border-[#F3F4F6] hover:border-[#E5E7EB]"
-                  }`}
-                >
-                  <button type="button" onClick={() => setSelectedFaqId(faq.id)} className="w-full text-right">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-bold text-[#111] line-clamp-2">{faq.questionAr || "بدون عنوان"}</p>
-                      <span className="text-[11px] text-[#9CA3AF]">#{index + 1}</span>
-                    </div>
+          {showNewComment && (
+            <NewCommentForm
+              onSubmit={handleCreateComment}
+              onCancel={() => setShowNewComment(false)}
+              submitting={commentSaving}
+            />
+          )}
 
-                    <p className="text-xs text-[#6B7280] leading-relaxed mt-3 line-clamp-3">{faq.answerAr || "أضف إجابة هذا السؤال هنا..."}</p>
-                  </button>
-
-                  <div className="flex flex-wrap items-center gap-2 mt-4">
-                    <ToggleButton active={faq.isPublished} label={faq.isPublished ? "منشور" : "مخفي"} onClick={() => updateFaqs((faqs) => faqs.map((item) => item.id === faq.id ? { ...item, isPublished: !item.isPublished } : item))} />
-                    <button type="button" onClick={() => moveFaq(faq.id, -1)} className="px-2.5 py-1.5 rounded-full bg-[#F3F4F6] text-[#6B7280] text-xs">رفع</button>
-                    <button type="button" onClick={() => moveFaq(faq.id, 1)} className="px-2.5 py-1.5 rounded-full bg-[#F3F4F6] text-[#6B7280] text-xs">خفض</button>
-                    <button type="button" onClick={() => deleteFaq(faq.id)} className="px-2.5 py-1.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-xs mr-auto">حذف</button>
-                  </div>
-                </div>
+          {commentsLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <CardSkeleton key={i} />
               ))}
             </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-[#F3F4F6] p-6">
-            {selectedFaq ? (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-[#111]">تحرير السؤال</h2>
-                    <p className="text-xs text-[#9CA3AF] mt-1">أضف نسخة واضحة بالعربية والإنجليزية لكل سؤال وجواب.</p>
-                  </div>
-                  <ToggleButton active={selectedFaq.isPublished} label={selectedFaq.isPublished ? "السؤال منشور" : "السؤال مخفي"} onClick={() => updateFaqField("isPublished", !selectedFaq.isPublished)} />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السؤال (عربي)</label>
-                    <input value={selectedFaq.questionAr} onChange={(event) => updateFaqField("questionAr", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السؤال (إنجليزي)</label>
-                    <input value={selectedFaq.questionEn} onChange={(event) => updateFaqField("questionEn", event.target.value)} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" dir="ltr" />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">الإجابة (عربي)</label>
-                    <textarea value={selectedFaq.answerAr} onChange={(event) => updateFaqField("answerAr", event.target.value)} rows={7} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">الإجابة (إنجليزي)</label>
-                    <textarea value={selectedFaq.answerEn} onChange={(event) => updateFaqField("answerEn", event.target.value)} rows={7} className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" dir="ltr" />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] p-5 space-y-4">
-                  <p className="text-[11px] font-medium text-[#9CA3AF] uppercase tracking-[0.2em]">معاينة الأكورديون</p>
-                  <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-base font-bold text-[#111]">{selectedFaq.questionAr || "عنوان السؤال"}</h3>
-                      <svg className="w-5 h-5 text-[#9CA3AF]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-[#6B7280] leading-relaxed mt-4">{selectedFaq.answerAr || "ستظهر الإجابة هنا بعد كتابتها."}</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-10 text-center text-sm text-[#6B7280]">
-                اختر سؤالاً من القائمة أو أضف سؤالاً جديداً للبدء.
-              </div>
-            )}
-          </div>
+          ) : commentsError ? (
+            <div className="rounded-2xl border border-dashed border-[#FCA5A5] bg-[#FEF2F2] p-8 text-center space-y-3">
+              <p className="text-sm text-[#DC2626]">{commentsError}</p>
+              <button
+                type="button"
+                onClick={fetchComments}
+                className="px-4 py-2 rounded-xl bg-[#DC2626] text-white text-sm font-medium hover:bg-[#B91C1C] transition-colors"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : comments.length === 0 && !showNewComment ? (
+            <div className="rounded-2xl border border-dashed border-[#D1D5DB] bg-white p-12 text-center text-sm text-[#6B7280]">
+              لا توجد تعليقات بعد. أضف تعليقاً جديداً للبدء.
+            </div>
+          ) : (
+            comments.map((comment) => (
+              <AdminCommentCard
+                key={comment.id}
+                comment={comment}
+                isOpen={openCommentId === comment.id}
+                onToggle={() => setOpenCommentId(openCommentId === comment.id ? null : comment.id)}
+                onSave={(input) => handleUpdateComment(comment.id, input)}
+                onDelete={() => setDeleteDialog({ type: "comment", id: comment.id })}
+                saving={commentSaving}
+              />
+            ))
+          )}
         </div>
       )}
+
+      {/* Custom animation style */}
+      <style jsx global>{`
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

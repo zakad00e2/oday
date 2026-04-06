@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
-import {
-  HOME_GALLERY_UPDATED_EVENT,
-  cloneHomeGalleryContent,
-  defaultHomeGalleryContent,
-  readHomeGalleryContent,
-} from "@/lib/home-gallery-content";
+import { defaultHomeGalleryContent } from "@/lib/home-gallery-content";
+import { listPhotoGallery, type PhotoGalleryItem } from "@/lib/photo-gallery-service";
 import { useI18n } from "@/lib/i18n/dictionary-context";
+
+type LoadState = "loading" | "loaded" | "error";
 
 export default function ShowcaseGallery() {
   const { dict, lang } = useI18n();
@@ -19,7 +17,8 @@ export default function ShowcaseGallery() {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const [thumbWidth, setThumbWidth] = useState(30);
-  const [showcaseImages, setShowcaseImages] = useState(() => cloneHomeGalleryContent().showcaseGallery);
+  const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [apiImages, setApiImages] = useState<PhotoGalleryItem[]>([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -31,21 +30,23 @@ export default function ShowcaseGallery() {
   }, []);
 
   useEffect(() => {
-    const syncShowcaseImages = () => {
-      setShowcaseImages(readHomeGalleryContent().showcaseGallery);
-    };
+    const controller = new AbortController();
 
-    syncShowcaseImages();
-    window.addEventListener("storage", syncShowcaseImages);
-    window.addEventListener(HOME_GALLERY_UPDATED_EVENT, syncShowcaseImages);
+    listPhotoGallery(controller.signal)
+      .then((items) => {
+        setApiImages(items);
+        setLoadState("loaded");
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load photo gallery:", err);
+        setLoadState("error");
+      });
 
-    return () => {
-      window.removeEventListener("storage", syncShowcaseImages);
-      window.removeEventListener(HOME_GALLERY_UPDATED_EVENT, syncShowcaseImages);
-    };
+    return () => controller.abort();
   }, []);
 
-  const updateProgress = () => {
+  const updateProgress = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
     const max = el.scrollWidth - el.clientWidth;
@@ -54,43 +55,43 @@ export default function ShowcaseGallery() {
     const scrolled = isRtl ? max - Math.abs(el.scrollLeft) : el.scrollLeft;
     setThumbWidth(tw);
     setProgress(max > 0 ? (scrolled / max) * (100 - tw) : 0);
-  };
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(updateProgress, 300);
     window.addEventListener("resize", updateProgress);
     return () => { clearTimeout(timeout); window.removeEventListener("resize", updateProgress); };
-  }, []);
+  }, [updateProgress]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(updateProgress);
     return () => window.cancelAnimationFrame(frame);
-  }, [showcaseImages, lang]);
+  }, [apiImages, lang, updateProgress]);
 
   const scroll = (direction: "prev" | "next") => {
     const el = scrollContainerRef.current;
     if (!el) return;
     const isRtl = getComputedStyle(el).direction === "rtl";
-    
-    // Standard scroll behavior:
-    // If RTL: next (left) is negative, prev (right) is positive
-    // If LTR: next (right) is positive, prev (left) is negative
-    const amount = direction === "next" 
-      ? (isRtl ? -350 : 350) 
+    const amount = direction === "next"
+      ? (isRtl ? -350 : 350)
       : (isRtl ? 350 : -350);
-    
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
-  const galleryCards = (showcaseImages.length > 0 ? showcaseImages : defaultHomeGalleryContent.showcaseGallery).map((image, index) => ({
-    id: image.id || `showcase-${index + 1}`,
-    src:
-      image.image ||
-      defaultHomeGalleryContent.showcaseGallery[index]?.image ||
-      defaultHomeGalleryContent.showcaseGallery[0]?.image ||
-      "",
-    alt: d.cards[index]?.title || (isAr ? `صورة المعرض ${index + 1}` : `Gallery image ${index + 1}`),
-  }));
+  const hasApiImages = apiImages.length > 0;
+  const galleryCards = hasApiImages
+    ? apiImages.map((item, index) => ({
+        id: item.id,
+        src: item.imageUrl,
+        alt: d.cards?.[index]?.title || (isAr ? `صورة المعرض ${index + 1}` : `Gallery image ${index + 1}`),
+      }))
+    : defaultHomeGalleryContent.showcaseGallery.map((image, index) => ({
+        id: image.id || `showcase-${index + 1}`,
+        src: image.image,
+        alt: d.cards?.[index]?.title || (isAr ? `صورة المعرض ${index + 1}` : `Gallery image ${index + 1}`),
+      }));
+
+  const isLoading = loadState === "loading";
 
   return (
     <section id="showcase" ref={sectionRef} aria-labelledby="showcase-heading" className="bg-white pt-16 pb-24 px-6">
@@ -110,72 +111,86 @@ export default function ShowcaseGallery() {
 
         {/* Carousel */}
         <div className={`relative -mx-6 md:mx-0 transition-all duration-1000 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}>
-          <div
-            ref={scrollContainerRef}
-            onScroll={updateProgress}
-            className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar py-4 px-6 md:px-2"
-            role="list"
-            dir={isAr ? "rtl" : "ltr"}
-          >
-            {galleryCards.map((card) => (
-              <div
-                key={card.id}
-                role="listitem"
-                className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden bg-white"
-                style={{ aspectRatio: "3/4" }}
-              >
-                <FlexibleImage
-                  src={card.src}
-                  alt={card.alt}
-                  fill
-                  sizes="(max-width: 768px) 256px, 288px"
-                  quality={60}
-                  className="w-full h-full object-cover"
+          {isLoading ? (
+            <div className="flex gap-4 md:gap-6 py-4 px-6 md:px-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-64 md:w-72 rounded-[20px] bg-[#F3F4F6] animate-pulse"
+                  style={{ aspectRatio: "3/4" }}
                 />
-              </div>
-            ))}
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-4 mt-6 px-2 max-w-sm mx-auto w-full">
-            <button
-              onClick={() => scroll("prev")}
-              className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
-              aria-label={d.prev}
-            >
-              <svg 
-                width="18" 
-                height="18" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2"
-                className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            <div className="flex-1 h-[3px] bg-[#E5E7EB] rounded-full relative">
-              <div className="absolute top-0 h-full bg-[#111] rounded-full transition-all duration-150" style={{ width: `${thumbWidth}%`, left: `${progress}%` }} />
+              ))}
             </div>
-            <button
-              onClick={() => scroll("next")}
-              className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
-              aria-label={d.next}
-            >
-              <svg 
-                width="18" 
-                height="18" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2"
-                className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
+          ) : (
+            <>
+              <div
+                ref={scrollContainerRef}
+                onScroll={updateProgress}
+                className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar py-4 px-6 md:px-2"
+                role="list"
+                dir={isAr ? "rtl" : "ltr"}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
+                {galleryCards.map((card) => (
+                  <div
+                    key={card.id}
+                    role="listitem"
+                    className="group relative flex-shrink-0 w-64 md:w-72 snap-center rounded-[20px] overflow-hidden bg-white"
+                    style={{ aspectRatio: "3/4" }}
+                  >
+                    <FlexibleImage
+                      src={card.src}
+                      alt={card.alt}
+                      fill
+                      sizes="(max-width: 768px) 256px, 288px"
+                      quality={60}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center gap-4 mt-6 px-2 max-w-sm mx-auto w-full">
+                <button
+                  onClick={() => scroll("prev")}
+                  className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
+                  aria-label={d.prev}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <div className="flex-1 h-[3px] bg-[#E5E7EB] rounded-full relative">
+                  <div className="absolute top-0 h-full bg-[#111] rounded-full transition-all duration-150" style={{ width: `${thumbWidth}%`, left: `${progress}%` }} />
+                </div>
+                <button
+                  onClick={() => scroll("next")}
+                  className="w-10 h-10 flex-shrink-0 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-xs hover:bg-[#F9FAFB] transition-all"
+                  aria-label={d.next}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`transition-transform duration-200 ${!isAr ? "rotate-180" : ""}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

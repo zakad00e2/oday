@@ -3,12 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import {
-  ABOUT_CONTENT_UPDATED_EVENT,
-  cloneAboutContent,
-  readAboutContent,
-  type AboutReview,
-} from "@/lib/about-content";
+import { listComments, type CommentRecord } from "@/lib/comment-service";
 
 function Stars({ count }: { count: number }) {
   return (
@@ -22,7 +17,32 @@ function Stars({ count }: { count: number }) {
   );
 }
 
-export default function Reviews() {
+/* ── Loading Skeleton ──────────────────────────────── */
+function ReviewSkeleton() {
+  return (
+    <div className="w-[300px] flex-shrink-0 snap-center rounded-[20px] border border-[#F3F4F6] bg-white p-6 shadow-sm md:w-[360px] animate-pulse">
+      <div className="mb-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="h-4 w-24 rounded bg-[#E5E7EB]" />
+          <div className="flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-4 w-4 rounded bg-[#E5E7EB]" />
+            ))}
+          </div>
+        </div>
+        <div className="h-3 w-32 rounded bg-[#F3F4F6]" />
+      </div>
+      <div className="mb-2 h-8 w-8 rounded bg-[#F3F4F6]" />
+      <div className="space-y-2">
+        <div className="h-3 w-full rounded bg-[#F3F4F6]" />
+        <div className="h-3 w-4/5 rounded bg-[#F3F4F6]" />
+        <div className="h-3 w-3/5 rounded bg-[#F3F4F6]" />
+      </div>
+    </div>
+  );
+}
+
+export default function Reviews({ autoPlay = true }: { autoPlay?: boolean }) {
   const { dict, lang, dir } = useI18n();
   const d = dict.reviews;
   const isRtl = dir === "rtl";
@@ -30,25 +50,37 @@ export default function Reviews() {
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [reviews, setReviews] = useState<AboutReview[]>(() => cloneAboutContent().reviews.filter((review) => review.isPublished));
-  const totalReviews = reviews.length;
-  const currentIdx = totalReviews === 0 ? 0 : Math.min(activeIdx, totalReviews - 1);
-  const paginationDots = Array.from({ length: totalReviews }, (_, idx) => idx);
+
+  // ── API State ──────────────────────────────────────
+  const [reviews, setReviews] = useState<CommentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const syncReviews = () => {
-      setReviews(readAboutContent().reviews.filter((review) => review.isPublished));
-    };
+    const controller = new AbortController();
 
-    syncReviews();
-    window.addEventListener("storage", syncReviews);
-    window.addEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncReviews);
+    async function fetchComments() {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await listComments({ limit: 100, signal: controller.signal });
+        setReviews(result.comments);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : "Failed to load reviews");
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
 
-    return () => {
-      window.removeEventListener("storage", syncReviews);
-      window.removeEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncReviews);
-    };
+    fetchComments();
+    return () => controller.abort();
   }, []);
+
+  const totalReviews = reviews.length;
+  const currentIdx = totalReviews === 0 ? 0 : Math.min(activeIdx, totalReviews - 1);
 
   const updateActiveFromScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -100,7 +132,7 @@ export default function Reviews() {
   }, [reviews, lang, updateActiveFromScroll]);
 
   useEffect(() => {
-    if (totalReviews < 2) {
+    if (!autoPlay || totalReviews < 2) {
       if (autoScrollRef.current) clearInterval(autoScrollRef.current);
       return;
     }
@@ -110,7 +142,7 @@ export default function Reviews() {
     return () => {
       if (autoScrollRef.current) clearInterval(autoScrollRef.current);
     };
-  }, [scroll, totalReviews]);
+  }, [autoPlay, scroll, totalReviews]);
 
   const pauseAuto = () => {
     if (autoScrollRef.current) clearInterval(autoScrollRef.current);
@@ -118,11 +150,66 @@ export default function Reviews() {
 
   const resumeAuto = () => {
     if (autoScrollRef.current) clearInterval(autoScrollRef.current);
-    if (totalReviews < 2) return;
+    if (!autoPlay || totalReviews < 2) return;
 
     autoScrollRef.current = setInterval(() => scroll("next"), 4000);
   };
 
+  // ── Loading State ──────────────────────────────────
+  if (loading) {
+    return (
+      <section id="reviews" className="overflow-hidden bg-white py-20">
+        <ScrollReveal>
+          <div className="mx-auto max-w-6xl px-6">
+            <div className="mb-14 text-center">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-sm">
+                <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span className="text-xs font-medium text-[#111]">{d.badge}</span>
+              </div>
+              <h2 className="mb-4 text-3xl font-semibold leading-tight text-[#111] md:text-5xl">
+                {d.title} <span className="font-semibold">{d.titleBold}</span>
+              </h2>
+              <p className="mx-auto max-w-lg text-sm leading-relaxed text-[#6B7280] md:text-base">{d.subtitle}</p>
+            </div>
+            <div className="flex gap-6 overflow-hidden px-2 py-4">
+              {[...Array(4)].map((_, i) => (
+                <ReviewSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+    );
+  }
+
+  // ── Error State ────────────────────────────────────
+  if (error) {
+    return (
+      <section id="reviews" className="overflow-hidden bg-white py-20">
+        <ScrollReveal>
+          <div className="mx-auto max-w-4xl px-6 text-center">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-sm">
+              <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-xs font-medium text-[#111]">{d.badge}</span>
+            </div>
+            <h2 className="mb-4 text-3xl font-semibold leading-tight text-[#111] md:text-5xl">
+              {d.title} <span className="font-semibold">{d.titleBold}</span>
+            </h2>
+            <p className="mx-auto mb-8 max-w-lg text-sm leading-relaxed text-[#6B7280] md:text-base">{d.subtitle}</p>
+            <div className="rounded-[24px] border border-dashed border-[#FCA5A5] bg-[#FEF2F2] p-10 text-sm text-[#DC2626]">
+              {lang === "ar" ? "حدث خطأ أثناء تحميل المراجعات. حاول مرة أخرى لاحقاً." : "An error occurred while loading reviews. Please try again later."}
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+    );
+  }
+
+  // ── Empty State ────────────────────────────────────
   if (totalReviews === 0) {
     return (
       <section id="reviews" className="overflow-hidden bg-white py-20">
@@ -139,7 +226,7 @@ export default function Reviews() {
             </h2>
             <p className="mx-auto mb-8 max-w-lg text-sm leading-relaxed text-[#6B7280] md:text-base">{d.subtitle}</p>
             <div className="rounded-[24px] border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-10 text-sm text-[#6B7280]">
-              {lang === "ar" ? "\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0631\u0627\u062c\u0639\u0627\u062a \u0645\u0646\u0634\u0648\u0631\u0629 \u062d\u0627\u0644\u064a\u064b\u0627." : "No published reviews are available right now."}
+              {lang === "ar" ? "لا توجد مراجعات منشورة حالياً." : "No published reviews are available right now."}
             </div>
           </div>
         </ScrollReveal>
@@ -174,12 +261,11 @@ export default function Reviews() {
               dir={dir}
             >
               {reviews.map((review, idx) => {
-                const name = lang === "ar" ? review.nameAr : review.nameEn;
-                const text = lang === "ar" ? review.textAr : review.textEn;
-                const meta =
-                  lang === "ar"
-                    ? [review.serviceAr, review.locationAr].filter(Boolean).join(" - ")
-                    : [review.serviceEn, review.locationEn].filter(Boolean).join(" - ");
+                const name = lang === "ar" ? review.clientNameAr : review.clientNameEn;
+                const text = lang === "ar" ? review.commentAr : review.commentEn;
+                const tripName = lang === "ar" ? review.tripNameAr : review.tripNameEn;
+                const city = lang === "ar" ? review.cityAr : review.cityEn;
+                const meta = [tripName, city].filter(Boolean).join(" - ");
 
                 return (
                   <div
@@ -215,18 +301,6 @@ export default function Reviews() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-
-              <div className="flex gap-2">
-                {paginationDots.map((idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => scrollToIdx(idx)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors duration-300 ${idx === currentIdx ? "bg-[#111]" : "bg-[#D1D5DB]"}`}
-                    aria-label={`${d.badge} ${idx + 1}`}
-                    aria-pressed={idx === currentIdx}
-                  />
-                ))}
-              </div>
 
               <button
                 onClick={() => scroll("next")}

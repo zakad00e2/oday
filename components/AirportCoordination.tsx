@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import Link from "next/link";
 import {
     NATIONALITY_OPTIONS,
-    EXTRA_AIRLINE_FEE,
     AIRLINES,
     ACCEPTED_EXTENSIONS,
     ACCEPTED_FILE_TYPES,
@@ -17,6 +16,12 @@ import {
     buildWhatsAppUrl,
     AirportFormData,
 } from "@/lib/whatsapp-message";
+import {
+    listNationalityPricing,
+    listAirlinePricing,
+    type NationalityPricingRecord,
+    type AirlinePricingRecord,
+} from "@/lib/security-approval-service";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type ServiceType = "24h" | "72h" | null;
@@ -256,6 +261,25 @@ export default function AirportCoordination() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [whatsappUrl, setWhatsappUrl] = useState("");
 
+    // ── API Pricing ────────────────────────────────────────────── 
+    const [natPricingMap, setNatPricingMap] = useState<Map<string, NationalityPricingRecord>>(new Map());
+    const [airPricingMap, setAirPricingMap] = useState<Map<string, AirlinePricingRecord>>(new Map());
+
+    useEffect(() => {
+        const controller = new AbortController();
+        void listNationalityPricing(controller.signal).then((records) => {
+            setNatPricingMap(new Map(records.map((r) => [r.nationalityKey, r])));
+        }).catch(() => {
+            // Silently fall back to airport-config.ts hardcoded values
+        });
+        void listAirlinePricing(controller.signal).then((records) => {
+            setAirPricingMap(new Map(records.map((r) => [r.airlineKey, r])));
+        }).catch(() => {
+            // Silently fall back to zero until a priced airline is selected
+        });
+        return () => controller.abort();
+    }, []);
+
     /* ─── Pricing ───────────────────────────────────────────────── */
     const selectedNationality = useMemo(
         () => NATIONALITY_OPTIONS.find((option) => option.id === nationalityId) ?? null,
@@ -265,16 +289,56 @@ export default function AirportCoordination() {
         if (!selectedNationality) return "";
         return isAr ? selectedNationality.labelAr : selectedNationality.labelEn;
     }, [isAr, selectedNationality]);
+
+    // Resolve prices: prefer API data, fall back to airport-config.ts hardcoded values
+    const resolvedPrice24 = useMemo(() => {
+        if (!selectedNationality) return 0;
+        const apiRecord = natPricingMap.get(selectedNationality.id);
+        return apiRecord ? apiRecord.price24h : selectedNationality.price24;
+    }, [selectedNationality, natPricingMap]);
+
+    const resolvedPrice72 = useMemo(() => {
+        if (!selectedNationality) return 0;
+        const apiRecord = natPricingMap.get(selectedNationality.id);
+        return apiRecord ? apiRecord.price72h : selectedNationality.price72;
+    }, [selectedNationality, natPricingMap]);
+
     const basePrice =
         serviceType === "24h"
-            ? selectedNationality?.price24 ?? 0
+            ? resolvedPrice24
             : serviceType === "72h"
-                ? selectedNationality?.price72 ?? 0
+                ? resolvedPrice72
                 : 0;
+
+    const selectedOtherAirlineRecord = useMemo(() => {
+        if (!otherAirlineId || otherAirlineId === "other") return null;
+        return airPricingMap.get(otherAirlineId) ?? null;
+    }, [otherAirlineId, airPricingMap]);
+
     const extraFee = useMemo(() => {
-        if (!airlineChoice) return 0;
-        return airlineChoice === "egyptair" ? 0 : EXTRA_AIRLINE_FEE;
-    }, [airlineChoice]);
+        if (!airlineChoice || airlineChoice === "egyptair") return 0;
+        return selectedOtherAirlineRecord?.price ?? 0;
+    }, [airlineChoice, selectedOtherAirlineRecord]);
+
+    const airlineFeeDisplay = useMemo(() => {
+        if (!airlineChoice) return "—";
+        if (airlineChoice === "egyptair") return t("مجاناً", "Free");
+        if (!otherAirlineId || otherAirlineId === "other") return "—";
+        return extraFee > 0 ? `+$${extraFee}` : t("مجاناً", "Free");
+    }, [airlineChoice, otherAirlineId, extraFee, t]);
+
+    const otherAirlineFeeHint = useMemo(() => {
+        if (!otherAirlineId || otherAirlineId === "other") {
+            return t(
+                "يتم احتساب الرسوم حسب شركة الطيران التي تختارها",
+                "The fee is based on the airline you select"
+            );
+        }
+        return extraFee > 0
+            ? `${t("رسوم الشركة المختارة", "Selected airline fee")} +$${extraFee}`
+            : t("بدون رسوم إضافية", "No extra fee");
+    }, [otherAirlineId, extraFee, t]);
+
     const total = selectedNationality && serviceType ? basePrice + extraFee : 0;
 
     /* ─── Airline display name ─────────────────────────────────── */
@@ -472,10 +536,11 @@ export default function AirportCoordination() {
                 <form id="airport-form" onSubmit={handleSubmit} noValidate>
                     <div className="flex flex-col lg:flex-row gap-8 items-stretch">
                         {/* ── Left: Form Sections ─────────────────────── */}
-                        <div className="flex-1 w-full flex flex-col gap-6">
+                        <div className="flex-1 w-full bg-white rounded-[28px] border border-[#F3F4F6] shadow-sm overflow-hidden">
+                            <div className="flex flex-col divide-y divide-[#EAEFF5]">
 
                             {/* ─── 1. Service Type ──────────────────────── */}
-                            <div className="order-2 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-2 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">2</span>
                                     {t("نوع الخدمة", "Service type")}
@@ -510,7 +575,7 @@ export default function AirportCoordination() {
                                             )}
                                         </p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
-                                            {selectedNationality ? `$${selectedNationality.price24}` : "—"}
+                                            {selectedNationality ? `$${resolvedPrice24}` : "—"}
                                         </div>
                                     </button>
 
@@ -543,7 +608,7 @@ export default function AirportCoordination() {
                                             )}
                                         </p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
-                                            {selectedNationality ? `$${selectedNationality.price72}` : "—"}
+                                            {selectedNationality ? `$${resolvedPrice72}` : "—"}
                                         </div>
                                     </button>
                                 </div>
@@ -551,7 +616,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 2. Document Type ─────────────────────── */}
-                            <div className="order-1 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-1 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">1</span>
                                     {t("الجنسية", "Nationality")}
@@ -593,7 +658,7 @@ export default function AirportCoordination() {
 
 
                             {/* ─── 3. Upload Document (Removed - Only WhatsApp) ───────────────────── */}
-                            <div className="order-3 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-3 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">3</span>
                                     {t("معلومات المستند", "Document information")}
@@ -615,7 +680,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 4. Arrival Details ───────────────────── */}
-                            <div className="order-4 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-4 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">4</span>
                                     {t("تفاصيل السفر", "Travel details")}
@@ -646,7 +711,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 5. Airline ────────────────────────────── */}
-                            <div className="order-5 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-5 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">5</span>
                                     {t("شركة الطيران", "Airline")}
@@ -700,7 +765,7 @@ export default function AirportCoordination() {
                                             <h3 className="font-bold text-[#111] text-sm">{t("شركة طيران أخرى", "Other airline")}</h3>
                                         </div>
                                         <div className={`mt-2 ${isAr ? 'mr-8' : 'ml-8'}`}>
-                                            <p className="text-xs text-amber-600 font-medium">{t("رسوم إضافية", "Extra fee")} ${EXTRA_AIRLINE_FEE} +</p>
+                                            <p className="text-xs text-amber-600 font-medium">{otherAirlineFeeHint}</p>
                                         </div>
                                     </button>
                                 </div>
@@ -758,7 +823,7 @@ export default function AirportCoordination() {
                             </div>
 
                             {/* ─── 6. Contact Info ──────────────────────── */}
-                            <div className="order-6 bg-white rounded-2xl border border-[#F3F4F6] shadow-sm p-6">
+                            <div className="order-6 p-6">
                                 <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center">6</span>
                                     {t("معلومات التواصل", "Contact information")}
@@ -785,6 +850,7 @@ export default function AirportCoordination() {
                                 </div>
                             </div>
 
+                            </div>
                         </div>
 
                         {/* ── Right/Bottom: Price Card ───── */}
@@ -823,7 +889,7 @@ export default function AirportCoordination() {
                                         <div className="flex justify-between items-center">
                                             <span className="text-[#6B7280]">{t("رسوم شركة الطيران", "Airline fee")}</span>
                                             <span className={`font-bold ${extraFee > 0 ? "text-[#111]" : "text-green-600"}`}>
-                                                {airlineChoice ? (extraFee > 0 ? `+$${extraFee}` : t("مجاناً", "Free")) : "—"}
+                                                {airlineFeeDisplay}
                                             </span>
                                         </div>
                                         <div className="h-px bg-[#E2E8F0]" />
@@ -970,4 +1036,3 @@ export default function AirportCoordination() {
         </section>
     );
 }
-

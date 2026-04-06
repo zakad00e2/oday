@@ -4,10 +4,145 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
 import Reviews from "@/components/Reviews";
-import { ABOUT_CONTENT_UPDATED_EVENT, cloneAboutContent, readAboutContent, type AboutFaq } from "@/lib/about-content";
+import { listFaqs, type FaqRecord } from "@/lib/faq-service";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
-function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en"; faqs: AboutFaq[] }) {
+/* ── FAQ Accordion Component ────────────────────────────── */
+function ChevronDownIcon({ className = "" }: { className?: string }) {
+    return (
+        <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+    );
+}
+
+function FAQItem({ question, answer, delay, isOpen, onToggle, lang }: { question: string; answer: string; delay: number; isOpen: boolean; onToggle: () => void; lang: "ar" | "en" }) {
+    return (
+        <ScrollReveal delay={delay}>
+            <div className="border-b border-[#e2e8f0]">
+                <button
+                    onClick={onToggle}
+                    className={`w-full py-6 flex items-center justify-between focus:outline-none group ${lang === "ar" ? "text-right" : "text-left"}`}
+                    aria-expanded={isOpen}
+                >
+                    <span className={`text-[18px] md:text-[20px] font-bold transition-colors ${lang === "ar" ? "pl-4" : "pr-4"} ${isOpen ? "text-[#0EA5E9]" : "text-[#0f172a] group-hover:text-[#0EA5E9]"}`}>{question}</span>
+                    <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#0EA5E9]" : "rotate-0 text-[#64748b]"}`}>
+                        <ChevronDownIcon />
+                    </div>
+                </button>
+                <div
+                    className={`grid  transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        }`}
+                >
+                    <div className="overflow-hidden">
+                        <div className={`text-[#64748b] pb-4 text-[15px] md:text-[17px] leading-[1.8] ${lang === "ar" ? "text-right" : "text-left"}`}>
+                            {answer}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ScrollReveal>
+    );
+}
+
+function FAQSkeleton() {
+    return (
+        <div className="border-t border-[#e2e8f0] mt-4 space-y-0">
+            {[...Array(4)].map((_, i) => (
+                <div key={i} className="border-b border-[#e2e8f0] py-6 animate-pulse">
+                    <div className="h-5 w-3/4 rounded bg-[#E5E7EB]" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function FAQList({ faqs, lang }: { faqs: FaqRecord[]; lang: "ar" | "en" }) {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    if (faqs.length === 0) {
+        return (
+            <div className="rounded-3xl border border-dashed border-[#D1D5DB] bg-[#F8FAFC] px-6 py-10 text-center text-sm text-[#64748b]">
+                {lang === "ar" ? "لا توجد أسئلة منشورة حالياً." : "There are no published FAQs at the moment."}
+            </div>
+        );
+    }
+
+    return (
+        <div className="border-t border-[#e2e8f0] flex flex-col mt-4">
+            {faqs.map((faq, index) => (
+                <FAQItem
+                    key={faq.id}
+                    question={lang === "ar" ? faq.questionAr : faq.questionEn}
+                    answer={lang === "ar" ? faq.answerAr : faq.answerEn}
+                    lang={lang}
+                    delay={index * 100}
+                    isOpen={openIndex === index}
+                    onToggle={() => setOpenIndex(openIndex === index ? null : index)}
+                />
+            ))}
+        </div>
+    );
+}
+
+/* ── FAQ Section Wrapper (fetches from API) ──────────────── */
+function FAQSection({ lang }: { lang: "ar" | "en" }) {
+    const [faqs, setFaqs] = useState<FaqRecord[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        async function fetchFaqs() {
+            try {
+                setLoading(true);
+                setError(null);
+                const result = await listFaqs({ limit: 100, signal: controller.signal });
+                setFaqs(result.faqs);
+            } catch (err) {
+                if (controller.signal.aborted) return;
+                setError(err instanceof Error ? err.message : "Failed to load FAQs");
+            } finally {
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        fetchFaqs();
+        return () => controller.abort();
+    }, []);
+
+    return (
+        <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
+            <div className="max-w-[700px] mx-auto">
+                <ScrollReveal className="text-center mb-8">
+                    <h2 className="text-4xl md:text-[42px] font-bold text-[#0f172a] mb-5">
+                        {lang === "ar" ? "الأسئلة الشائعة" : "Frequently asked questions"}
+                    </h2>
+                    <p className="text-[17px] md:text-[19px] text-[#64748b] font-medium">
+                        {lang === "ar"
+                            ? "إجابات على الأسئلة الشائعة حول Oday Tourism"
+                            : "Quick answers about bookings, transfers, and what to expect with Oday Tourism."}
+                    </p>
+                </ScrollReveal>
+
+                {loading ? (
+                    <FAQSkeleton />
+                ) : error ? (
+                    <div className="rounded-3xl border border-dashed border-[#FCA5A5] bg-[#FEF2F2] px-6 py-10 text-center text-sm text-[#DC2626]">
+                        {lang === "ar" ? "حدث خطأ أثناء تحميل الأسئلة. حاول مرة أخرى لاحقاً." : "An error occurred while loading FAQs. Please try again later."}
+                    </div>
+                ) : (
+                    <FAQList faqs={faqs} lang={lang} />
+                )}
+            </div>
+        </section>
+    );
+}
+
+function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
     return (
         <main className="bg-[#FAFAFA]">
             <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#ffffff] via-[#f8fafc] to-[#eff6ff] pt-40 pb-28 md:pt-48 md:pb-28">
@@ -223,22 +358,9 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
                 </div>
             </section>
 
-            <Reviews />
+            <Reviews autoPlay={false} />
 
-            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
-                <div className="max-w-[700px] mx-auto">
-                    <ScrollReveal className="text-center mb-8">
-                        <h2 className="text-4xl md:text-[42px] font-black text-[#0f172a] mb-5">
-                            Frequently asked questions
-                        </h2>
-                        <p className="text-[17px] md:text-[19px] text-[#64748b] font-medium">
-                            Quick answers about bookings, transfers, and what to expect with Oday Tourism.
-                        </p>
-                    </ScrollReveal>
-
-                    <FAQList faqs={faqs} lang="en" />
-                </div>
-            </section>
+            <FAQSection lang="en" />
 
             <section className="relative overflow-hidden">
                 <Image
@@ -267,7 +389,7 @@ function AboutPageEn({ loaded, lang, faqs }: { loaded: boolean; lang: "ar" | "en
     );
 }
 
-/* ── SVG Icon Components ─────────────────────────────── */
+/* ── SVG Icon Components ─────────────────────────────────── */
 
 function HotelIcon() {
     return (
@@ -424,98 +546,13 @@ const advantagesEn = [
     },
 ];
 
-/* ── FAQ Accrodion Component ────────────────────────────── */
-function ChevronDownIcon({ className = "" }: { className?: string }) {
-    return (
-        <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
-    );
-}
-
-function FAQItem({ question, answer, delay, isOpen, onToggle, lang }: { question: string; answer: string; delay: number; isOpen: boolean; onToggle: () => void; lang: "ar" | "en" }) {
-    return (
-        <ScrollReveal delay={delay}>
-            <div className="border-b border-[#e2e8f0]">
-                <button
-                    onClick={onToggle}
-                    className={`w-full py-6 flex items-center justify-between focus:outline-none group ${lang === "ar" ? "text-right" : "text-left"}`}
-                    aria-expanded={isOpen}
-                >
-                    <span className={`text-[18px] md:text-[20px] font-bold transition-colors ${lang === "ar" ? "pl-4" : "pr-4"} ${isOpen ? "text-[#0EA5E9]" : "text-[#0f172a] group-hover:text-[#0EA5E9]"}`}>{question}</span>
-                    <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#0EA5E9]" : "rotate-0 text-[#64748b]"}`}>
-                        <ChevronDownIcon />
-                    </div>
-                </button>
-                <div
-                    className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                        }`}
-                >
-                    <div className="overflow-hidden">
-                        <div className={`pb-6 pt-0 text-[#64748b] text-[15px] md:text-[17px] leading-[1.8] ${lang === "ar" ? "pr-8 text-right" : "pl-8 text-left"}`}>
-                            {answer}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </ScrollReveal>
-    );
-}
-
-function FAQList({ faqs, lang }: { faqs: AboutFaq[]; lang: "ar" | "en" }) {
-    const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-    if (faqs.length === 0) {
-        return (
-            <div className="rounded-3xl border border-dashed border-[#D1D5DB] bg-[#F8FAFC] px-6 py-10 text-center text-sm text-[#64748b]">
-                {lang === "ar" ? "لا توجد أسئلة منشورة حالياً." : "There are no published FAQs at the moment."}
-            </div>
-        );
-    }
-
-    return (
-        <div className="border-t border-[#e2e8f0] flex flex-col mt-4">
-            {faqs.map((faq, index) => (
-                <FAQItem
-                    key={faq.id}
-                    question={lang === "ar" ? faq.questionAr : faq.questionEn}
-                    answer={lang === "ar" ? faq.answerAr : faq.answerEn}
-                    lang={lang}
-                    delay={index * 100}
-                    isOpen={openIndex === index}
-                    onToggle={() => setOpenIndex(openIndex === index ? null : index)}
-                />
-            ))}
-        </div>
-    );
-}
-
 /* ── Page ─────────────────────────────────────────────── */
 export default function AboutPage() {
     const loaded = true;
-    const [aboutContent, setAboutContent] = useState(() => cloneAboutContent());
-
-    useEffect(() => {
-        const syncAboutContent = () => {
-            setAboutContent(readAboutContent());
-        };
-
-        const frame = window.requestAnimationFrame(syncAboutContent);
-        window.addEventListener("storage", syncAboutContent);
-        window.addEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncAboutContent);
-
-        return () => {
-            window.cancelAnimationFrame(frame);
-            window.removeEventListener("storage", syncAboutContent);
-            window.removeEventListener(ABOUT_CONTENT_UPDATED_EVENT, syncAboutContent);
-        };
-    }, []);
-
     const { lang } = useI18n();
-    const publishedFaqs = aboutContent.faqs.filter((faq) => faq.isPublished);
 
     if (lang === "en") {
-        return <AboutPageEn loaded={loaded} lang={lang} faqs={publishedFaqs} />;
+        return <AboutPageEn loaded={loaded} lang={lang} />;
     }
 
     return (
@@ -612,9 +649,6 @@ export default function AboutPage() {
                     </div>
 
                 </div>
-
-                {/* bottom fade */}
-                {/* <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#FAFAFA] to-transparent" /> */}
             </section>
 
 
@@ -710,7 +744,6 @@ export default function AboutPage() {
             <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
                 <div className="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-                    {/* Left: Image (on Desktop, it's the second item in RTL -> left) */}
                     <ScrollReveal className="order-2 lg:order-2 relative">
                         <Image
                             src="/optimized/about-activities.avif"
@@ -721,12 +754,10 @@ export default function AboutPage() {
                             quality={55}
                             className="w-full h-[400px] lg:h-[600px] object-cover rounded-[2rem] shadow-2xl"
                         />
-                        {/* decorative accents */}
                         <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-[2rem] bg-[#0EA5E9]/10 -z-10" />
                         <div className="absolute top-12 -left-6 w-24 h-24 rounded-[1.5rem] bg-[#111]/5 -z-10" />
                     </ScrollReveal>
 
-                    {/* Right: Text & Features (on Desktop, it's the first item in RTL -> right) */}
                     <div className="order-1 lg:order-1 space-y-10">
                         <ScrollReveal>
                             <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-2 block">
@@ -767,25 +798,12 @@ export default function AboutPage() {
             {/* ════════════════════════════════════════════════════
                 ██  Reviews SECTION
             ════════════════════════════════════════════════════ */}
-            <Reviews />
+            <Reviews autoPlay={false} />
 
             {/* ════════════════════════════════════════════════════
                 ██  5. FAQ SECTION
             ════════════════════════════════════════════════════ */}
-            <section className="py-16 md:py-24 px-6 md:px-12 bg-white">
-                <div className="max-w-[700px] mx-auto">
-                    <ScrollReveal className="text-center mb-8">
-                        <h2 className="text-4xl md:text-[42px] font-black text-[#0f172a] mb-5">
-                            الأسئلة الشائعة
-                        </h2>
-                        <p className="text-[17px] md:text-[19px] text-[#64748b] font-medium">
-                            إجابات على الأسئلة الشائعة حول Oday Tourism
-                        </p>
-                    </ScrollReveal>
-
-                    <FAQList faqs={publishedFaqs} lang="ar" />
-                </div>
-            </section>
+            <FAQSection lang="ar" />
 
             {/* ════════════════════════════════════════════════════
                 ██  6. EXPERIENCE SECTION
@@ -814,10 +832,6 @@ export default function AboutPage() {
                     </ScrollReveal>
                 </div>
             </section>
-
-
-
-
         </main>
     );
 }

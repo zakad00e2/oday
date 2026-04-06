@@ -5,10 +5,10 @@ import type { Locale } from "@/lib/i18n/config";
 
 const packageHrefs = ["/hotels", "/trips", "/airport-coordination", "/contact"];
 const packageImages = [
-  "/optimized/package-card.webp",
-  "/optimized/gallery-6.webp",
+  "/IMG_3739.PNG",
+  "/IMG_3745.PNG",
   "/optimized/airport-card.webp",
-  "/optimized/contact-card.webp",
+  "/IMG_3751.PNG",
 ];
 const featuredImage = "/optimized/gallery-4.webp";
 
@@ -38,14 +38,14 @@ export default function Packages({
           </div>
 
           <div className="grid lg:grid-cols-[1fr_2fr] gap-4 items-stretch">
-            <div className="relative hidden sm:block rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 cursor-pointer group border border-[#F3F4F6] shadow-sm hover:shadow-lg transition-all duration-500">
+            <div className="relative hidden sm:block rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 border border-[#F3F4F6] shadow-sm">
               <Image
                 src={featuredImage}
                 alt={packages.featured.title}
                 fill
                 sizes="(max-width: 1024px) 0px, 33vw"
                 quality={60}
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-0 start-0 end-0 p-5">

@@ -1,93 +1,376 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import FlexibleImage from "@/components/FlexibleImage";
-import { getHotelBySlug } from "@/lib/hotels-data";
-import { useCart } from "@/lib/cart-context";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import HotelDetailSkeleton from "@/components/detail-skeletons/HotelDetailSkeleton";
+import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
+import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import { hotelAddOnsEn, hotelDetailEn } from "@/lib/hotel-detail-locales";
+import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
 
-/* ─── Hero ─────────────────────────────────────────────────── */
-function HotelDetailHero({
+interface LocalizedHotelRoom {
+    id: string;
+    capacity: number;
+    name: string;
+    nameAr: string;
+    nameEn: string;
+    price: number;
+    description: string;
+}
+
+interface LocalizedHotelAddon {
+    id: string;
+    name: string;
+    nameAr: string;
+    nameEn: string;
+    description: string;
+    descriptionAr: string;
+    descriptionEn: string;
+    price: number;
+}
+
+interface LocalizedHotelView {
+    id: string;
+    slug: string;
+    name: string;
+    nameAr: string;
+    nameEn: string;
+    city: string;
+    cityAr: string;
+    cityEn: string;
+    image: string;
+    mainImages: string[];
+    stars: number;
+    description: string;
+    gallery: string[];
+    youtubeUrl: string;
+    youtubeIsShort: boolean;
+    amenities: { label: string }[];
+    rooms: LocalizedHotelRoom[];
+    addons: LocalizedHotelAddon[];
+}
+
+function formatIsoDate(date: Date) {
+    return date.toISOString().split("T")[0];
+}
+
+function extractYouTubeVideoId(url: string) {
+    if (!url) return "";
+
+    const normalizedUrl = url.trim();
+    const directIdPattern = /^[A-Za-z0-9_-]{11}$/;
+    if (directIdPattern.test(normalizedUrl)) {
+        return normalizedUrl;
+    }
+
+    try {
+        const parsed = new URL(normalizedUrl);
+        const hostname = parsed.hostname.replace(/^www\./, "");
+
+        if (hostname === "youtu.be") {
+            const id = parsed.pathname.replace(/\//g, "");
+            return directIdPattern.test(id) ? id : "";
+        }
+
+        if (
+            hostname === "youtube.com" ||
+            hostname === "m.youtube.com" ||
+            hostname === "youtube-nocookie.com"
+        ) {
+            const pathnameParts = parsed.pathname.split("/").filter(Boolean);
+
+            if (pathnameParts[0] === "watch") {
+                const id = parsed.searchParams.get("v") ?? "";
+                return directIdPattern.test(id) ? id : "";
+            }
+
+            if (pathnameParts[0] === "embed" || pathnameParts[0] === "shorts") {
+                const id = pathnameParts[1] ?? "";
+                return directIdPattern.test(id) ? id : "";
+            }
+        }
+    } catch {
+        return "";
+    }
+
+    return "";
+}
+
+function isYouTubeShortUrl(url: string) {
+    if (!url) return false;
+
+    try {
+        const parsed = new URL(url.trim());
+        const hostname = parsed.hostname.replace(/^www\./, "");
+        if (hostname !== "youtube.com" && hostname !== "m.youtube.com") {
+            return false;
+        }
+
+        const pathnameParts = parsed.pathname.split("/").filter(Boolean);
+        return pathnameParts[0] === "shorts";
+    } catch {
+        return false;
+    }
+}
+
+function toEmbedUrl(url: string) {
+    if (!url) return "";
+    const videoId = extractYouTubeVideoId(url);
+    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : "";
+}
+
+function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): LocalizedHotelView {
+    const isAr = language === "ar";
+    const mainImages = hotel.mainImages.length > 0 ? hotel.mainImages : hotel.mainImage ? [hotel.mainImage] : [];
+    const gallery = hotel.gallery.length > 0 ? hotel.gallery : mainImages;
+
+    return {
+        id: hotel.id,
+        slug: hotel.slugEn || hotel.slug,
+        name: isAr ? hotel.nameAr : hotel.nameEn,
+        nameAr: hotel.nameAr,
+        nameEn: hotel.nameEn,
+        city: isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn,
+        cityAr: hotel.destinationLabelAr,
+        cityEn: hotel.destinationLabelEn,
+        image: mainImages[0] || hotel.mainImage,
+        mainImages,
+        stars: hotel.stars,
+        description: isAr ? hotel.descriptionAr : hotel.descriptionEn,
+        gallery,
+        youtubeUrl: toEmbedUrl(hotel.youtubeVideoUrl),
+        youtubeIsShort: isYouTubeShortUrl(hotel.youtubeVideoUrl),
+        amenities: (isAr ? hotel.facilitiesAr : hotel.facilitiesEn).map((label) => ({ label })),
+        rooms: hotel.rooms.map((room) => ({
+            id: room.id,
+            capacity: room.capacity,
+            name: isAr ? room.nameAr : room.nameEn,
+            nameAr: room.nameAr,
+            nameEn: room.nameEn,
+            price: room.price,
+            description:
+                (isAr ? room.descriptionAr : room.descriptionEn) ||
+                (isAr ? room.descriptionEn : room.descriptionAr) ||
+                (isAr ? `السعة: ${room.capacity}` : `Capacity: ${room.capacity}`),
+        })),
+        addons: hotel.addons.map((addon) => ({
+            id: addon.id,
+            name: isAr ? addon.nameAr : addon.nameEn,
+            nameAr: addon.nameAr,
+            nameEn: addon.nameEn,
+            description: isAr ? addon.descriptionAr : addon.descriptionEn,
+            descriptionAr: addon.descriptionAr,
+            descriptionEn: addon.descriptionEn,
+            price: addon.price,
+        })),
+    };
+}
+
+function resolveRoomIndexFromCart(
+    hotel: LocalizedHotelView | null,
+    cartHotel: ReturnType<typeof useCart>["cart"]["hotel"],
+) {
+    if (!hotel || !cartHotel) return -1;
+
+    const roomNames = [cartHotel.roomName, cartHotel.roomNameAr, cartHotel.roomNameEn].filter(
+        (value): value is string => Boolean(value),
+    );
+
+    if (roomNames.length === 0) return -1;
+
+    return hotel.rooms.findIndex((room) =>
+        roomNames.includes(room.name) ||
+        roomNames.includes(room.nameAr) ||
+        roomNames.includes(room.nameEn),
+    );
+}
+
+function resolveAddOnIdFromCart(
+    hotel: LocalizedHotelView | null,
+    cartHotel: ReturnType<typeof useCart>["cart"]["hotel"],
+) {
+    if (!hotel || !cartHotel?.selectedAddOns?.length) return null;
+
+    for (const cartAddon of cartHotel.selectedAddOns) {
+        const addonNames = [cartAddon.name, cartAddon.nameAr, cartAddon.nameEn].filter(
+            (value): value is string => Boolean(value),
+        );
+
+        const found = hotel.addons.find((addon) =>
+            addonNames.includes(addon.name) ||
+            addonNames.includes(addon.nameAr) ||
+            addonNames.includes(addon.nameEn),
+        );
+
+        if (found) return found.id;
+    }
+
+    return null;
+}
+
+function HotelStateCard({
+    title,
+    description,
+    actionLabel,
+    onAction,
+    actionHref,
+}: {
+    title: string;
+    description: string;
+    actionLabel: string;
+    onAction?: () => void;
+    actionHref?: string;
+}) {
+    return (
+        <main className="min-h-screen bg-[#FAFAFA] px-6 pt-24">
+            <div className="mx-auto max-w-2xl rounded-[28px] border border-dashed border-[#CBD5E1] bg-white px-6 py-16 text-center shadow-sm">
+                <h1 className="text-3xl font-bold text-[#0f172a]">{title}</h1>
+                <p className="mt-3 text-base leading-relaxed text-[#64748b]">{description}</p>
+                {actionHref ? (
+                    <Link
+                        href={actionHref}
+                        className="mt-6 inline-flex rounded-full bg-[#0EA5E9] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0284C7]"
+                    >
+                        {actionLabel}
+                    </Link>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onAction}
+                        className="mt-6 inline-flex rounded-full bg-[#0EA5E9] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0284C7]"
+                    >
+                        {actionLabel}
+                    </button>
+                )}
+            </div>
+        </main>
+    );
+}
+
+function SectionTitle({
+    iconTone,
+    title,
+}: {
+    iconTone: "sky" | "emerald" | "amber";
+    title: string;
+}) {
+    const toneClasses =
+        iconTone === "emerald"
+            ? "bg-[#10B981]/10 text-[#10B981]"
+            : iconTone === "amber"
+                ? "bg-[#F59E0B]/10 text-[#F59E0B]"
+                : "bg-[#0EA5E9]/10 text-[#0EA5E9]";
+
+    return (
+        <div className="mb-6 flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClasses}`}>
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#0f172a] md:text-3xl">{title}</h2>
+        </div>
+    );
+}
+
+function HotelHero({
     hotel,
-    onBookNow,
     isAr,
     labels,
+    onBookNow,
 }: {
-    hotel: ReturnType<typeof getHotelBySlug> & object;
-    onBookNow: () => void;
+    hotel: LocalizedHotelView;
     isAr: boolean;
     labels: { stars: string; bookNow: string; viewGallery: string };
+    onBookNow: () => void;
 }) {
-    const images = hotel.gallery ?? [];
-    const [idx, setIdx] = useState(0);
+    const images =
+        hotel.mainImages.length > 0
+            ? hotel.mainImages
+            : hotel.gallery.length > 0
+                ? hotel.gallery
+                : hotel.image
+                    ? [hotel.image]
+                    : [];
+    const [imageIndex, setImageIndex] = useState(0);
 
     useEffect(() => {
         if (images.length <= 1) return;
-        const timer = setInterval(() => setIdx((i) => (i + 1) % images.length), 4000);
-        return () => clearInterval(timer);
+
+        const timer = window.setInterval(() => {
+            setImageIndex((current) => (current + 1) % images.length);
+        }, 4000);
+
+        return () => window.clearInterval(timer);
     }, [images.length]);
 
     return (
-        <section className="w-full px-3 md:px-5 pt-20 pb-10">
+        <section className="w-full px-3 pt-20 pb-10 md:px-5">
             <div className="mx-auto max-w-[1600px]">
-
-                {/* ── Main Image ── */}
-                <div className="relative overflow-hidden rounded-[2rem] h-[58vh] sm:h-[65vh] md:h-[78vh] flex flex-col justify-end shadow-2xl mb-3">
-
-                    {images.map((src, i) => (
-                        <Image
-                            key={src}
-                            src={src}
-                            alt={`${hotel.name} - ${i + 1}`}
-                            fill
-                            priority={i === 0}
-                            sizes="100vw"
-                            className={`object-cover transition-opacity duration-700 ${i === idx ? "opacity-100" : "opacity-0"}`}
-                        />
-                    ))}
+                <div className="relative mb-3 flex h-[58vh] flex-col justify-end overflow-hidden rounded-[2rem] shadow-2xl sm:h-[65vh] md:h-[78vh]">
+                    {images.length > 0 ? (
+                        images.map((src, index) => (
+                            <Image
+                                key={`${src}-${index}`}
+                                src={src}
+                                alt={`${hotel.name} - ${index + 1}`}
+                                fill
+                                priority={index === 0}
+                                sizes="100vw"
+                                className={`object-cover transition-opacity duration-700 ${
+                                    index === imageIndex ? "opacity-100" : "opacity-0"
+                                }`}
+                            />
+                        ))
+                    ) : (
+                        <div className="absolute inset-0 bg-[#E5E7EB]" />
+                    )}
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
 
-                    {/* Content */}
-                    <div className="relative z-10 w-full max-w-[900px] px-5 md:px-14 pb-8 md:pb-12 pt-32 md:pt-48">
+                    <div className="relative z-10 w-full max-w-[900px] px-5 pt-32 pb-8 md:px-14 md:pt-48 md:pb-12">
                         <ScrollReveal delay={100}>
-                            <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-4 max-w-3xl" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.4)" }}>
+                            <h1 className="mb-2 max-w-3xl text-xl font-bold leading-tight text-white sm:text-3xl md:mb-4 md:text-5xl lg:text-6xl">
                                 {hotel.name}
                             </h1>
                         </ScrollReveal>
+
                         <ScrollReveal delay={200}>
-                            <div className="flex items-center gap-1 mb-5 sm:mb-8">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                    <svg key={i} className={`w-5 h-5 ${i < hotel.stars ? "text-amber-400" : "text-white/20"}`} fill="currentColor" viewBox="0 0 20 20">
+                            <div className="mb-5 flex items-center gap-1 sm:mb-8">
+                                {Array.from({ length: 5 }).map((_, index) => (
+                                    <svg key={index} className={`h-5 w-5 ${index < hotel.stars ? "text-amber-400" : "text-white/20"}`} fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
                                 ))}
-                                <span className={`text-white/70 text-sm ${isAr ? "mr-2" : "ml-2"}`}>{hotel.stars} {labels.stars}</span>
+                                <span className={`text-sm text-white/70 ${isAr ? "mr-2" : "ml-2"}`}>
+                                    {hotel.stars} {labels.stars}
+                                </span>
                             </div>
                         </ScrollReveal>
+
                         <ScrollReveal delay={300}>
                             <div className="flex flex-wrap gap-3">
                                 <button
+                                    type="button"
                                     onClick={onBookNow}
-                                    className="group inline-flex items-center gap-2 sm:gap-2.5 ps-5 pe-2 py-2 sm:ps-7 sm:pe-2.5 sm:py-2.5 rounded-full bg-gradient-to-l from-[#0369A1] via-[#0284C7] to-[#0EA5E9] text-white text-sm sm:text-base font-semibold shadow-[0_0_20px_rgba(14,165,233,0.5)] hover:shadow-[0_0_24px_rgba(14,165,233,0.55)] hover:scale-105 hover:brightness-110 transition-all duration-300 border border-white/20 cursor-pointer"
+                                    className="group inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/20 bg-gradient-to-l from-[#0369A1] via-[#0284C7] to-[#0EA5E9] ps-5 pe-2 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(14,165,233,0.5)] transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-[0_0_24px_rgba(14,165,233,0.55)] sm:gap-2.5 sm:ps-7 sm:pe-2.5 sm:py-2.5 sm:text-base"
                                 >
                                     {labels.bookNow}
-                                    <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#0284C7] shadow-md shrink-0">
-                                        <svg className={`w-3.5 h-3.5 ${isAr ? "scale-x-[-1]" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#0284C7] shadow-md sm:h-9 sm:w-9">
+                                        <svg className={`h-3.5 w-3.5 ${isAr ? "scale-x-[-1]" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                                         </svg>
                                     </span>
                                 </button>
+
                                 <a
                                     href="#gallery"
-                                    className="inline-flex items-center gap-2 border border-white/30 bg-white/10 backdrop-blur-sm text-white font-semibold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full hover:bg-white/20 hover:border-white/50 hover:scale-105 transition-all duration-300 text-xs sm:text-sm"
+                                    className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-white/50 hover:bg-white/20 sm:px-5 sm:py-2.5 sm:text-sm"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     {labels.viewGallery}
@@ -97,23 +380,22 @@ function HotelDetailHero({
                     </div>
                 </div>
 
-                {/* ── Thumbnails ── */}
-                {images.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto py-2 px-2" style={{ scrollbarWidth: "none" }}>
-                        {images.map((src, i) => (
+                {images.length > 1 ? (
+                    <div className="flex gap-2 overflow-x-auto px-2 py-2" style={{ scrollbarWidth: "none" }}>
+                        {images.map((src, index) => (
                             <button
-                                key={i}
-                                onClick={() => setIdx(i)}
-                                className={`relative shrink-0 rounded-xl overflow-hidden transition-all duration-300 ${
-                                    i === idx
-                                        ? "ring-2 ring-[#0EA5E9] ring-offset-2 opacity-100 scale-[1.04]"
+                                key={`${src}-${index}`}
+                                type="button"
+                                onClick={() => setImageIndex(index)}
+                                className={`relative h-[60px] w-[90px] shrink-0 overflow-hidden rounded-xl transition-all duration-300 ${
+                                    index === imageIndex
+                                        ? "scale-[1.04] opacity-100 ring-2 ring-[#0EA5E9] ring-offset-2"
                                         : "opacity-60 hover:opacity-90"
                                 }`}
-                                style={{ width: "90px", height: "60px" }}
                             >
                                 <Image
                                     src={src}
-                                    alt={`${hotel.name} - ${i + 1}`}
+                                    alt={`${hotel.name} - ${index + 1}`}
                                     fill
                                     sizes="90px"
                                     className="object-cover"
@@ -121,500 +403,104 @@ function HotelDetailHero({
                             </button>
                         ))}
                     </div>
-                )}
-
+                ) : null}
             </div>
         </section>
     );
 }
 
-/* ─── Gallery ───────────────────────────────────────────────── */
 function HotelGallery({
-    images,
-    name,
-    youtubeUrl,
-    title,
-    videoTitle,
-    imageLabel,
+    hotel,
+    labels,
 }: {
-    images: string[];
-    name: string;
-    youtubeUrl?: string;
-    title: string;
-    videoTitle: string;
-    imageLabel: string;
+    hotel: LocalizedHotelView;
+    labels: { hotelGallery: string; hotelVideo: string; image: string };
 }) {
-    const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+    const galleryImages = [...hotel.mainImages, ...hotel.gallery];
+    const hasGalleryContent = Boolean(hotel.youtubeUrl) || galleryImages.length > 0;
+
     return (
-        <section id="gallery" className="py-10 md:py-14 border-b border-[#e2e8f0] scroll-mt-24">
+        <section id="gallery" className="border-t border-[#e2e8f0] py-10 md:py-14">
             <ScrollReveal>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{title}</h2>
-                </div>
+                <SectionTitle iconTone="amber" title={labels.hotelGallery} />
             </ScrollReveal>
 
-            {youtubeUrl ? (
-                /* Video + Images layout */
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                    {/* Video - takes full height on mobile, 2 rows on desktop */}
-                    <ScrollReveal delay={0} className="md:row-span-2 w-full h-full">
-                        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#f0f0f0] w-full h-full min-h-[300px] aspect-[9/16] md:aspect-auto">
-                            <iframe
-                                src={youtubeUrl}
-                                title={videoTitle}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="w-full h-full absolute inset-0"
-                            />
-                        </div>
-                    </ScrollReveal>
-
-                    {/* Images beside video */}
-                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
-                        {images.slice(0, 4).map((img, i) => (
-                            <ScrollReveal key={i} delay={(i + 1) * 60} className="w-full h-full">
-                                <button
-                                    onClick={() => setLightboxIdx(i)}
-                                    className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
-                                >
-                                    <Image
-                                        src={img}
-                                        alt={`${name} - ${imageLabel} ${i + 1}`}
-                                        fill
-                                        sizes="(max-width: 768px) 50vw, 33vw"
-                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                        <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            </ScrollReveal>
-                        ))}
-                    </div>
-
-                    {/* Extra images below */}
-                    {images.length > 4 && (
-                        <div className="col-span-full grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-3">
-                            {images.slice(4).map((img, i) => (
-                                <ScrollReveal key={i + 4} delay={(i + 5) * 60} className="w-full h-full">
-                                    <button
-                                        onClick={() => setLightboxIdx(i + 4)}
-                                        className="relative overflow-hidden rounded-2xl group cursor-pointer aspect-square w-full h-full block"
-                                    >
-                                        <Image
-                                            src={img}
-                                            alt={`${name} - ${imageLabel} ${i + 5}`}
-                                            fill
-                                            sizes="(max-width: 768px) 50vw, 33vw"
-                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                            <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                            </svg>
+            {hasGalleryContent ? (
+                <div className="grid gap-4 md:auto-rows-[280px] md:grid-cols-2 xl:grid-cols-3">
+                    {hotel.youtubeUrl ? (
+                        <ScrollReveal delay={0} className="md:row-span-2">
+                            <div className={`h-full overflow-hidden rounded-[24px] border border-[#E2E8F0] shadow-sm ${
+                                hotel.youtubeIsShort ? "bg-black" : "bg-white"
+                            }`}>
+                                {hotel.youtubeIsShort ? (
+                                    <div className="flex min-h-[520px] items-center justify-center p-4 md:h-full md:min-h-0 md:p-0">
+                                        <div className="relative aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-[20px] md:h-full md:w-auto md:max-w-full md:rounded-none">
+                                            <iframe
+                                                src={hotel.youtubeUrl}
+                                                title={labels.hotelVideo}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                                referrerPolicy="strict-origin-when-cross-origin"
+                                                loading="lazy"
+                                                className="absolute inset-0 h-full w-full"
+                                            />
                                         </div>
-                                    </button>
-                                </ScrollReveal>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            ) : (
-                /* Images only grid */
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                    {images.map((img, i) => (
-                        <ScrollReveal
-                            key={i}
-                            delay={i * 60}
-                            className={i === 0 ? "col-span-2 md:col-span-2 row-span-2 w-full h-full" : "w-full h-full"}
-                        >
-                            <button
-                                onClick={() => setLightboxIdx(i)}
-                                className="relative w-full h-full overflow-hidden rounded-2xl group cursor-pointer aspect-square block"
-                            >
+                                    </div>
+                                ) : (
+                                    <div className="relative aspect-[4/3] min-h-[260px] md:h-full md:min-h-0 md:aspect-auto">
+                                        <iframe
+                                            src={hotel.youtubeUrl}
+                                            title={labels.hotelVideo}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            referrerPolicy="strict-origin-when-cross-origin"
+                                            loading="lazy"
+                                            className="absolute inset-0 h-full w-full"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollReveal>
+                    ) : null}
+
+                    {galleryImages.map((image, index) => (
+                        <ScrollReveal key={`${image}-${index}`} delay={index * 40} className="h-full">
+                            <div className="relative aspect-[4/3] min-h-[260px] overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm md:h-full md:min-h-0 md:aspect-auto">
                                 <Image
-                                    src={img}
-                                    alt={`${name} - ${imageLabel} ${i + 1}`}
+                                    src={image}
+                                    alt={`${hotel.name} - ${labels.image} ${index + 1}`}
                                     fill
-                                    sizes="(max-width: 768px) 50vw, 33vw"
-                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                    sizes="(max-width: 1280px) 50vw, 33vw"
+                                    className="object-cover transition-transform duration-500 hover:scale-105"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                    </svg>
-                                </div>
-                            </button>
+                            </div>
                         </ScrollReveal>
                     ))}
                 </div>
-            )}
-
-            {/* Lightbox */}
-            {lightboxIdx !== null && (
-                <div
-                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-                    onClick={() => setLightboxIdx(null)}
-                >
-                    <button
-                        className="absolute top-6 left-6 text-white/80 hover:text-white transition z-10 cursor-pointer"
-                        onClick={() => setLightboxIdx(null)}
-                    >
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-
-                    {/* Prev */}
-                    <button
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setLightboxIdx((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1));
-                        }}
-                    >
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-
-                    {/* Next */}
-                    <button
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition p-2 cursor-pointer"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setLightboxIdx((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0));
-                        }}
-                    >
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-
-                    <FlexibleImage
-                        src={images[lightboxIdx]}
-                        alt={`${name} - ${imageLabel} ${lightboxIdx + 1}`}
-                        width={1600}
-                        height={1200}
-                        sizes="100vw"
-                        className="max-w-full max-h-[85vh] object-contain rounded-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-
-                    {/* Counter */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-                        {lightboxIdx + 1} / {images.length}
-                    </div>
+            ) : (
+                <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-6 py-10 text-center text-sm text-[#64748b]">
+                    {labels.image}
                 </div>
             )}
         </section>
     );
 }
 
-function parseIsoDate(value: string): Date | null {
-    if (!value) return null;
-    const [year, month, day] = value.split("-").map(Number);
-    if (!year || !month || !day) return null;
-    return new Date(year, month - 1, day);
-}
-
-function formatIsoDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
-
-function LocalizedDatePicker({
-    value,
-    onChange,
-    locale,
-    label,
-    placeholder,
-    clearLabel,
-    minDate,
-    open,
-    onOpenChange,
-}: {
-    value: string;
-    onChange: (value: string) => void;
-    locale: "ar" | "en";
-    label: string;
-    placeholder: string;
-    clearLabel: string;
-    minDate?: string;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-}) {
-    const isAr = locale === "ar";
-    const selectedDate = parseIsoDate(value);
-    const minDateValue = parseIsoDate(minDate ?? "");
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
-    const [visibleMonth, setVisibleMonth] = useState<Date>(() => {
-        const base = selectedDate ?? minDateValue ?? new Date();
-        return new Date(base.getFullYear(), base.getMonth(), 1);
-    });
-
-    useEffect(() => {
-        if (!open) return;
-
-        const updatePlacement = () => {
-            if (!containerRef.current) return;
-            const rect = containerRef.current.getBoundingClientRect();
-            const estimatedPanelHeight = 380;
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
-
-            setPlacement(spaceBelow < estimatedPanelHeight && spaceAbove > spaceBelow ? "top" : "bottom");
-        };
-
-        const handlePointerDown = (event: PointerEvent) => {
-            if (!containerRef.current?.contains(event.target as Node)) {
-                onOpenChange(false);
-            }
-        };
-
-        updatePlacement();
-        document.addEventListener("pointerdown", handlePointerDown);
-        window.addEventListener("resize", updatePlacement);
-        window.addEventListener("scroll", updatePlacement, true);
-        return () => {
-            document.removeEventListener("pointerdown", handlePointerDown);
-            window.removeEventListener("resize", updatePlacement);
-            window.removeEventListener("scroll", updatePlacement, true);
-        };
-    }, [open, onOpenChange]);
-
-    const weekdayFormatter = useMemo(
-        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { weekday: "short" }),
-        [isAr]
-    );
-    const monthFormatter = useMemo(
-        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { month: "long", year: "numeric" }),
-        [isAr]
-    );
-    const displayFormatter = useMemo(
-        () => new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { year: "numeric", month: "long", day: "numeric" }),
-        [isAr]
-    );
-
-    const weekdayLabels = useMemo(() => {
-        const start = new Date(2026, 0, 4);
-        return Array.from({ length: 7 }, (_, idx) => {
-            const date = new Date(start);
-            date.setDate(start.getDate() + idx);
-            return weekdayFormatter.format(date);
-        });
-    }, [weekdayFormatter]);
-
-    const calendarDays = useMemo(() => {
-        const year = visibleMonth.getFullYear();
-        const month = visibleMonth.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const cells: Array<Date | null> = Array.from({ length: firstDay }, () => null);
-
-        for (let day = 1; day <= daysInMonth; day += 1) {
-            cells.push(new Date(year, month, day));
-        }
-
-        while (cells.length % 7 !== 0) {
-            cells.push(null);
-        }
-
-        return cells;
-    }, [visibleMonth]);
-
-    const chooseDate = (date: Date) => {
-        if (minDateValue && date < minDateValue) return;
-        onChange(formatIsoDate(date));
-        setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-        onOpenChange(false);
-    };
-
-    return (
-        <div ref={containerRef} className="relative">
-            <button
-                type="button"
-                onClick={() => onOpenChange(!open)}
-                className={`w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] transition-all flex items-center justify-between gap-3 hover:border-[#0EA5E9] ${isAr ? "text-right" : "text-left"}`}
-            >
-                <span className={value ? "text-[#0F172A]" : "text-[#94A3B8]"}>
-                    {selectedDate ? displayFormatter.format(selectedDate) : placeholder}
-                </span>
-                <svg className="w-5 h-5 text-[#64748B] shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            </button>
-
-            {open && (
-                <div className={`absolute z-30 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] sm:w-full sm:min-w-[280px] rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xl ${placement === "top" ? "bottom-full mb-2" : "top-full mt-2"} ${isAr ? "right-0" : "left-0"}`}>
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]"
-                            aria-label={isAr ? "الشهر السابق" : "Previous month"}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d={isAr ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
-                            </svg>
-                        </button>
-                        <div className="text-sm font-semibold text-[#111]">{monthFormatter.format(visibleMonth)}</div>
-                        <button
-                            type="button"
-                            onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]"
-                            aria-label={isAr ? "الشهر التالي" : "Next month"}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d={isAr ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="mb-2 grid grid-cols-7 gap-1">
-                        {weekdayLabels.map((day) => (
-                            <div key={day} className="py-1 text-center text-xs font-semibold text-[#94A3B8]">
-                                {day}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1">
-                        {calendarDays.map((date, index) => {
-                            if (!date) {
-                                return <div key={`empty-${index}`} className="h-10" />;
-                            }
-
-                            const iso = formatIsoDate(date);
-                            const isSelected = iso === value;
-                            const isToday = iso === formatIsoDate(new Date());
-                            const isDisabled = minDateValue ? date < minDateValue : false;
-
-                            return (
-                                <button
-                                    key={iso}
-                                    type="button"
-                                    disabled={isDisabled}
-                                    onClick={() => chooseDate(date)}
-                                    className={`h-10 rounded-xl text-sm transition-all ${
-                                        isSelected
-                                            ? "bg-[#0EA5E9] text-white shadow-sm"
-                                            : isDisabled
-                                            ? "text-[#CBD5E1] cursor-not-allowed"
-                                            : isToday
-                                            ? "border border-[#0EA5E9] text-[#0EA5E9] hover:bg-[#F0F9FF]"
-                                            : "text-[#0F172A] hover:bg-[#F8FAFC]"
-                                    }`}
-                                >
-                                    {date.getDate()}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                onOpenChange(false);
-                            }}
-                            className="text-xs font-medium text-[#64748B] hover:text-[#111]"
-                        >
-                            {clearLabel}
-                        </button>
-                        <div className="text-xs text-[#94A3B8]">{label}</div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-const hotelAddOnsData = [
-    { id: "sea_view", name: "إطلالة بحرية", price: 40, description: "غرفة بإطلالة مباشرة على البحر" },
-    { id: "pool_view", name: "إطلالة مسبح", price: 20, description: "غرفة بإطلالة على المسبح الخارجي" },
-    { id: "first_row", name: "صف أول على البحر", price: 60, description: "موقع في الصف الأول مباشرةً أمام الشاطئ" }
-];
-
-function resolveRoomIndexFromCart(
-    hotel: ReturnType<typeof getHotelBySlug>,
-    hotelLocale: (typeof hotelDetailEn)[string] | null,
-    cartHotel: ReturnType<typeof useCart>["cart"]["hotel"]
-) {
-    if (!hotel || !cartHotel) return -1;
-
-    const cartRoomNames = [cartHotel.roomName, cartHotel.roomNameAr, cartHotel.roomNameEn].filter(
-        (value): value is string => Boolean(value)
-    );
-    if (cartRoomNames.length === 0) return -1;
-
-    return hotel.rooms.findIndex((room, index) => {
-        const localizedRoomName = hotelLocale?.rooms[index]?.name;
-        return cartRoomNames.includes(room.name) || (localizedRoomName ? cartRoomNames.includes(localizedRoomName) : false);
-    });
-}
-
-function resolveAddOnIdFromCart(cartHotel: ReturnType<typeof useCart>["cart"]["hotel"]) {
-    if (!cartHotel?.selectedAddOns?.length) return null;
-
-    for (const cartAddon of cartHotel.selectedAddOns) {
-        const addonNames = [cartAddon.name, cartAddon.nameAr, cartAddon.nameEn].filter(
-            (value): value is string => Boolean(value)
-        );
-        const found = hotelAddOnsData.find((addon) => {
-            const englishName = hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.name;
-            return addonNames.includes(addon.name) || (englishName ? addonNames.includes(englishName) : false);
-        });
-        if (found) return found.id;
-    }
-
-    return null;
-}
-
 export default function HotelDetailPage() {
     const params = useParams();
     const slug = params?.slug as string;
-    const hotel = getHotelBySlug(slug);
     const { lang } = useI18n();
     const isAr = lang === "ar";
-    const { setHotel, cart, openCart, setNights } = useCart();
-    const isInCart = cart.hotel?.id === hotel?.id;
-    const hotelLocale = hotel ? hotelDetailEn[hotel.slug] : null;
-    const localizedHotel = hotel
-        ? {
-            ...hotel,
-            name: isAr ? hotel.name : hotelLocale?.name ?? hotel.name,
-            city: isAr ? hotel.city : hotelLocale?.city ?? hotel.city,
-            description: isAr ? hotel.description : hotelLocale?.description ?? hotel.description,
-            amenities: hotel.amenities.map((item, index) => ({
-                ...item,
-                label: isAr ? item.label : hotelLocale?.amenities[index] ?? item.label,
-            })),
-            rooms: hotel.rooms.map((room, index) => ({
-                ...room,
-                name: isAr ? room.name : hotelLocale?.rooms[index]?.name ?? room.name,
-                description: isAr ? room.description : hotelLocale?.rooms[index]?.description ?? room.description,
-            })),
-        }
-        : null;
-    const localizedAddOns = hotelAddOnsData.map((addon) => ({
-        ...addon,
-        name: isAr ? addon.name : hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.name ?? addon.name,
-        description: isAr ? addon.description : hotelAddOnsEn[addon.id as keyof typeof hotelAddOnsEn]?.description ?? addon.description,
-    }));
+    const { cart, openCart, setHotel, setNights } = useCart();
+    const [hotelData, setHotelData] = useState<HotelRecord | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
     const labels = {
+        loading: isAr ? "جاري تحميل الفندق..." : "Loading hotel...",
+        retry: isAr ? "إعادة المحاولة" : "Retry",
         notFound: isAr ? "الفندق غير موجود" : "Hotel not found",
+        notFoundDesc: isAr ? "لم نتمكن من العثور على هذا الفندق في البيانات القادمة من الـ API." : "We could not find this hotel in the live API data.",
         backToHotels: isAr ? "العودة للفنادق" : "Back to hotels",
         stars: isAr ? "نجوم" : "stars",
         bookNow: isAr ? "احجز الآن" : "Book now",
@@ -622,10 +508,9 @@ export default function HotelDetailPage() {
         aboutHotel: isAr ? "نبذة عن الفندق" : "About the hotel",
         amenities: isAr ? "المرافق والخدمات" : "Amenities and services",
         chooseRoom: isAr ? "اختر غرفتك واحجز" : "Choose your room and book",
-        chooseRoomSub: isAr ? "حدد نوع الغرفة وعدد الليالي" : "Select your room type and number of nights",
+        chooseRoomSub: isAr ? "حدد نوع الغرفة وعدد الغرف وتواريخ الإقامة" : "Select the room type, room count, and your stay dates.",
         roomType: isAr ? "نوع الغرفة" : "Room type",
         roomCount: isAr ? "عدد الغرف" : "Rooms",
-        roomChangeNote: isAr ? "يمكن تغيير نوع الغرفة بعد إتمام الحجز، وذلك عبر التواصل معنا على الواتساب، حسب التوفر وبرسوم إضافية." : "Room type can be changed after booking by contacting us on WhatsApp, subject to availability and possible extra fees.",
         addOns: isAr ? "الإضافات" : "Add-ons",
         optional: isAr ? "(اختياري)" : "(Optional)",
         stayDates: isAr ? "تواريخ الإقامة" : "Stay dates",
@@ -640,159 +525,167 @@ export default function HotelDetailPage() {
         hotelGallery: isAr ? "صور الفندق" : "Hotel gallery",
         hotelVideo: isAr ? "فيديو الفندق" : "Hotel video",
         image: isAr ? "صورة" : "Image",
+        noRooms: isAr ? "لا توجد غرف متاحة لهذا الفندق حاليًا." : "No rooms are available for this hotel right now.",
+        noAddOns: isAr ? "لا توجد إضافات متاحة حاليًا." : "No add-ons are available right now.",
     };
+
+    const loadHotel = useCallback(async (signal?: AbortSignal) => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const hotel = await getHotelBySlug(slug, signal);
+            setHotelData(hotel);
+        } catch (loadError) {
+            if (signal?.aborted) return;
+            setError(loadError instanceof Error ? loadError.message : labels.loading);
+        } finally {
+            if (!signal?.aborted) {
+                setIsLoading(false);
+            }
+        }
+    }, [labels.loading, slug]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        void loadHotel(controller.signal);
+        return () => controller.abort();
+    }, [loadHotel]);
+
+    const hotel = useMemo(
+        () => (hotelData ? buildLocalizedHotelView(hotelData, lang) : null),
+        [hotelData, lang],
+    );
+
+    const isInCart = cart.hotel?.id === hotel?.id;
+    const cartRoomIndex = resolveRoomIndexFromCart(hotel, cart.hotel);
+    const cartAddonId = resolveAddOnIdFromCart(hotel, cart.hotel);
+
+    const today = formatIsoDate(new Date());
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = formatIsoDate(tomorrowDate);
 
     const [selectedRoom, setSelectedRoom] = useState(0);
     const [roomsCount, setRoomsCount] = useState(1);
-    const [selectedAddOns, setSelectedAddOns] = useState<string | null>(null);
-    const today = new Date().toISOString().split("T")[0];
-    const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
+    const [selectedAddOnId, setSelectedAddOnId] = useState<string | null>(null);
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
-    const [savedRoom, setSavedRoom] = useState<number | null>(null);
-    const [savedRoomsCount, setSavedRoomsCount] = useState<number | null>(null);
-    const [savedAddOns, setSavedAddOns] = useState<string | null>(null);
-    const [savedCheckIn, setSavedCheckIn] = useState<string | null>(null);
-    const [savedCheckOut, setSavedCheckOut] = useState<string | null>(null);
-    const [openDatePicker, setOpenDatePicker] = useState<"checkIn" | "checkOut" | null>(null);
 
-    // Initialize state from cart if it's already in the cart
-    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
-        if (isInCart && cart.hotel) {
-            const roomIndex = resolveRoomIndexFromCart(hotel, hotelLocale, cart.hotel);
-            if (roomIndex !== -1) {
-                setSelectedRoom((prev) => (prev === roomIndex ? prev : roomIndex));
-                setSavedRoom((prev) => (prev === roomIndex ? prev : roomIndex));
-            }
-            if (cart.hotel.roomsCount) {
-                setRoomsCount((prev) => (prev === cart.hotel!.roomsCount ? prev : cart.hotel!.roomsCount!));
-                setSavedRoomsCount((prev) => (prev === cart.hotel!.roomsCount ? prev : cart.hotel!.roomsCount!));
-            }
-            const addOnId = resolveAddOnIdFromCart(cart.hotel);
-            setSelectedAddOns((prev) => (prev === addOnId ? prev : addOnId));
-            setSavedAddOns((prev) => (prev === addOnId ? prev : addOnId));
-        }
-    }, [
-        isInCart,
-        cart.hotel,
-        hotel,
-        hotelLocale,
-    ]);
-    /* eslint-enable react-hooks/set-state-in-effect */
+        if (!hotel || !isInCart || !cart.hotel) return;
 
-    const nights = Math.max(1, Math.round(
-        (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000 
-    ));
+        if (cartRoomIndex >= 0) {
+            setSelectedRoom((current) => (current === cartRoomIndex ? current : cartRoomIndex));
+        }
+
+        setRoomsCount((current) => (current === (cart.hotel?.roomsCount || 1) ? current : (cart.hotel?.roomsCount || 1)));
+        setSelectedAddOnId((current) => (current === cartAddonId ? current : cartAddonId));
+    }, [hotel, isInCart, cart.hotel, cartRoomIndex, cartAddonId]);
+
+    useEffect(() => {
+        if (checkOut <= checkIn) {
+            const nextDate = new Date(checkIn);
+            nextDate.setDate(nextDate.getDate() + 1);
+            setCheckOut(formatIsoDate(nextDate));
+        }
+    }, [checkIn, checkOut]);
+
+    const nights = Math.max(
+        1,
+        Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000),
+    );
+    const minimumCheckOut = formatIsoDate(new Date(new Date(checkIn).getTime() + 86400000));
+
+    const room = hotel?.rooms[selectedRoom] ?? null;
+    const selectedAddon = hotel?.addons.find((addon) => addon.id === selectedAddOnId) ?? null;
+    const selectedAddOns = selectedAddon
+        ? [{
+            name: selectedAddon.name,
+            nameAr: selectedAddon.nameAr,
+            nameEn: selectedAddon.nameEn,
+            price: selectedAddon.price,
+        }]
+        : [];
+
+    const totalPrice = room
+        ? (room.price * roomsCount * nights) + (selectedAddon ? selectedAddon.price * roomsCount * nights : 0)
+        : 0;
+
+    const hasChanges = Boolean(
+        isInCart && hotel && (
+            selectedRoom !== cartRoomIndex ||
+            roomsCount !== (cart.hotel?.roomsCount || 1) ||
+            nights !== cart.nights ||
+            selectedAddOnId !== cartAddonId
+        ),
+    );
 
     const scrollToBooking = () => {
         document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
-    const isAddOnsChanged = () => {
-        if (savedAddOns !== null) {
-            return selectedAddOns !== savedAddOns;
-        }
-        const reference = isInCart ? resolveAddOnIdFromCart(cart.hotel) : null;
-        return selectedAddOns !== reference;
-    };
+    if (isLoading) {
+        return <HotelDetailSkeleton />;
+    }
 
-    const hasChanges = Boolean(
-        isInCart && (
-            (savedRoom !== null ? selectedRoom !== savedRoom : hotel?.rooms[selectedRoom].price !== cart.hotel?.pricePerNight) ||
-            (savedRoomsCount !== null ? roomsCount !== savedRoomsCount : roomsCount !== (cart.hotel?.roomsCount || 1)) ||
-            (savedCheckIn !== null ? checkIn !== savedCheckIn : false) ||
-            (savedCheckOut !== null ? checkOut !== savedCheckOut : nights !== cart.nights) ||
-            isAddOnsChanged()
-        )
-    );
-
-    if (!hotel) {
+    if (error) {
         return (
-            <main className="min-h-screen bg-[#FAFAFA] flex items-center justify-center pt-20">
-                <div className="text-center">
-                    <h1 className="text-4xl font-bold text-[#0f172a] mb-4">404</h1>
-                    <p className="text-[#64748b] text-lg">{labels.notFound}</p>
-                    <Link href={`/${lang}/hotels`} className="inline-block mt-6 bg-[#0EA5E9] text-white px-6 py-3 rounded-full font-bold hover:bg-[#0284C7] transition">
-                        {labels.backToHotels}
-                    </Link>
-                </div>
-            </main>
+            <HotelStateCard
+                title={isAr ? "تعذر تحميل الفندق" : "Unable to load hotel"}
+                description={error}
+                actionLabel={labels.retry}
+                onAction={() => {
+                    void loadHotel();
+                }}
+            />
         );
     }
 
-    const resolvedHotel = localizedHotel!;
-    const room = resolvedHotel.rooms[selectedRoom];
-    type HotelSelectedAddOn = {
-        name: string;
-        nameAr: string;
-        nameEn: string;
-        price: number;
-    };
-
-    const selectedHotelAddOns = selectedAddOns
-        ? (() => {
-              const addon = localizedAddOns.find((a) => a.id === selectedAddOns);
-              const source = hotelAddOnsData.find((a) => a.id === selectedAddOns);
-              const englishName = hotelAddOnsEn[selectedAddOns as keyof typeof hotelAddOnsEn]?.name;
-              return addon
-                  ? [{
-                        name: addon.name,
-                        nameAr: source?.name ?? addon.name,
-                        nameEn: englishName ?? addon.name,
-                        price: addon.price,
-                    } satisfies HotelSelectedAddOn]
-                  : [];
-          })()
-        : [];
-    const addonsPriceTotal = selectedHotelAddOns.reduce((sum, addon) => sum + addon.price, 0) * nights * roomsCount;
-    const totalPrice = (room.price * roomsCount * nights) + addonsPriceTotal;
+    if (!hotel) {
+        return (
+            <HotelStateCard
+                title={labels.notFound}
+                description={labels.notFoundDesc}
+                actionLabel={labels.backToHotels}
+                actionHref={`/${lang}/hotels`}
+            />
+        );
+    }
 
     return (
         <main className="bg-[#FAFAFA]">
-            <HotelDetailHero hotel={resolvedHotel} onBookNow={scrollToBooking} isAr={isAr} labels={{ stars: labels.stars, bookNow: labels.bookNow, viewGallery: labels.viewGallery }} />
+            <HotelHero
+                hotel={hotel}
+                isAr={isAr}
+                labels={{ stars: labels.stars, bookNow: labels.bookNow, viewGallery: labels.viewGallery }}
+                onBookNow={scrollToBooking}
+            />
 
-            <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12">
-
-                {/* ── Overview + Amenities ── */}
-                <div className="py-10 md:py-14 border-b border-[#e2e8f0]">
-                    {/* Description */}
+            <div className="mx-auto max-w-[1100px] px-4 md:px-8 lg:px-12">
+                <div className="border-b border-[#e2e8f0] py-10 md:py-14">
                     <section className="mb-10">
                         <ScrollReveal>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a]">{labels.aboutHotel}</h2>
-                            </div>
+                            <SectionTitle iconTone="sky" title={labels.aboutHotel} />
                         </ScrollReveal>
                         <ScrollReveal delay={100}>
-                            <p className="text-[#444] text-base md:text-lg leading-[2] max-w-3xl whitespace-pre-line">{resolvedHotel.description}</p>
+                            <p className="max-w-3xl whitespace-pre-line text-base leading-[2] text-[#444] md:text-lg">
+                                {hotel.description}
+                            </p>
                         </ScrollReveal>
                     </section>
 
-                    {/* Amenities */}
                     <section>
                         <ScrollReveal>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 0 0 2.25-2.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v2.25A2.25 2.25 0 0 0 6 10.5Zm0 9.75h2.25A2.25 2.25 0 0 0 10.5 18v-2.25a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25V18A2.25 2.25 0 0 0 6 20.25Zm9.75-9.75H18a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 18 3.75h-2.25A2.25 2.25 0 0 0 13.5 6v2.25a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                    </svg>
-                                </div>
-                                <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">{labels.amenities}</h2>
-                            </div>
+                            <SectionTitle iconTone="emerald" title={labels.amenities} />
                         </ScrollReveal>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {resolvedHotel.amenities.map((item, i) => (
-                                <ScrollReveal key={item.label} delay={i * 40}>
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                            {hotel.amenities.map((item, index) => (
+                                <ScrollReveal key={`${item.label}-${index}`} delay={index * 40}>
                                     <div className="flex items-center gap-2.5 px-1 py-2">
-                                        <svg className="w-4 h-4 text-[#10B981] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                        <svg className="h-4 w-4 shrink-0 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
-                                        <span className="text-sm text-[#374151] font-medium leading-snug">{item.label}</span>
+                                        <span className="text-sm font-medium leading-snug text-[#374151]">{item.label}</span>
                                     </div>
                                 </ScrollReveal>
                             ))}
@@ -800,277 +693,267 @@ export default function HotelDetailPage() {
                     </section>
                 </div>
 
-                {/* ── Booking Section ── */}
-                <div id="booking" className="py-10 md:py-14 scroll-mt-24" dir={isAr ? "rtl" : "ltr"}>
-                    <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-visible">
-
-                        {/* Header */}
-                        <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
-                            <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
-                                <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <div id="booking" className="scroll-mt-24 py-10 md:py-14" dir={isAr ? "rtl" : "ltr"}>
+                    <div className="overflow-visible rounded-3xl border border-[#e2e8f0] bg-white shadow-sm">
+                        <div className="flex items-center gap-3 border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 md:px-8">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0EA5E9]/10 text-[#0EA5E9]">
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-[#0f172a]">{labels.chooseRoom}</h2>
-                                <p className="text-xs text-[#64748b] mt-0.5">{labels.chooseRoomSub}</p>
+                                <p className="mt-0.5 text-xs text-[#64748b]">{labels.chooseRoomSub}</p>
                             </div>
                         </div>
 
-                        {/* Room + Addons + Nights grid */}
-                        <div className="px-6 md:px-8 py-7 border-b border-[#e2e8f0] grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                            {/* Room selector */}
+                        <div className="grid grid-cols-1 gap-8 border-b border-[#e2e8f0] px-6 py-7 lg:grid-cols-2 md:px-8">
                             <div>
-                                <div className="flex items-center gap-2 mb-4">
+                                <div className="mb-4 flex items-center gap-2">
                                     <h3 className="font-bold text-[#0f172a]">{labels.roomType}</h3>
                                 </div>
-                                <div className="flex flex-col gap-3">
-                                    {resolvedHotel.rooms.map((r, i) => {
-                                        const isSelected = selectedRoom === i;
-                                        return (
-                                            <div
-                                                key={r.name}
-                                                role="radio"
-                                                aria-checked={isSelected}
-                                                tabIndex={0}
-                                                onClick={() => { if (selectedRoom !== i) { setSelectedRoom(i); setRoomsCount(1); } }}
-                                                onKeyDown={(e) => e.key === "Enter" && (() => { if (selectedRoom !== i) { setSelectedRoom(i); setRoomsCount(1); } })()}
-                                                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"}`}
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex items-start gap-2.5 flex-1">
-                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1]"}`}>
-                                                            {isSelected && (
-                                                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+
+                                {hotel.rooms.length > 0 ? (
+                                    <div className="flex flex-col gap-3">
+                                        {hotel.rooms.map((hotelRoom, index) => {
+                                            const isSelected = selectedRoom === index;
+                                            return (
+                                                <div
+                                                    key={hotelRoom.id}
+                                                    role="radio"
+                                                    aria-checked={isSelected}
+                                                    tabIndex={0}
+                                                    onClick={() => setSelectedRoom(index)}
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === "Enter") {
+                                                            setSelectedRoom(index);
+                                                        }
+                                                    }}
+                                                    className={`cursor-pointer rounded-2xl border-2 p-5 transition-all ${
+                                                        isSelected
+                                                            ? "border-[#0EA5E9] bg-[#0EA5E9]/5"
+                                                            : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex flex-1 items-start gap-2.5">
+                                                            <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                                                isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1]"
+                                                            }`}>
+                                                                {isSelected ? (
+                                                                    <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                ) : null}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-bold leading-tight text-[#0f172a]">{hotelRoom.name}</p>
+                                                                <p className="mt-0.5 text-xs text-[#64748b]">{hotelRoom.description}</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`shrink-0 font-semibold ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
+                                                            ${hotelRoom.price.toLocaleString("en-US")}
+                                                        </span>
+                                                    </div>
+
+                                                    {isSelected ? (
+                                                        <div
+                                                            className="mt-3 flex items-center justify-between border-t border-[#0EA5E9]/20 pt-3"
+                                                            onClick={(event) => event.stopPropagation()}
+                                                        >
+                                                            <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setRoomsCount((current) => Math.max(1, current - 1))}
+                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20"
+                                                                >
+                                                                    -
+                                                                </button>
+                                                                <span className="w-5 text-center text-sm font-bold text-[#0f172a]">{roomsCount}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setRoomsCount((current) => current + 1)}
+                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 py-6 text-sm text-[#64748b]">
+                                        {labels.noRooms}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <div className="mb-4 flex items-center gap-2">
+                                    <h3 className="font-bold text-[#0f172a]">
+                                        {labels.addOns} <span className="text-xs font-normal text-[#94a3b8]">{labels.optional}</span>
+                                    </h3>
+                                </div>
+
+                                {hotel.addons.length > 0 ? (
+                                    <div className="flex flex-col gap-3">
+                                        {hotel.addons.map((addon) => {
+                                            const isSelected = selectedAddOnId === addon.id;
+                                            return (
+                                                <button
+                                                    key={addon.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedAddOnId((current) => current === addon.id ? null : addon.id)}
+                                                    className={`flex items-start justify-between rounded-2xl border-2 p-4 text-start transition-all ${
+                                                        isSelected
+                                                            ? "border-[#F59E0B] bg-[#F59E0B]/5"
+                                                            : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                                            isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"
+                                                        }`}>
+                                                            {isSelected ? (
+                                                                <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                                 </svg>
-                                                            )}
+                                                            ) : null}
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-[#0f172a] text-sm leading-tight">{r.name}</p>
-                                                            <p className="text-xs text-[#64748b] mt-0.5">{r.description}</p>
+                                                            <span className="block text-sm font-bold text-[#0f172a]">{addon.name}</span>
+                                                            <span className="text-xs text-[#64748b]">{addon.description}</span>
                                                         </div>
                                                     </div>
-                                                    <span className={`font-black shrink-0 ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
-                                                        ${r.price.toLocaleString("en-US")}
+                                                    <span className={`mt-0.5 shrink-0 font-semibold ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
+                                                        +{addon.price}$
                                                     </span>
-                                                </div>
-                                                {isSelected && (
-                                                    <div
-                                                        className="mt-3 pt-3 border-t border-[#0EA5E9]/20 flex items-center justify-between"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <button
-                                                                onClick={() => setRoomsCount(c => Math.max(1, c - 1))}
-                                                                className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] font-bold flex items-center justify-center hover:bg-[#0EA5E9]/20 transition text-base leading-none cursor-pointer"
-                                                            >−</button>
-                                                            <span className="w-5 text-center font-bold text-[#0f172a] text-sm">{roomsCount}</span>
-                                                            <button
-                                                                onClick={() => setRoomsCount(c => c + 1)}
-                                                                className="w-7 h-7 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] font-bold flex items-center justify-center hover:bg-[#0EA5E9]/20 transition text-base leading-none cursor-pointer"
-                                                            >+</button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                <p className="mt-3 text-xs text-[#64748b] leading-relaxed flex items-start gap-1.5">
-                                    <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {labels.roomChangeNote}
-                                </p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 py-6 text-sm text-[#64748b]">
+                                        {labels.noAddOns}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Add-ons — col 2 on desktop, spans 2 rows */}
-                            <div className="lg:row-span-2">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <h3 className="font-bold text-[#0f172a]">{labels.addOns} <span className="text-xs font-normal text-[#94a3b8]">{labels.optional}</span></h3>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    {localizedAddOns.map((addon) => {
-                                        const isSelected = selectedAddOns === addon.id;
-                                        return (
-                                            <div
-                                                key={addon.id}
-                                                onClick={() => setSelectedAddOns((prev) => (prev === addon.id ? null : addon.id))}
-                                                className={`flex items-start justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? "border-[#F59E0B] bg-[#F59E0B]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"}`}
-                                            >
-                                                <div className="flex items-start gap-3">
-                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"}`}>
-                                                        {isSelected && (
-                                                            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-bold text-[#0f172a] text-sm block">{addon.name}</span>
-                                                        <span className="text-xs text-[#64748b]">{addon.description}</span>
-                                                    </div>
-                                                </div>
-                                                <span className={`font-black shrink-0 mt-0.5 ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
-                                                    +{addon.price}$
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Dates */}
-                            <div className="relative z-20 flex flex-col gap-5">
-                                <div className="flex items-center gap-2 mb-1">
+                            <div className="lg:col-span-2">
+                                <div className="mb-4 flex items-center gap-2">
                                     <h3 className="font-bold text-[#0f172a]">{labels.stayDates}</h3>
                                 </div>
 
-                                {/* Dates Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    {/* Check-in */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkIn}</label>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <label className="flex flex-col gap-1.5">
+                                        <span className="text-xs font-semibold text-[#64748b]">{labels.checkIn}</span>
                                         <LocalizedDatePicker
                                             value={checkIn}
-                                            minDate={today}
+                                            onChange={(value) => setCheckIn(value || today)}
                                             locale={isAr ? "ar" : "en"}
                                             label={labels.checkIn}
-                                            open={openDatePicker === "checkIn"}
-                                            onOpenChange={(open) => setOpenDatePicker(open ? "checkIn" : null)}
-                                            placeholder={isAr ? "اختر التاريخ" : "Select a date"}
-                                            clearLabel={isAr ? "مسح" : "Clear"}
-                                            onChange={(value) => {
-                                                const nextCheckIn = value || today;
-                                                setCheckIn(nextCheckIn);
-                                                if (nextCheckIn >= checkOut) {
-                                                    const d = new Date(nextCheckIn);
-                                                    d.setDate(d.getDate() + 1);
-                                                    setCheckOut(formatIsoDate(d));
-                                                }
-                                            }}
+                                            placeholder={isAr ? "اختر من التقويم" : "Choose from calendar"}
+                                            minDate={today}
+                                            allowClear={false}
                                         />
-                                    </div>
+                                    </label>
 
-                                    {/* Check-out */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] sm:text-xs font-semibold text-[#64748b]">{labels.checkOut}</label>
+                                    <label className="flex flex-col gap-1.5">
+                                        <span className="text-xs font-semibold text-[#64748b]">{labels.checkOut}</span>
                                         <LocalizedDatePicker
                                             value={checkOut}
-                                            minDate={(() => {
-                                                const d = new Date(checkIn);
-                                                d.setDate(d.getDate() + 1);
-                                                return formatIsoDate(d);
-                                            })()}
+                                            onChange={(value) => setCheckOut(value || tomorrow)}
                                             locale={isAr ? "ar" : "en"}
                                             label={labels.checkOut}
-                                            open={openDatePicker === "checkOut"}
-                                            onOpenChange={(open) => setOpenDatePicker(open ? "checkOut" : null)}
-                                            placeholder={isAr ? "اختر التاريخ" : "Select a date"}
-                                            clearLabel={isAr ? "مسح" : "Clear"}
-                                            onChange={(value) => {
-                                                if (value) setCheckOut(value);
-                                            }}
+                                            placeholder={isAr ? "اختر من التقويم" : "Choose from calendar"}
+                                            minDate={minimumCheckOut}
+                                            allowClear={false}
                                         />
-                                    </div>
+                                    </label>
                                 </div>
 
-                                {/* Nights badge */}
-                                <div className="flex items-center gap-2 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl px-4 py-2.5">
-                                    <svg className="w-4 h-4 text-[#F59E0B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-2.5">
+                                    <svg className="h-4 w-4 shrink-0 text-[#F59E0B]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                     </svg>
-                                    <span className="text-sm font-medium text-[#0f172a]">{nights} {nights === 1 ? labels.night : labels.nights}</span>
+                                    <span className="text-sm font-medium text-[#0f172a]">
+                                        {nights} {nights === 1 ? labels.night : labels.nights}
+                                    </span>
                                 </div>
                             </div>
-
                         </div>
 
-                        {/* Total + CTA */}
-                        <div className="px-6 md:px-8 py-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
+                        <div className="flex flex-col items-center justify-between gap-4 px-6 py-6 sm:flex-row md:px-8">
                             <div>
-                                <p className="text-sm text-[#64748b] mb-1">{labels.estimatedTotalFor} {nights} {nights === 1 ? labels.night : labels.nights}</p>
-                                <div className="flex items-baseline gap-1.5 flex-wrap">
-                                    <span className="text-4xl font-extrabold text-[#0EA5E9]">${totalPrice.toLocaleString("en-US")}</span>
-                                    <span className="text-sm text-[#94a3b8]">({room.name}{roomsCount > 1 ? ` × ${roomsCount}` : ""})</span>
-                                    {selectedHotelAddOns.length > 0 && (
+                                <p className="mb-1 text-sm text-[#64748b]">
+                                    {labels.estimatedTotalFor} {nights} {nights === 1 ? labels.night : labels.nights}
+                                </p>
+                                <div className="flex flex-wrap items-baseline gap-1.5">
+                                    <span className="text-4xl font-bold text-[#0EA5E9]">
+                                        ${totalPrice.toLocaleString("en-US")}
+                                    </span>
+                                    {room ? (
                                         <span className="text-sm text-[#94a3b8]">
-                                            + {selectedHotelAddOns.map((addon) => addon.name).join(isAr ? "، " : ", ")}
+                                            ({room.name}{roomsCount > 1 ? ` x ${roomsCount}` : ""})
                                         </span>
-                                    )}
+                                    ) : null}
+                                    {selectedAddon ? (
+                                        <span className="text-sm text-[#94a3b8]">+ {selectedAddon.name}</span>
+                                    ) : null}
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-                                <button
-                                    onClick={() => {
-                                        setHotel({
-                                            id: hotel.id,
-                                            slug: hotel.slug,
-                                            name: resolvedHotel.name,
-                                            nameAr: hotel.name,
-                                            nameEn: hotelLocale?.name ?? hotel.name,
-                                            city: resolvedHotel.city,
-                                            cityAr: hotel.city,
-                                            cityEn: hotelLocale?.city ?? hotel.city,
-                                            image: hotel.image,
-                                            pricePerNight: room.price,
-                                            stars: hotel.stars,
-                                            roomName: room.name,
-                                            roomNameAr: hotel.rooms[selectedRoom]?.name,
-                                            roomNameEn: hotelLocale?.rooms[selectedRoom]?.name ?? hotel.rooms[selectedRoom]?.name,
-                                            roomsCount: roomsCount,
-                                            selectedAddOns: selectedHotelAddOns,
-                                           });
-                                          setNights(nights);
-                                          setSavedRoom(selectedRoom);
-                                          setSavedRoomsCount(roomsCount);
-                                          setSavedAddOns(selectedAddOns);
-                                        setSavedCheckIn(checkIn);
-                                        setSavedCheckOut(checkOut);
-                                        openCart();
-                                    }}
-                                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-2xl font-bold text-base transition-all duration-300 active:scale-[0.97] ${
-                                        hasChanges
+
+                            <button
+                                type="button"
+                                disabled={!room}
+                                onClick={() => {
+                                    if (!room) return;
+
+                                    setHotel({
+                                        id: hotel.id,
+                                        slug: hotel.slug,
+                                        name: hotel.name,
+                                        nameAr: hotel.nameAr,
+                                        nameEn: hotel.nameEn,
+                                        city: hotel.city,
+                                        cityAr: hotel.cityAr,
+                                        cityEn: hotel.cityEn,
+                                        image: hotel.image,
+                                        pricePerNight: room.price,
+                                        stars: hotel.stars,
+                                        roomName: room.name,
+                                        roomNameAr: room.nameAr,
+                                        roomNameEn: room.nameEn,
+                                        roomsCount,
+                                        selectedAddOns,
+                                    });
+                                    setNights(nights);
+                                    openCart();
+                                }}
+                                className={`inline-flex w-full items-center justify-center gap-3 rounded-2xl px-7 py-3.5 text-base font-bold transition-all duration-300 active:scale-[0.97] sm:w-auto ${
+                                    !room
+                                        ? "cursor-not-allowed bg-[#E2E8F0] text-[#94A3B8]"
+                                        : hasChanges
                                             ? "bg-[#0284C7] text-white hover:bg-[#0369A1]"
                                             : isInCart
-                                            ? "bg-[#dcfce7] text-[#15803d] border-2 border-[#86efac] hover:bg-[#bbf7d0]"
-                                            : "bg-[#0284C7] text-white hover:bg-[#0369A1]"
-                                    }`}
-                                >
-                                    {hasChanges ? (
-                                        <>
-                                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                            {labels.updateBooking}
-                                        </>
-                                    ) : isInCart ? (
-                                        <>
-                                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            {labels.addedToPlan}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            {labels.addToPlan}
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                                                ? "border-2 border-[#86efac] bg-[#dcfce7] text-[#15803d] hover:bg-[#bbf7d0]"
+                                                : "bg-[#0284C7] text-white hover:bg-[#0369A1]"
+                                }`}
+                            >
+                                {hasChanges ? labels.updateBooking : isInCart ? labels.addedToPlan : labels.addToPlan}
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* ── Gallery ── */}
-                <HotelGallery images={hotel.gallery} name={resolvedHotel.name} youtubeUrl={hotel.youtubeUrl} title={labels.hotelGallery} videoTitle={labels.hotelVideo} imageLabel={labels.image} />
-
+                <HotelGallery
+                    hotel={hotel}
+                    labels={{ hotelGallery: labels.hotelGallery, hotelVideo: labels.hotelVideo, image: labels.image }}
+                />
             </div>
         </main>
     );

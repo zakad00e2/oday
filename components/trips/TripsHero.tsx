@@ -47,11 +47,11 @@ export default function TripsHero() {
 
                 <a
                     href="#trips"
-                    className="absolute bottom-8 left-1/2 z-10 inline-flex -translate-x-1/2 text-sm font-semibold text-[#9CA3AF] transition-all duration-300 hover:text-[#9CA3AF]"
+                    className="absolute bottom-8 left-1/2 z-10 inline-flex -translate-x-1/2 text-sm font-semibold text-[#9CA3AF] transition-all duration-300 hover:text-white group"
                 >
-                    <span className="inline-flex flex-col items-center gap-2 animate-arrow-nudge-down">
+                    <span className="inline-flex flex-col items-center gap-2 animate-arrow-nudge-down group-hover:scale-105 transition-transform duration-300">
                         <span>{t("استكشف الرحلات", "Explore Trips")}</span>
-                        <svg className="w-6 h-10" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 40">
+                        <svg className="w-6 h-10 animate-bounce" style={{ animationDuration: '2s', animationIterationCount: 3 }} fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 40">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v28" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 26l6 6 6-6" />
                         </svg>

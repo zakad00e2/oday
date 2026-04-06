@@ -39,7 +39,7 @@ export const NATIONALITY_OPTIONS = [
     {
         id: "saint-kitts-dominica-group",
         labelAr: "سانت كيتس ونيفيس",
-        labelEn: "Saint Kitts + Dominica Group",
+        labelEn: "Saint Kitts and Nevis",
         price24: 110,
         price72: 80,
     },

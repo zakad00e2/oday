@@ -51,13 +51,12 @@ const legalContent: Record<LegalLocale, LegalContent> = {
           ],
         },
         {
-          title: "Pricing",
+          title: "Pricing Policy",
           bullets: [
-            "Prices are subject to change without prior notice until the booking is confirmed.",
-            "All prices are final and non-negotiable once confirmed.",
-            "Prices may vary in the market depending on service level.",
-            "No claims for price reduction are accepted after booking.",
-            "Payment confirms acceptance of the agreed price and service.",
+            "All prices provided by the company are official, final, and non-negotiable.",
+            "Prices in the market may vary depending on the level of service, and the company is committed to delivering quality and service for the listed price.",
+            "The customer is not entitled to request a price reduction after booking if lower prices are found elsewhere.",
+            "Prices are made clear before booking, and payment constitutes final acceptance of the price and service.",
           ],
         },
         {
@@ -234,13 +233,12 @@ const legalContent: Record<LegalLocale, LegalContent> = {
           ],
         },
         {
-          title: "الأسعار",
+          title: "سياسة التسعير",
           bullets: [
-            "الأسعار قابلة للتغيير دون إشعار مسبق حتى يتم تأكيد الحجز.",
-            "جميع الأسعار نهائية وغير قابلة للتفاوض بعد التأكيد.",
-            "قد تختلف الأسعار في السوق حسب مستوى الخدمة.",
-            "لا تقبل أي مطالبات بتخفيض السعر بعد إتمام الحجز.",
-            "إتمام الدفع يعد موافقة على السعر والخدمة المتفق عليهما.",
+            "جميع الأسعار المقدمة من الشركة هي أسعار رسمية نهائية وغير قابلة للتفاوض.",
+            "تختلف الأسعار في السوق حسب مستوى الخدمة، والشركة ملتزمة بتقديم جودة وخدمة مقابل السعر المعروض.",
+            "لا يحق للعميل المطالبة بتخفيض السعر بعد الحجز في حال وجود أسعار أقل لدى جهات أخرى.",
+            "الأسعار تكون واضحة قبل الحجز، ويُعتبر الدفع موافقة نهائية على السعر والخدمة.",
           ],
         },
         {

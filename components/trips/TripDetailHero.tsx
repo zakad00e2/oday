@@ -26,15 +26,18 @@ export default function TripDetailHero({
         <section className="w-full px-3 md:px-5 pt-20 pb-10">
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col justify-end mx-auto max-w-[1600px] shadow-2xl">
 
-                {/* Background image */}
-                <Image
-                    src={heroImage}
-                    alt={title}
-                    fill
-                    priority
-                    sizes="100vw"
-                    className="object-cover"
-                />
+                {heroImage ? (
+                    <Image
+                        src={heroImage}
+                        alt={title}
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover"
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#0369A1] to-[#0EA5E9]" />
+                )}
 
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />

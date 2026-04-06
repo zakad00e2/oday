@@ -39,9 +39,11 @@ export default function Footer() {
     { label: dict.nav.home, href: `/${lang}` },
     { label: dict.nav.hotels, href: `/${lang}/hotels` },
     { label: dict.nav.trips, href: `/${lang}/trips` },
-        { label: dict.nav.airportCoordination, href: `/${lang}/airport-coordination` },
-
+    { label: dict.nav.airportCoordination, href: `/${lang}/airport-coordination` },
     { label: dict.nav.about, href: `/${lang}/about` },
+  ];
+
+  const policyLinks = [
     { label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', href: `/${lang}/terms` },
     { label: lang === 'ar' ? 'سياسة الاسترداد' : 'Refund Policy', href: `/${lang}/refund-policy` },
   ];
@@ -56,11 +58,11 @@ export default function Footer() {
     <footer className="bg-white">
       <div className="max-w-[1200px] mx-auto px-6 pt-20 pb-10">
 
-        {/* 4-column grid */}
+        {/* 5-column grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10 items-start">
 
           {/* Col 1 — Brand */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <Link href={`/${lang}`} className="flex items-center gap-1 mb-6">
               <Image
                 src="/optimized/logo.webp"
@@ -95,7 +97,21 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 3 — Contact Info */}
+          {/* Col 3 — Policies */}
+          <div className="lg:col-span-2">
+            <h4 className="text-sm font-semibold text-[#111] mb-5">{lang === 'ar' ? 'السياسات' : 'Policies'}</h4>
+            <ul className="space-y-3">
+              {policyLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors duration-200">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 4 — Contact Info */}
           <div className="lg:col-span-2">
             <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.contactInfo}</h4>
             <ul className="space-y-3">
@@ -105,8 +121,8 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 4 — Newsletter + Social */}
-          <div className="lg:col-span-3 flex flex-col gap-5">
+          {/* Col 5 — Newsletter + Social */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
             {/* <div className="flex items-center rounded-full border border-[#E5E7EB] bg-white overflow-hidden pe-4 ps-1.5 py-1.5">
               <input
                 type="email"

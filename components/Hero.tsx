@@ -23,13 +23,13 @@ export default function Hero({
     >
       <div className="absolute inset-0">
         <Image
-          src="https://cdn.europosters.eu/image/hp/106504.jpg"
+          src="/IMG_3734 (1).PNG"
           alt={hero.heroImageAlt}
           fill
           priority
-          quality={55}
+          quality={100}
           sizes="100vw"
-          className="object-cover"
+          className="object-cover object-right sm:object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
       </div>

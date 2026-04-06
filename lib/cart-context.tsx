@@ -12,7 +12,7 @@ import {
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface CartHotel {
-  id: number;
+  id: string | number;
   slug: string;
   name: string;
   nameAr?: string;

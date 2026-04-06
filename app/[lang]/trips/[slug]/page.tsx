@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getTripBySlug } from "@/lib/trips-data";
+import TripDetailSkeleton from "@/components/detail-skeletons/TripDetailSkeleton";
+import { getTripBySlug, type TripRecord } from "@/lib/trip-service";
 import TripDetailHero from "@/components/trips/TripDetailHero";
 import TripOverview from "@/components/trips/TripOverview";
 import TripSchedule from "@/components/trips/TripSchedule";
@@ -11,100 +12,136 @@ import TripIncludes from "@/components/trips/TripIncludes";
 import TripGallery from "@/components/trips/TripGallery";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import { tripDetailEn } from "@/lib/trip-detail-locales";
+import { isYouTubeShortUrl, toYouTubeEmbedUrl } from "@/lib/youtube";
 
 export default function TripDetailPage() {
     const params = useParams();
-    const slug = params?.slug as string;
-    const trip = getTripBySlug(slug);
+    const slugParam = params?.slug;
+    const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam ?? "";
     const { lang } = useI18n();
     const isAr = lang === "ar";
 
-    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(() => {
-        if (!trip || trip.options.length === 0) return new Set();
-        return new Set([trip.options[0].id]);
-    });
-    const [personCounts, setPersonCounts] = useState<Record<string, number>>(() => {
-        if (!trip) return {};
-        const p: Record<string, number> = {};
-        trip.options.forEach((o) => { p[o.id] = 1; });
-        return p;
-    });
+    const [trip, setTrip] = useState<TripRecord | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+
+    const loadTrip = useCallback(async (signal?: AbortSignal) => {
+        if (!slug) {
+            setTrip(null);
+            setFetchError(null);
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setFetchError(null);
+            setTrip(null);
+            const result = await getTripBySlug(slug, signal);
+            if (signal?.aborted) return;
+            setTrip(result);
+        } catch (err) {
+            if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) return;
+            setFetchError(err instanceof Error ? err.message : "Failed to load trip");
+        } finally {
+            if (!signal?.aborted) {
+                setLoading(false);
+            }
+        }
+    }, [slug]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        void loadTrip(controller.signal);
+
+        return () => controller.abort();
+    }, [loadTrip]);
+
+    const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
+    const [personCounts, setPersonCounts] = useState<Record<string, number>>({});
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
-    const [addOnPersonCounts, setAddOnPersonCounts] = useState<Record<string, number>>(() => {
-        if (!trip) return {};
-        const p: Record<string, number> = {};
-        trip.addOns.forEach((a) => { p[a.id] = 1; });
-        return p;
-    });
-
+    const [addOnPersonCounts, setAddOnPersonCounts] = useState<Record<string, number>>({});
     const optionsRef = useRef<HTMLDivElement>(null);
-
-    const { addTrip, removeTrip, cart, openCart } = useCart();
+    const { addTrip, cart, openCart } = useCart();
     const [justAdded, setJustAdded] = useState(false);
-    const tripLocale = !isAr && trip ? tripDetailEn[trip.slug] : null;
-    const tripTitle = trip ? (isAr ? trip.titleAr : trip.titleEn) : "";
-    const tripDescription = trip ? (isAr ? trip.descriptionAr : tripLocale?.description ?? trip.descriptionEn) : "";
-    const tripIncludes = trip ? (isAr ? trip.includesAr : trip.includesEn) : [];
-    const tripDuration = trip
-        ? (isAr
-            ? trip.schedule.durationAr
-            : tripLocale?.duration ?? trip.schedule.durationEn)
-        : "";
 
-    // Load selections from cart if trip exists in cart (only on mount or when cart trip changes)
     useEffect(() => {
         if (!trip) return;
-        
+        if (trip.options.length > 0) {
+            setSelectedOptionIds(new Set([trip.options[0].id]));
+        } else {
+            setSelectedOptionIds(new Set());
+        }
+        const p: Record<string, number> = {};
+        trip.options.forEach((o) => { p[o.id] = 1; });
+        setPersonCounts(p);
+
+        const ap: Record<string, number> = {};
+        trip.addOns.forEach((a) => { ap[a.id] = 1; });
+        setAddOnPersonCounts(ap);
+        setSelectedAddOnIds(new Set());
+    }, [trip?.id]);
+
+    useEffect(() => {
+        if (!trip) return;
         const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
         if (!cartTrip) return;
 
-        // Load selected options
         if (cartTrip.selectedOptions && cartTrip.selectedOptions.length > 0) {
             const optionIds = new Set<string>();
             const newPersonCounts: Record<string, number> = {};
-            
-            // Initialize all options to 1 first
             trip.options.forEach((o) => { newPersonCounts[o.id] = 1; });
-            
             cartTrip.selectedOptions.forEach((selectedOption) => {
-                // Find matching option by name (since we only store nameAr in cart)
                 const matchingOption = trip.options.find((o) => o.nameAr === selectedOption.nameAr);
                 if (matchingOption) {
                     optionIds.add(matchingOption.id);
                     newPersonCounts[matchingOption.id] = selectedOption.persons || 1;
                 }
             });
-            
             setSelectedOptionIds(optionIds);
             setPersonCounts(newPersonCounts);
         }
 
-        // Load selected add-ons
         if (cartTrip.selectedAddOns && cartTrip.selectedAddOns.length > 0) {
             const addOnIds = new Set<string>();
             const newAddOnPersonCounts: Record<string, number> = {};
-            
-            // Initialize all add-ons to 1 first
             trip.addOns.forEach((a) => { newAddOnPersonCounts[a.id] = 1; });
-            
             cartTrip.selectedAddOns.forEach((selectedAddOn) => {
-                // Find matching add-on by name (since we only store nameAr in cart)
                 const matchingAddOn = trip.addOns.find((a) => a.nameAr === selectedAddOn.nameAr);
                 if (matchingAddOn) {
                     addOnIds.add(matchingAddOn.id);
                     newAddOnPersonCounts[matchingAddOn.id] = selectedAddOn.persons || 1;
                 }
             });
-            
             setSelectedAddOnIds(addOnIds);
             setAddOnPersonCounts(newAddOnPersonCounts);
         }
-    }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);  // Re-run when this trip's cart data changes
+    }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);
 
     useEffect(() => {
-        // Reserved for future cart updates if needed
-    }, [cart.trips.length, trip?.slug]);
+        if (justAdded) {
+            const timeout = setTimeout(() => setJustAdded(false), 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [justAdded]);
+
+    if (loading) {
+        return <TripDetailSkeleton />;
+    }
+
+    if (fetchError) {
+        return (
+            <main className="min-h-screen bg-[#FAFAFA] flex items-center justify-center pt-20">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-[#0f172a] mb-4">{isAr ? "خطأ" : "Error"}</h1>
+                    <p className="text-[#64748b] text-lg mb-6">{fetchError}</p>
+                    <Link href={`/${lang}/trips`} className="inline-block bg-[#0EA5E9] text-white px-6 py-3 rounded-full font-bold hover:bg-[#0284C7] transition">
+                        {isAr ? "العودة للرحلات" : "Back to trips"}
+                    </Link>
+                </div>
+            </main>
+        );
+    }
 
     if (!trip) {
         return (
@@ -120,7 +157,15 @@ export default function TripDetailPage() {
         );
     }
 
-    // --- Price computation ---
+    const tripTitle = isAr ? trip.titleAr : (trip.titleEn || trip.titleAr);
+    const tripDescription = isAr ? trip.descriptionAr : (trip.descriptionEn || trip.descriptionAr);
+    const tripIncludes = isAr ? trip.includesAr : (trip.includesEn.length > 0 ? trip.includesEn : trip.includesAr);
+    const tripDuration = isAr ? trip.schedule.durationAr : (trip.schedule.durationEn || trip.schedule.durationAr);
+    const tripYoutubeUrl = toYouTubeEmbedUrl(trip.youtubeUrl);
+    const tripYoutubeIsShort = isYouTubeShortUrl(trip.youtubeUrl);
+    const tripGalleryImages =
+        trip.galleryImages.length > 0 ? trip.galleryImages : trip.heroImage ? [trip.heroImage] : [];
+
     const selectedOptions = trip.options.filter((o) => selectedOptionIds.has(o.id));
     const optionsTotal = selectedOptions.reduce((sum, o) => sum + o.price * (personCounts[o.id] || 1), 0);
     const addOnsTotal = trip.addOns
@@ -132,7 +177,6 @@ export default function TripDetailPage() {
     const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
     const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
 
-    // Check if current selections differ from cart
     let hasChanges = false;
     if (isInCart && cartTrip) {
         const cartOpts = cartTrip.selectedOptions || [];
@@ -163,16 +207,6 @@ export default function TripDetailPage() {
             }
         }
     }
-
-    // (Removed wasUpdated effect)
-
-    // Reset justAdded flag after a short delay
-    useEffect(() => {
-        if (justAdded) {
-            const timeout = setTimeout(() => setJustAdded(false), 100);
-            return () => clearTimeout(timeout);
-        }
-    }, [justAdded]);
 
     const toggleAddOn = (id: string) => {
         setSelectedAddOnIds((prev) => {
@@ -233,8 +267,8 @@ export default function TripDetailPage() {
             <TripDetailHero
                 heroImage={trip.heroImage}
                 title={tripTitle}
-                kicker={isAr ? trip.titleEn : trip.titleAr}
-                tagline={isAr ? trip.taglineAr : tripLocale?.tagline ?? trip.taglineAr}
+                kicker={isAr ? (trip.titleEn || "") : (trip.titleAr || "")}
+                tagline={isAr ? trip.taglineAr : (trip.taglineEn || trip.taglineAr)}
                 duration={tripDuration}
                 startingPrice={trip.startingPrice}
                 onBookNow={scrollToOptions}
@@ -242,7 +276,6 @@ export default function TripDetailPage() {
             />
 
             <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-12">
-                {/* Overview + Schedule (full width) */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 py-10 md:py-14 border-b border-[#e2e8f0]">
                     <TripOverview description={tripDescription} title={isAr ? "تفاصيل الرحلة" : "Trip details"} />
                     <TripSchedule
@@ -258,17 +291,16 @@ export default function TripDetailPage() {
                     />
                 </div>
 
-                {/* Includes */}
-                <div className="py-10 md:py-14 border-b border-[#e2e8f0]">
-                    <TripIncludes items={tripIncludes} title={isAr ? "ماذا تشمل الرحلة؟" : "What's included?"} />
-                </div>
+                {tripIncludes.length > 0 && (
+                    <div className="py-10 md:py-14 border-b border-[#e2e8f0]">
+                        <TripIncludes items={tripIncludes} title={isAr ? "ماذا تشمل الرحلة؟" : "What's included?"} />
+                    </div>
+                )}
 
-                {/* ── Combined Booking Section ── */}
                 {(trip.options.length > 0 || trip.addOns.length > 0) && (
                     <div id="booking" ref={optionsRef} className="py-10 md:py-14" dir={isAr ? "rtl" : "ltr"}>
                         <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
 
-                            {/* Header */}
                             <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
                                 <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
                                     <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -281,14 +313,12 @@ export default function TripDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Options + AddOns Grid */}
                             <div className={`px-6 md:px-8 py-7 border-b border-[#e2e8f0] ${
                                 trip.options.length > 0 && trip.addOns.length > 0
                                     ? "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10"
                                     : ""
                             }`}>
 
-                                {/* Options */}
                                 {trip.options.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
@@ -323,8 +353,10 @@ export default function TripDetailPage() {
                                                                     )}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? option.nameAr : option.nameEn}</p>
-                                                                    {(isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn) && <p className="text-xs text-[#64748b] mt-0.5">{isAr ? option.descriptionAr : tripLocale?.options?.[option.id]?.description ?? option.descriptionEn}</p>}
+                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? option.nameAr : (option.nameEn || option.nameAr)}</p>
+                                                                    {(isAr ? option.descriptionAr : (option.descriptionEn || option.descriptionAr)) && (
+                                                                        <p className="text-xs text-[#64748b] mt-0.5">{isAr ? option.descriptionAr : (option.descriptionEn || option.descriptionAr)}</p>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${
@@ -356,7 +388,6 @@ export default function TripDetailPage() {
                                     </div>
                                 )}
 
-                                {/* AddOns */}
                                 {trip.addOns.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
@@ -391,8 +422,10 @@ export default function TripDetailPage() {
                                                                     )}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? addOn.nameAr : addOn.nameEn}</p>
-                                                                    {(isAr ? addOn.descriptionAr : tripLocale?.addOns?.[addOn.id]?.description ?? addOn.descriptionEn) && <p className="text-xs text-[#64748b] mt-0.5">{isAr ? addOn.descriptionAr : tripLocale?.addOns?.[addOn.id]?.description ?? addOn.descriptionEn}</p>}
+                                                                    <p className="font-bold text-[#0f172a] text-sm leading-tight">{isAr ? addOn.nameAr : (addOn.nameEn || addOn.nameAr)}</p>
+                                                                    {(isAr ? addOn.descriptionAr : (addOn.descriptionEn || addOn.descriptionAr)) && (
+                                                                        <p className="text-xs text-[#64748b] mt-0.5">{isAr ? addOn.descriptionAr : (addOn.descriptionEn || addOn.descriptionAr)}</p>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
@@ -423,14 +456,13 @@ export default function TripDetailPage() {
                                 )}
                             </div>
 
-                            {/* Price Summary + CTA */}
                             <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4">
                                 <div className="w-full flex flex-col items-center sm:items-start text-center sm:text-start">
                                     {(selectedOptions.length > 0 || selectedAddOns.length > 0) && (
                                         <p className="text-xs text-[#64748b] mb-1 sm:mb-1 leading-relaxed">
-                                            {(isAr ? selectedOptions.map((o) => o.nameAr) : selectedOptions.map((o) => o.nameEn)).join(" + ")}
+                                            {(isAr ? selectedOptions.map((o) => o.nameAr) : selectedOptions.map((o) => o.nameEn || o.nameAr)).join(" + ")}
                                             {selectedAddOns.length > 0 && (
-                                                <> + {(isAr ? selectedAddOns.map((a) => a.nameAr).join("، ") : selectedAddOns.map((a) => a.nameEn).join(", "))}</>
+                                                <> + {(isAr ? selectedAddOns.map((a) => a.nameAr).join("، ") : selectedAddOns.map((a) => a.nameEn || a.nameAr).join(", "))}</>
                                             )}
                                         </p>
                                     )}
@@ -491,12 +523,12 @@ export default function TripDetailPage() {
                     </div>
                 )}
 
-                {/* Gallery */}
-                {(trip.galleryImages.length > 0 || trip.youtubeUrl) && (
+                {(tripGalleryImages.length > 0 || tripYoutubeUrl) && (
                     <TripGallery
-                        images={trip.galleryImages}
+                        images={tripGalleryImages}
                         tripTitle={tripTitle}
-                        youtubeUrl={trip.youtubeUrl}
+                        youtubeUrl={tripYoutubeUrl}
+                        youtubeIsShort={tripYoutubeIsShort}
                         title={isAr ? "لحظات من الرحلة" : "Moments from the trip"}
                         videoTitle={isAr ? "فيديو الرحلة" : "Trip video"}
                         imageLabel={isAr ? "صورة" : "Image"}
