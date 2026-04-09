@@ -658,7 +658,7 @@ export default function AboutPage() {
             <section className="py-16 md:py-24 px-6 md:px-12">
                 <div className="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     {/* text */}
-                    <div className="space-y-6 order-2 lg:order-1">
+                    <div className="space-y-6 order-2 lg:order-1 ">
                         <ScrollReveal>
                             <span className="text-xs font-semibold tracking-widest uppercase text-[#0EA5E9] mb-1 block">
                                 تعرّف علينا
@@ -670,34 +670,44 @@ export default function AboutPage() {
 
                         <ScrollReveal delay={100}>
                             <p className="text-[#444] text-base md:text-lg leading-[1.9]">
-                                عدي توريزم (Oday Tourism) هي شركة سياحية متخصصة في تقديم الخدمات السياحية المتكاملة في مصر، وبشكل خاص في مدينة شرم الشيخ، إحدى أبرز الوجهات السياحية في منطقة البحر الأحمر.
+                                عدي توريزم (Oday Tourism) شركة سياحية متخصصة في تقديم خدمات سياحية متكاملة داخل مصر، وبشكل خاص في شرم الشيخ، إحدى أبرز وجهات البحر الأحمر.
                             </p>
                         </ScrollReveal>
 
                         <ScrollReveal delay={200}>
                             <p className="text-[#444] text-base md:text-lg leading-[1.9]">
-                                نحن نؤمن أن السفر ليس مجرد حجز فندق أو رحلة سياحية، بل تجربة متكاملة تبدأ منذ لحظة التخطيط وحتى نهاية الرحلة. لذلك نحرص على تقديم خدمات سياحية احترافية تجمع بين الجودة، التنظيم، والأسعار المناسبة.
+                                نقدم خدمات حجز الفنادق، وتنظيم الرحلات الداخلية مثل اليخوت والسفاري والأنشطة البحرية، بالإضافة إلى إعداد برامج سياحية تناسب مختلف الاحتياجات، مع الحرص على الجودة، التنظيم، والأسعار المناسبة.
                             </p>
                         </ScrollReveal>
 
                         <ScrollReveal delay={300}>
-                            <p className="text-[#555] text-base md:text-lg leading-[1.9] font-medium border-r-4 border-[#0EA5E9] pr-5 py-1">
-                                هدفنا هو أن يحصل كل مسافر على تجربة سياحية مريحة وآمنة مليئة بالذكريات الجميلة.
+                            <p className="text-[#444] text-base md:text-lg leading-[1.9]">
+                                نهدف إلى تقديم تجربة سفر مريحة وآمنة ومميزة، تبدأ من التخطيط وحتى نهاية الرحلة، مع اهتمام كامل بالتفاصيل ورضا العملاء.
+                            </p>
+                        </ScrollReveal>
+
+                        <ScrollReveal delay={400}>
+                            <p className="text-[#555] text-base md:text-lg leading-[1.9] font-medium border-r-4 border-[#0EA5E9] pr-5 py-2">
+                                عدي توريزم شركة مرخصة رسميًا داخل جمهورية مصر العربية، وتعمل وفق الأنظمة والقوانين المنظمة للعمل السياحي، بما يضمن المصداقية والموثوقية.
+                                <span className="block mt-3 text-sm flex flex-col gap-1">
+                                    <span>📄 السجل التجاري: 260221</span>
+                                    <span>🧾 الرقم الضريبي: 771-779-046</span>
+                                </span>
                             </p>
                         </ScrollReveal>
                     </div>
 
                     {/* image */}
-                    <ScrollReveal delay={150} className="order-1 lg:order-2">
-                        <div className="relative">
+                    <ScrollReveal delay={150} className="order-1 lg:order-2 lg:mr-8">
+                        <div className="relative scale-105 lg:scale-110 mt-4 lg:mt-0">
                             <Image
-                                src="/optimized/about-team.avif"
+                                src="/image.png"
                                 alt="فريق عدي توريزم"
                                 width={1200}
                                 height={900}
                                 sizes="(max-width: 1024px) 100vw, 50vw"
                                 quality={58}
-                                className="w-full rounded-3xl shadow-xl object-cover aspect-[4/3]"
+                                className="w-full rounded-3xl shadow-xl object-cover object-bottom min-h-[400px] sm:min-h-[470px] aspect-[5/4]"
                             />
                             {/* decorative accents */}
                             <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl bg-[#0EA5E9]/10 -z-10" />

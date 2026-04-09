@@ -38,7 +38,7 @@ export default function Packages({
           </div>
 
           <div className="grid lg:grid-cols-[1fr_2fr] gap-4 items-stretch">
-            <div className="relative hidden sm:block rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 border border-[#F3F4F6] shadow-sm">
+            <div className="relative hidden lg:block rounded-[20px] overflow-hidden min-h-[380px] lg:min-h-0 border border-[#F3F4F6] shadow-sm">
               <Image
                 src={featuredImage}
                 alt={packages.featured.title}
