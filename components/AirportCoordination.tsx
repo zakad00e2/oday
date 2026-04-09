@@ -913,9 +913,9 @@ export default function AirportCoordination() {
                                             <label htmlFor="agreement" className="text-xs text-[#0F172A] leading-tight font-medium">
                                                 {t("قرأت وأوافق على", "I have read and agree to")}
                                                 &nbsp;
-                                                <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
+                                                <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
                                                 &nbsp;{isAr ? "و" : "and"}&nbsp;
-                                                <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank">{t("سياسة الاسترداد", "Refund Policy")}</Link>
+                                                <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("سياسة الاسترداد", "Refund Policy")}</Link>
                                             </label>
                                         </div>
                                         {errors.agreement && <p className="text-xs text-red-500 mt-1.5 font-bold">{errors.agreement}</p>}

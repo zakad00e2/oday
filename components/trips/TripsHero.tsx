@@ -18,7 +18,8 @@ export default function TripsHero() {
                     fill
                     priority
                     sizes="100vw"
-                    quality={45}
+                    quality={100}
+                    unoptimized
                     className="object-cover"
                 />
 

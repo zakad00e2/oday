@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   description:
     "حجوزات فنادق • إدارة الجولات • تجارب سفر مصممة خصيصًا لك — Oday Tourism",
   keywords: "سياحة, سفر, حجوزات, فنادق, جولات, Oday Tourism",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -4,6 +4,7 @@ const AUTH_API_BASE =
 
 const TOKEN_KEY = "oday-admin-token";
 const ADMIN_DATA_KEY = "oday-admin-data";
+const ADMIN_UNAUTHORIZED_EVENT = "oday-admin-unauthorized";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -98,4 +99,31 @@ export function getStoredAdminData(): AdminData | null {
 export function clearAdminData(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ADMIN_DATA_KEY);
+}
+
+export function createAuthorizedHeaders(
+  headersInit?: HeadersInit,
+): Headers {
+  const headers = new Headers(headersInit ?? {});
+  const token = getStoredToken();
+
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return headers;
+}
+
+export function broadcastUnauthorizedSession(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(ADMIN_UNAUTHORIZED_EVENT));
+}
+
+export function subscribeToUnauthorizedSession(
+  handler: EventListener,
+): () => void {
+  if (typeof window === "undefined") return () => undefined;
+
+  window.addEventListener(ADMIN_UNAUTHORIZED_EVENT, handler);
+  return () => window.removeEventListener(ADMIN_UNAUTHORIZED_EVENT, handler);
 }

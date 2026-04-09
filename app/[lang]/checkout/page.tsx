@@ -4,44 +4,58 @@ import { useState } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import { useCart } from "@/lib/cart-context";
+import {
+    calculateGuestTotal,
+    calculateHotelLineCost,
+    calculateTripLineCost,
+    calculateTripQuantity,
+} from "@/lib/cart-pricing";
+import { openExternalUrl } from "@/lib/external-links";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 export default function CheckoutPage() {
     const { cart, totalPrice, totalItems, clearCart } = useCart();
     const { lang } = useI18n();
     const isAr = lang === "ar";
+
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [hotelName, setHotelName] = useState("");
     const [notes, setNotes] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
-    const guestsTotal = cart.guests.adults + cart.guests.children;
-    const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-    const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-    const hotelCost = hotelBaseCost + hotelAddOnsCost;
-    const getHotelName = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.nameAr ?? hotel.name) : (hotel.nameEn ?? hotel.name);
-    const getHotelRoomName = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.roomNameAr ?? hotel.roomName) : (hotel.roomNameEn ?? hotel.roomName);
-    const getHotelAddOnName = (addOn: NonNullable<NonNullable<typeof cart.hotel>["selectedAddOns"]>[number]) => isAr ? (addOn.nameAr ?? addOn.name) : (addOn.nameEn ?? addOn.name);
-    const getTripTitle = (trip: typeof cart.trips[number]) => isAr ? trip.titleAr : (trip.titleEn ?? trip.titleAr);
-    const getTripOptionName = (option: NonNullable<typeof cart.trips[number]["selectedOptions"]>[number]) => isAr ? option.nameAr : (option.nameEn ?? option.nameAr);
-    const getTripAddOnName = (addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number]) => isAr ? addOn.nameAr : (addOn.nameEn ?? addOn.nameAr);
+    const guestsTotal = calculateGuestTotal(cart.guests);
+    const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
+
+    const getHotelName = (hotel: NonNullable<typeof cart.hotel>) =>
+        isAr ? (hotel.nameAr ?? hotel.name) : (hotel.nameEn ?? hotel.name);
+    const getHotelCity = (hotel: NonNullable<typeof cart.hotel>) =>
+        isAr ? (hotel.cityAr ?? hotel.city) : (hotel.cityEn ?? hotel.city);
+    const getHotelRoomName = (hotel: NonNullable<typeof cart.hotel>) =>
+        isAr ? (hotel.roomNameAr ?? hotel.roomName) : (hotel.roomNameEn ?? hotel.roomName);
+    const getHotelAddOnName = (addOn: NonNullable<NonNullable<typeof cart.hotel>["selectedAddOns"]>[number]) =>
+        isAr ? (addOn.nameAr ?? addOn.name) : (addOn.nameEn ?? addOn.name);
+    const getTripTitle = (trip: typeof cart.trips[number]) =>
+        isAr ? trip.titleAr : (trip.titleEn ?? trip.titleAr);
+    const getTripOptionName = (option: NonNullable<typeof cart.trips[number]["selectedOptions"]>[number]) =>
+        isAr ? option.nameAr : (option.nameEn ?? option.nameAr);
+    const getTripAddOnName = (addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number]) =>
+        isAr ? addOn.nameAr : (addOn.nameEn ?? addOn.nameAr);
+
     const t = {
         errors: {
             name: isAr ? "الاسم مطلوب" : "Name is required",
-            phone: isAr ? "Phone number is required" : "Phone number is required",
+            phone: isAr ? "رقم الهاتف مطلوب" : "Phone number is required",
         },
         whatsapp: {
             header: isAr ? "طلب حجز جديد — Oday Tourism" : "New booking request — Oday Tourism",
             name: isAr ? "الاسم" : "Name",
-            phone: isAr ? "الهاتف/واتساب" : "Phone / WhatsApp",
-            email: isAr ? "البريد" : "Email",
-            guests: isAr ? "الضيوف" : "Guests",
-            adults: isAr ? "بالغ" : "adults",
-            children: isAr ? "أطفال" : "children",
+            phone: isAr ? "الهاتف / واتساب" : "Phone / WhatsApp",
+            email: isAr ? "البريد الإلكتروني" : "Email",
             travelDate: isAr ? "تاريخ السفر" : "Travel date",
             hotel: isAr ? "الفندق" : "Hotel",
             room: isAr ? "الغرفة" : "Room",
@@ -50,14 +64,17 @@ export default function CheckoutPage() {
             cost: isAr ? "التكلفة" : "Cost",
             requestedHotel: isAr ? "الفندق المطلوب" : "Requested hotel",
             trips: isAr ? "الرحلات" : "Trips",
-            perPerson: isAr ? "/شخص" : "/person",
             estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
             notes: isAr ? "ملاحظات" : "Notes",
-            agreementConfirmed: isAr ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد" : "Agreed to Terms & Conditions and Refund Policy",
+            agreementConfirmed: isAr
+                ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد"
+                : "Agreed to Terms & Conditions and Refund Policy",
         },
         submitted: {
             title: isAr ? "تم إرسال طلبك بنجاح!" : "Your request was sent successfully!",
-            desc: isAr ? "سيتم التواصل معك عبر الواتساب لتأكيد التفاصيل." : "We'll contact you on WhatsApp to confirm the details.",
+            desc: isAr
+                ? "سيتم التواصل معك عبر الواتساب لتأكيد التفاصيل."
+                : "We'll contact you on WhatsApp to confirm the details.",
             cta: isAr ? "تصفح المزيد من الرحلات" : "Browse more trips",
         },
         empty: {
@@ -74,7 +91,9 @@ export default function CheckoutPage() {
             phone: isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *",
             email: isAr ? "البريد الإلكتروني" : "Email address",
             hotelName: isAr ? "اسم الفندق (إن وجد)" : "Hotel name (if any)",
-            hotelNamePlaceholder: isAr ? "الفندق الذي تقيم به في شرم الشيخ" : "The hotel you're staying at in Sharm El Sheikh",
+            hotelNamePlaceholder: isAr
+                ? "الفندق الذي تقيم به في شرم الشيخ"
+                : "The hotel you're staying at in Sharm El Sheikh",
             notes: isAr ? "ملاحظات إضافية" : "Additional notes",
             notesPlaceholder: isAr ? "أي ملاحظات أو طلبات خاصة..." : "Any notes or special requests...",
             submit: isAr ? "أرسل طلب الحجز عبر واتساب" : "Send booking request via WhatsApp",
@@ -83,7 +102,9 @@ export default function CheckoutPage() {
             agreementLabel: isAr ? "قرأت وأوافق على" : "I have read and agree to",
             termsLabel: isAr ? "الشروط والأحكام" : "Terms & Conditions",
             refundLabel: isAr ? "سياسة الاسترداد" : "Refund Policy",
-            agreementError: isAr ? "يجب الموافقة على الشروط والأحكام للاستمرار" : "You must agree to the terms to continue",
+            agreementError: isAr
+                ? "يجب الموافقة على الشروط والأحكام للمتابعة"
+                : "You must agree to the terms to continue",
         },
         summary: {
             title: isAr ? "ملخص الطلب" : "Order summary",
@@ -93,43 +114,48 @@ export default function CheckoutPage() {
             nights: isAr ? "ليالي" : "nights",
             rooms: isAr ? "غرف" : "rooms",
             trip: isAr ? "رحلة" : "Trip",
-            guests: isAr ? "الضيوف" : "Guests",
-            adults: isAr ? "بالغ" : "adults",
-            children: isAr ? "أطفال" : "children",
             travelDate: isAr ? "تاريخ السفر" : "Travel date",
             estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
             onRequest: isAr ? "عند الطلب" : "On request",
             clear: isAr ? "مسح السلة بالكامل" : "Clear cart",
+            free: isAr ? "مجاني" : "Free",
         },
     };
 
     const validate = () => {
-        const errs: Record<string, string> = {};
-        if (!name.trim()) errs.name = t.errors.name;
-        if (!phone.trim()) errs.phone = t.errors.phone;
-        if (!agreedToPolicies) errs.agreement = t.legal.agreementError;
-        return errs;
+        const nextErrors: Record<string, string> = {};
+        if (!name.trim()) nextErrors.name = t.errors.name;
+        if (!phone.trim()) nextErrors.phone = t.errors.phone;
+        if (!agreedToPolicies) nextErrors.agreement = t.legal.agreementError;
+        return nextErrors;
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const errs = validate();
-        setErrors(errs);
-        if (Object.keys(errs).length > 0) return;
+        setSubmitError("");
+
+        const nextErrors = validate();
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) return;
 
         let msg = `*${t.whatsapp.header}*\n\n`;
         msg += `${t.whatsapp.name}: ${name}\n`;
         msg += `${t.whatsapp.phone}: ${phone}\n`;
         if (email.trim()) msg += `${t.whatsapp.email}: ${email}\n`;
-        msg += `${t.whatsapp.guests}: ${cart.guests.adults} ${t.whatsapp.adults}${cart.guests.children > 0 ? `${isAr ? "،" : ","} ${cart.guests.children} ${t.whatsapp.children}` : ""}\n`;
         if (cart.travelDate) msg += `${t.whatsapp.travelDate}: ${cart.travelDate}\n`;
         msg += "\n";
 
         if (cart.hotel) {
-            msg += `*${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} — ${isAr ? (cart.hotel.cityAr ?? cart.hotel.city) : (cart.hotel.cityEn ?? cart.hotel.city)}\n`;
-            if (getHotelRoomName(cart.hotel)) msg += `${t.whatsapp.room}: ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
-            if (cart.hotel.selectedAddOns?.length) msg += `${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
-            msg += `   ${t.whatsapp.nights}: ${cart.nights} | ${t.whatsapp.cost}: $${hotelCost}\n\n`;
+            msg += `*${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
+            if (getHotelRoomName(cart.hotel)) {
+                msg += `${t.whatsapp.room}: ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
+            }
+            if (cart.hotel.selectedAddOns?.length) {
+                msg += `${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns
+                    .map((addOn) => `${getHotelAddOnName(addOn)}${addOn.price > 0 ? ` (+$${addOn.price * cart.nights * (cart.hotel?.roomsCount || 1)})` : ""}`)
+                    .join(isAr ? "، " : ", ")}\n`;
+            }
+            msg += `${t.whatsapp.nights}: ${cart.nights} | ${t.whatsapp.cost}: $${hotelCost}\n\n`;
         }
 
         if (hotelName.trim() && !cart.hotel) {
@@ -139,32 +165,51 @@ export default function CheckoutPage() {
         if (cart.trips.length > 0) {
             msg += `*${t.whatsapp.trips}:*\n`;
             cart.trips.forEach((trip) => {
-                msg += `  • ${getTripTitle(trip)}`;
-                if (trip.selectedOptions && trip.selectedOptions.length > 0) {
-                    trip.selectedOptions.forEach((opt) => {
-                        msg += ` — ${getTripOptionName(opt)}`;
-                        if (opt.price > 0) msg += ` ($${opt.price}${t.whatsapp.perPerson})`;
-                    });
-                }
-                msg += "\n";
-                if (trip.selectedAddOns && trip.selectedAddOns.length > 0) {
-                    trip.selectedAddOns.forEach((a) => {
-                        msg += `    + ${getTripAddOnName(a)}`;
-                        if (a.price > 0) msg += ` ($${a.price})`;
+                const tripQuantity = calculateTripQuantity(trip, guestsTotal);
+                msg += `  • ${getTripTitle(trip)} ×${tripQuantity}\n`;
+
+                if (trip.selectedOptions?.length) {
+                    trip.selectedOptions.forEach((option) => {
+                        const optionPersons = option.persons ?? 1;
+                        const optionTotal = option.price * optionPersons;
+                        msg += `    - ${getTripOptionName(option)}`;
+                        if (optionPersons > 1) msg += ` ×${optionPersons}`;
+                        if (option.price > 0) msg += ` ($${optionTotal})`;
                         msg += "\n";
                     });
                 }
+
+                if (trip.selectedAddOns?.length) {
+                    trip.selectedAddOns.forEach((addOn) => {
+                        const addOnPersons = addOn.persons ?? tripQuantity;
+                        const addOnTotal = addOn.price * addOnPersons;
+                        msg += `    + ${getTripAddOnName(addOn)}`;
+                        if (addOnPersons > 1) msg += ` ×${addOnPersons}`;
+                        if (addOn.price > 0) msg += ` (+$${addOnTotal})`;
+                        msg += "\n";
+                    });
+                }
+
+                const tripCost = calculateTripLineCost(trip, guestsTotal);
+                if (tripCost > 0) msg += `    ${t.whatsapp.cost}: $${tripCost}\n`;
             });
             msg += "\n";
         }
 
         if (totalPrice > 0) msg += `*${t.whatsapp.estimatedTotal}: $${totalPrice}*\n`;
         if (notes.trim()) msg += `\n${t.whatsapp.notes}: ${notes}\n`;
-        
         msg += `\n${t.whatsapp.agreementConfirmed}\n`;
 
         const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
-        window.open(whatsappUrl, "_blank");
+        if (!openExternalUrl(whatsappUrl)) {
+            setSubmitError(
+                isAr
+                    ? "تعذر فتح واتساب. يرجى السماح بالنوافذ المنبثقة ثم المحاولة مرة أخرى."
+                    : "Couldn't open WhatsApp. Please allow pop-ups and try again.",
+            );
+            return;
+        }
+
         setSubmitted(true);
     };
 
@@ -227,7 +272,6 @@ export default function CheckoutPage() {
                 <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-8">{t.form.title}</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm p-6 md:p-8">
                         <h2 className="text-lg font-bold text-[#0f172a] mb-6">{t.form.section}</h2>
 
@@ -290,7 +334,7 @@ export default function CheckoutPage() {
                                     className={`${inputClass("notes")} resize-none`}
                                 />
                             </div>
-                            {/* Agreement Checkbox */}
+
                             <div className="md:col-span-2 flex items-center mt-2 gap-2">
                                 <input
                                     id="agreement"
@@ -300,13 +344,17 @@ export default function CheckoutPage() {
                                     className="w-5 h-5 text-[#0EA5E9] border-gray-300 rounded focus:ring-[#0EA5E9]"
                                 />
                                 <label htmlFor="agreement" className="ml-3 text-sm font-semibold text-[#0f172a]">
-                                    {t.legal.agreementLabel}
-                                    &nbsp;
-                                    <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank">{t.legal.termsLabel}</Link>
-                                    &nbsp;{isAr ? "و" : "and"}&nbsp;
-                                    <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank">{t.legal.refundLabel}</Link>
+                                    {t.legal.agreementLabel}{" "}
+                                    <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank" rel="noopener noreferrer">
+                                        {t.legal.termsLabel}
+                                    </Link>{" "}
+                                    {isAr ? "و" : "and"}{" "}
+                                    <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284c7] font-bold" target="_blank" rel="noopener noreferrer">
+                                        {t.legal.refundLabel}
+                                    </Link>
                                 </label>
                             </div>
+
                             {errors.agreement && <p className="md:col-span-2 text-sm font-semibold text-red-500 mt-1">{errors.agreement}</p>}
                         </div>
 
@@ -321,9 +369,10 @@ export default function CheckoutPage() {
                                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.527 5.862L.06 23.854l6.143-1.438C7.869 23.456 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.93 0-3.76-.514-5.352-1.442l-.384-.228-3.644.854.893-3.546-.252-.399A9.773 9.773 0 012.18 12c0-5.423 4.397-9.82 9.82-9.82 5.423 0 9.82 4.397 9.82 9.82 0 5.423-4.397 9.82-9.82 9.82z" />
                             </svg>
                         </button>
+
+                        {submitError && <p className="mt-3 text-sm font-medium text-red-500">{submitError}</p>}
                     </form>
 
-                    {/* Order Summary */}
                     <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden lg:sticky lg:top-28">
                         <div className="px-6 pt-6 pb-4 border-b border-[#e2e8f0]">
                             <h2 className="text-lg font-bold text-[#0f172a]">{t.summary.title}</h2>
@@ -333,71 +382,145 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="px-6 py-5 space-y-4">
-                            {/* Hotel */}
                             {cart.hotel && (
-                                <div className="flex gap-3 pb-4 border-b border-[#f1f5f9]">
-                                    <FlexibleImage src={cart.hotel.image} alt={getHotelName(cart.hotel)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.hotelStay}</p>
-                                        <p className="text-sm font-semibold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
-                                        <p className="text-xs text-[#64748b]">
-                                            {cart.nights} {t.summary.nights}
-                                            {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} ${t.summary.rooms}` : ''}
-                                        </p>
-                                        {getHotelRoomName(cart.hotel) && <p className="text-[11px] text-[#94a3b8] mt-0.5">{getHotelRoomName(cart.hotel)}</p>}
-                                        {cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0 && (
-                                            <p className="text-[11px] text-[#94a3b8] mt-0.5">
-                                                + {cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}
+                                <div className="rounded-2xl border border-[#e2e8f0] bg-white overflow-hidden">
+                                    <div className="flex gap-3 p-3.5">
+                                        <FlexibleImage src={cart.hotel.image} alt={getHotelName(cart.hotel)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.hotelStay}</p>
+                                            <p className="text-sm font-semibold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
+                                            <p className="text-xs text-[#64748b] mt-0.5">{getHotelCity(cart.hotel)}</p>
+                                            <p className="text-xs text-[#64748b]">
+                                                {cart.nights} {t.summary.nights}
+                                                {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} ${t.summary.rooms}` : ""}
                                             </p>
-                                        )}
+                                        </div>
                                     </div>
-                                    <span className="text-sm font-semibold text-[#0f172a] shrink-0">${hotelCost}</span>
+
+                                    {getHotelRoomName(cart.hotel) && (
+                                        <div className="mx-3.5 mb-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/80 px-3 py-2">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-start gap-2 min-w-0 flex-1">
+                                                    <span className="text-xs font-semibold text-[#334155] leading-relaxed break-words">
+                                                        {getHotelRoomName(cart.hotel)}
+                                                    </span>
+                                                    {cart.hotel.roomsCount && cart.hotel.roomsCount > 1 && (
+                                                        <span className="text-[10px] text-[#94a3b8] shrink-0">x{cart.hotel.roomsCount}</span>
+                                                    )}
+                                                </div>
+                                                <div className="shrink-0 text-right">
+                                                    <span className="block text-xs font-bold text-[#0f172a]">${cart.hotel.pricePerNight}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {cart.hotel.selectedAddOns?.length ? (
+                                        <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
+                                            {cart.hotel.selectedAddOns.map((addOn, index) => {
+                                                const hotelRoomsCount = cart.hotel?.roomsCount || 1;
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <span className="text-[10px] shrink-0">✦</span>
+                                                            <span className="text-xs font-semibold text-[#92400E] truncate">
+                                                                {getHotelAddOnName(addOn)} x{hotelRoomsCount}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-[#92400E] shrink-0">
+                                                            {addOn.price > 0 ? `+$${addOn.price}` : t.summary.free}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : null}
+
+                                    <div className="border-t border-[#F1F5F9] px-4 py-3 flex items-center justify-between">
+                                        <span className="text-xs text-[#64748b]">{t.summary.estimatedTotal}</span>
+                                        <span className="text-sm font-semibold text-[#0f172a]">${hotelCost}</span>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Trips */}
                             {cart.trips.map((trip) => {
-                                const tripCost = trip.selectedOptions && trip.selectedOptions.length > 0
-                                    ? (trip.selectedOptions[0].price + (trip.selectedAddOns || []).reduce((s, a) => s + a.price, 0)) * guestsTotal
-                                    : trip.startingPrice > 0 ? trip.startingPrice * guestsTotal : 0;
+                                const tripCost = calculateTripLineCost(trip, guestsTotal);
+                                const tripQuantity = calculateTripQuantity(trip, guestsTotal);
+
                                 return (
-                                    <div key={trip.slug} className="flex gap-3 pb-4 border-b border-[#f1f5f9] last:border-0 last:pb-0">
-                                        <FlexibleImage src={trip.heroImage} alt={getTripTitle(trip)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.trip}</p>
-                                            <p className="text-sm font-semibold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
-                                            {trip.selectedOptions && trip.selectedOptions.length > 0 && (
-                                                <p className="text-xs text-[#64748b]">{trip.selectedOptions.map((o) => getTripOptionName(o)).join(isAr ? "، " : ", ")}</p>
-                                            )}
-                                            {trip.selectedAddOns && trip.selectedAddOns.length > 0 && (
-                                                <p className="text-xs text-[#94a3b8]">
-                                                    + {trip.selectedAddOns.map((a) => getTripAddOnName(a)).join(isAr ? "، " : ", ")}
-                                                </p>
-                                            )}
+                                    <div key={trip.slug} className="rounded-2xl border border-[#e2e8f0] bg-white overflow-hidden">
+                                        <div className="flex gap-3 p-3.5">
+                                            <FlexibleImage src={trip.heroImage} alt={getTripTitle(trip)} width={56} height={56} sizes="56px" className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.trip}</p>
+                                                <p className="text-sm font-semibold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
+                                            </div>
                                         </div>
-                                        <span className="text-sm font-semibold text-[#0f172a] shrink-0">
-                                            {tripCost > 0 ? `$${tripCost}` : "—"}
-                                        </span>
+
+                                        {trip.selectedOptions?.length ? (
+                                            <div className="mx-3.5 mb-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/80 divide-y divide-[#E2E8F0]/60">
+                                                {trip.selectedOptions.map((option, index) => {
+                                                    const optionPersons = option.persons ?? 1;
+                                                    const optionTotal = option.price * optionPersons;
+                                                    return (
+                                                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
+                                                                <span className="text-xs font-semibold text-[#334155] truncate">{getTripOptionName(option)}</span>
+                                                                {optionPersons > 1 && (
+                                                                    <span className="text-[10px] text-[#94A3B8] shrink-0">×{optionPersons}</span>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-[#0F172A] shrink-0">
+                                                                {option.price > 0 ? `$${optionTotal}` : "—"}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : null}
+
+                                        {trip.selectedAddOns?.length ? (
+                                            <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
+                                                {trip.selectedAddOns.map((addOn, index) => {
+                                                    const addOnPersons = addOn.persons ?? tripQuantity;
+                                                    const addOnTotal = addOn.price * addOnPersons;
+                                                    return (
+                                                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <span className="text-[10px] shrink-0">✦</span>
+                                                                <span className="text-xs font-semibold text-[#92400E] truncate">{getTripAddOnName(addOn)}</span>
+                                                                {addOnPersons > 1 && (
+                                                                    <span className="text-[10px] text-[#B45309] shrink-0">×{addOnPersons}</span>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-[#92400E] shrink-0">
+                                                                {addOn.price > 0 ? `+$${addOnTotal}` : t.summary.free}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : null}
+
+                                        <div className="border-t border-[#F1F5F9] px-4 py-3 flex items-center justify-between">
+                                            <span className="text-xs text-[#64748b]">{t.summary.estimatedTotal}</span>
+                                            <span className="text-sm font-semibold text-[#0f172a]">
+                                                {tripCost > 0 ? `$${tripCost}` : "—"}
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })}
 
-                            {/* Guests */}
-                            <div className="flex items-center justify-between text-sm pt-2">
-                                <span className="text-[#64748b]">{t.summary.guests}</span>
-                                <span className="font-semibold text-[#0f172a]">
-                                    {cart.guests.adults} {t.summary.adults}{cart.guests.children > 0 ? `${isAr ? "،" : ","} ${cart.guests.children} ${t.summary.children}` : ""}
-                                </span>
-                            </div>
                             {cart.travelDate && (
-                                <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center justify-between text-sm pt-2">
                                     <span className="text-[#64748b]">{t.summary.travelDate}</span>
                                     <span className="font-semibold text-[#0f172a]">{cart.travelDate}</span>
                                 </div>
                             )}
                         </div>
 
-                        {/* Total */}
                         <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
                             <span className="font-semibold text-[#0f172a]">{t.summary.estimatedTotal}</span>
                             <span className="text-2xl font-semibold text-[#0EA5E9]">

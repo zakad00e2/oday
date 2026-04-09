@@ -69,12 +69,21 @@ async function parseResponse(response: Response) {
 }
 
 async function request<T>(path = "", init?: RequestInit): Promise<T> {
+  const headers = createAuthorizedHeaders(init?.headers);
   const response = await fetch(`${OFFER_API_BASE}${path}`, {
     ...init,
+    headers,
     cache: "no-store",
   });
 
   const payload = await parseResponse(response);
+
+  if (
+    (response.status === 401 || response.status === 403) &&
+    headers.has("Authorization")
+  ) {
+    broadcastUnauthorizedSession();
+  }
 
   if (!response.ok) {
     const message =
@@ -141,3 +150,7 @@ export async function createOffer(
 export async function deleteOffer(id: string): Promise<void> {
   await request<unknown>(`/${id}`, { method: "DELETE" });
 }
+import {
+  broadcastUnauthorizedSession,
+  createAuthorizedHeaders,
+} from "./auth-service";

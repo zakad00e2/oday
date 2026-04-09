@@ -28,6 +28,7 @@ export default function Hero({
           fill
           priority
           quality={100}
+          unoptimized
           sizes="100vw"
           className="object-cover object-right sm:object-center"
         />

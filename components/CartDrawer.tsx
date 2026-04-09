@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import { useCart } from "@/lib/cart-context";
+import { calculateTripQuantity } from "@/lib/cart-pricing";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 /* ── Counter sub-component ── */
@@ -71,7 +72,8 @@ export default function CartDrawer() {
     if (cart.trips.length > 0) {
       msg += `*${wa.tripsLabel}*\n`;
       cart.trips.forEach((t) => {
-        msg += `  • ${getTripTitle(t)}`;
+        const tripQuantity = calculateTripQuantity(t, guestsTotal);
+        msg += `  • ${getTripTitle(t)} ×${tripQuantity}`;
         if (t.selectedOptions && t.selectedOptions.length > 0) {
           const optTotal = t.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
           msg += ` — ${t.selectedOptions.map((o) => getTripOptionName(o)).join(isAr ? "، " : ", ")}`;
@@ -90,7 +92,6 @@ export default function CartDrawer() {
       });
       msg += "\n";
     }
-    msg += `${wa.guests} ${cart.guests.adults} ${wa.adults}، ${cart.guests.children} ${wa.children}\n`;
     if (cart.travelDate) msg += `${wa.travelDate} ${cart.travelDate}\n`;
     if (totalPrice > 0) msg += `\n*${wa.estimatedTotal} $${totalPrice}*`;
     return msg;
@@ -277,6 +278,7 @@ export default function CartDrawer() {
                   </div>
                   {cart.trips.map((trip) => {
                     const price = getTripPrice(trip);
+                    const tripQuantity = calculateTripQuantity(trip, guestsTotal);
                     return (
                       <div key={trip.slug} className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0]/60 overflow-hidden">
                         {/* Trip header */}
@@ -290,7 +292,12 @@ export default function CartDrawer() {
                             className="w-[60px] h-[60px] rounded-xl object-cover shrink-0"
                           />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">{getTripTitle(trip)}</h4>
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">{getTripTitle(trip)}</h4>
+                              <span className="shrink-0 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">
+                                ×{tripQuantity}
+                              </span>
+                            </div>
                           </div>
                         </div>
 

@@ -19,6 +19,7 @@ import {
   type LoginInput,
   type AdminData,
   AuthError,
+  subscribeToUnauthorizedSession,
 } from "./auth-service";
 
 type AuthState = "loading" | "authenticated" | "unauthenticated";
@@ -37,14 +38,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [adminData, setAdminData] = useState<AdminData | null>(null);
 
   useEffect(() => {
-    const token = getStoredToken();
-    if (token) {
-      setAdminData(getStoredAdminData());
-      setState("authenticated");
-    } else {
-      setState("unauthenticated");
-    }
+    queueMicrotask(() => {
+      const token = getStoredToken();
+      if (token) {
+        setAdminData(getStoredAdminData());
+        setState("authenticated");
+      } else {
+        setAdminData(null);
+        setState("unauthenticated");
+      }
+    });
   }, []);
+
+  useEffect(
+    () =>
+      subscribeToUnauthorizedSession(() => {
+        clearToken();
+        clearAdminData();
+        setAdminData(null);
+        setState("unauthenticated");
+      }),
+    [],
+  );
 
   const login = useCallback(async (input: LoginInput) => {
     const result = await apiLogin(input);

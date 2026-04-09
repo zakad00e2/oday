@@ -15,7 +15,8 @@ export default function CTAHeroBanner({
           alt={cta.title}
           fill
           sizes="100vw"
-          quality={45}
+          quality={100}
+          unoptimized
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/40" />

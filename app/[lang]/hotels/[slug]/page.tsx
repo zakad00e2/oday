@@ -898,11 +898,8 @@ export default function HotelDetailPage() {
                                     </span>
                                     {room ? (
                                         <span className="text-sm text-[#94a3b8]">
-                                            ({room.name}{roomsCount > 1 ? ` x ${roomsCount}` : ""})
+                                            {roomsCount > 1 ? `x${roomsCount} ` : ""}({room.name}{selectedAddon ? ` + ${selectedAddon.name}` : ""})
                                         </span>
-                                    ) : null}
-                                    {selectedAddon ? (
-                                        <span className="text-sm text-[#94a3b8]">+ {selectedAddon.name}</span>
                                     ) : null}
                                 </div>
                             </div>

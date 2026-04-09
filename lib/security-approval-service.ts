@@ -122,7 +122,7 @@ async function parseResponse(response: Response) {
 }
 
 async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers ?? {});
+  const headers = createAuthorizedHeaders(init?.headers);
   if (!headers.has("Content-Type") && init?.method !== "GET") {
     headers.set("Content-Type", "application/json");
   }
@@ -134,6 +134,13 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
   });
 
   const payload = await parseResponse(response);
+
+  if (
+    (response.status === 401 || response.status === 403) &&
+    headers.has("Authorization")
+  ) {
+    broadcastUnauthorizedSession();
+  }
 
   if (!response.ok) {
     const message =
@@ -249,3 +256,7 @@ export async function updateAirlinePricing(
 export async function deleteAirlinePricing(id: string): Promise<void> {
   await requestJson<unknown>(`/airline-pricing/${id}`, { method: "DELETE" });
 }
+import {
+  broadcastUnauthorizedSession,
+  createAuthorizedHeaders,
+} from "./auth-service";

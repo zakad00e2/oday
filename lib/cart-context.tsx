@@ -8,6 +8,11 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import {
+  calculateGuestTotal,
+  calculateHotelLineCost,
+  calculateTripLineCost,
+} from "./cart-pricing";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -169,24 +174,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const guestsTotal = cart.guests.adults + cart.guests.children;
-  const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-  const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-  const hotelCost = hotelBaseCost + hotelAddOnsCost;
-
-  const tripsCost = cart.trips.reduce((sum, t) => {
-    const persons = t.persons ?? guestsTotal;
-    const hasOptions = t.selectedOptions && t.selectedOptions.length > 0;
-    const hasAddOns = t.selectedAddOns && t.selectedAddOns.length > 0;
-
-    if (hasOptions || hasAddOns) {
-      const optPrice = (t.selectedOptions || []).reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
-      const addOnsPrice = (t.selectedAddOns || []).reduce((s, a) => s + a.price * (a.persons ?? persons), 0);
-      return sum + optPrice + addOnsPrice;
-    }
-
-    return sum + (t.startingPrice > 0 ? t.startingPrice * persons : 0);
-  }, 0);
+  const guestsTotal = calculateGuestTotal(cart.guests);
+  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
+  const tripsCost = cart.trips.reduce(
+    (sum, trip) => sum + calculateTripLineCost(trip, guestsTotal),
+    0,
+  );
   const totalPrice = hotelCost + tripsCost;
   const totalItems = (cart.hotel ? 1 : 0) + cart.trips.length;
 

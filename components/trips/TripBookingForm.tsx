@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TripDetail, TripOption, TripAddOn } from "@/lib/trips-types";
 import ScrollReveal from "../ScrollReveal";
 import { useCart } from "@/lib/cart-context";
+import { openExternalUrl } from "@/lib/external-links";
 
 interface TripBookingFormProps {
     trip: TripDetail;
@@ -38,19 +39,45 @@ export default function TripBookingForm({
     const [time, setTime] = useState("");
     const [notes, setNotes] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const { addTrip, removeTrip, cart, openCart } = useCart();
+    const { addTrip, cart, openCart } = useCart();
     const isInCart = cart.trips.some((t) => t.slug === trip.slug);
 
     const handleCartAction = () => {
         if (isInCart) {
             openCart();
         } else {
+            const currentSelectedOption =
+                selectedOption ??
+                trip.options.find((option) => option.id === selectedOptionId) ??
+                null;
+            const currentSelectedAddOns =
+                selectedAddOns.length > 0
+                    ? selectedAddOns
+                    : trip.addOns.filter((addOn) => selectedAddOnIds.has(addOn.id));
+
             addTrip({
                 slug: trip.slug,
                 titleAr: trip.titleAr,
+                titleEn: trip.titleEn,
                 heroImage: trip.heroImage,
                 startingPrice: trip.startingPrice,
+                selectedOptions: currentSelectedOption
+                    ? [{
+                        nameAr: currentSelectedOption.nameAr,
+                        nameEn: currentSelectedOption.nameEn,
+                        price: currentSelectedOption.price,
+                        persons: optionQuantity,
+                    }]
+                    : undefined,
+                selectedAddOns: currentSelectedAddOns.length > 0
+                    ? currentSelectedAddOns.map((addOn) => ({
+                        nameAr: addOn.nameAr,
+                        nameEn: addOn.nameEn,
+                        price: addOn.price,
+                    }))
+                    : undefined,
             });
             openCart();
         }
@@ -69,6 +96,7 @@ export default function TripBookingForm({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitError("");
         const errs = validate();
         setErrors(errs);
         if (Object.keys(errs).length > 0) return;
@@ -90,7 +118,10 @@ export default function TripBookingForm({
         if (notes) msg += `ملاحظات: ${notes}\n`;
 
         const whatsappUrl = `https://wa.me/201234567890?text=${encodeURIComponent(msg)}`;
-        window.open(whatsappUrl, "_blank");
+        if (!openExternalUrl(whatsappUrl)) {
+            setSubmitError("تعذر فتح واتساب. يرجى السماح بالنوافذ المنبثقة ثم المحاولة مرة أخرى.");
+            return;
+        }
         setSubmitted(true);
     };
 
@@ -337,6 +368,11 @@ export default function TripBookingForm({
                                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.527 5.862L.06 23.854l6.143-1.438C7.869 23.456 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.93 0-3.76-.514-5.352-1.442l-.384-.228-3.644.854.893-3.546-.252-.399A9.773 9.773 0 012.18 12c0-5.423 4.397-9.82 9.82-9.82 5.423 0 9.82 4.397 9.82 9.82 0 5.423-4.397 9.82-9.82 9.82z" />
                             </svg>
                         </button>
+                        {submitError && (
+                            <p className="text-center text-sm font-medium text-red-500">
+                                {submitError}
+                            </p>
+                        )}
                     </div>
                 </form>
             </ScrollReveal>

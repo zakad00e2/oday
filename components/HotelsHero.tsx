@@ -18,6 +18,8 @@ export default function HotelsHero() {
                     fill
                     priority
                     sizes="100vw"
+                    quality={100}
+                    unoptimized
                     className="object-cover"
                 />
 

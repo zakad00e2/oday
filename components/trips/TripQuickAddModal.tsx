@@ -59,10 +59,14 @@ export default function TripQuickAddModal({ trip, onClose }: TripQuickAddModalPr
         addTrip({
             slug: trip.slug,
             titleAr: trip.titleAr,
+            titleEn: trip.titleEn,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
             selectedOptions: selectedOptions.length > 0
-                ? selectedOptions.map(o => ({ nameAr: o.nameAr, price: o.price }))
+                ? selectedOptions.map(o => ({ nameAr: o.nameAr, nameEn: o.nameEn, price: o.price }))
+                : undefined,
+            selectedAddOns: selectedAddOns.length > 0
+                ? selectedAddOns.map(a => ({ nameAr: a.nameAr, nameEn: a.nameEn, price: a.price }))
                 : undefined,
         });
         onClose();

@@ -1,3 +1,8 @@
+import {
+  broadcastUnauthorizedSession,
+  createAuthorizedHeaders,
+} from "./auth-service";
+
 export const HOTEL_API_BASE =
   process.env.NEXT_PUBLIC_HOTEL_API_BASE ??
   "https://oday-tourisim-production.up.railway.app/hotel";
@@ -473,7 +478,7 @@ async function parseResponse(response: Response) {
 }
 
 async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers ?? {});
+  const headers = createAuthorizedHeaders(init?.headers);
   if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -485,6 +490,13 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
   });
 
   const payload = await parseResponse(response);
+
+  if (
+    (response.status === 401 || response.status === 403) &&
+    headers.has("Authorization")
+  ) {
+    broadcastUnauthorizedSession();
+  }
 
   if (!response.ok) {
     const message =
