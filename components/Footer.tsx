@@ -53,7 +53,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-white">
+    <footer className="relative isolate z-10 bg-white">
       <div className="max-w-[1200px] mx-auto px-6 pt-20 pb-10">
 
         {/* 5-column grid */}
@@ -139,15 +139,15 @@ export default function Footer() {
             </div> */}
 
             {/* Social icons */}
-            <div className="flex items-center gap-3">
+            <div className="relative z-10 flex items-center gap-3">
               {socials.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="w-10 h-10 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] hover:border-[#111] hover:text-[#111] transition-colors duration-200"
+                  className="relative z-10 pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] text-[#6B7280] transition-colors duration-200 hover:border-[#111] hover:text-[#111]"
                 >
                   <svg width={s.size} height={s.size} viewBox="0 0 24 24" fill="currentColor">
                     <path d={s.path} />

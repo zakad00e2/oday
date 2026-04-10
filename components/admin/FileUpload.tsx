@@ -3,16 +3,23 @@
 import { useRef, useState } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 
+export interface FileUploadItem {
+  url: string;
+  file: File;
+}
+
 interface FileUploadProps {
   label: string;
   accept?: "image" | "video" | "both";
   value?: string; // current preview URL
-  onChange: (url: string, file: File) => void;
+  onChange?: (url: string, file: File) => void;
+  onFilesChange?: (items: FileUploadItem[]) => void;
   onClear?: () => void;
   previewHeight?: string;
   persistMode?: "object-url" | "data-url";
   previewFit?: "cover" | "contain";
   compactTrigger?: boolean;
+  multiple?: boolean;
 }
 
 export default function FileUpload({
@@ -20,11 +27,13 @@ export default function FileUpload({
   accept = "image",
   value,
   onChange,
+  onFilesChange,
   onClear,
   previewHeight = "h-36",
   persistMode = "object-url",
   previewFit = "cover",
   compactTrigger = false,
+  multiple = false,
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -36,9 +45,7 @@ export default function FileUpload({
       ? "video/*"
       : "image/*,video/*";
 
-  const handleFile = async (file: File) => {
-    if (!file) return;
-
+  const createUploadItem = async (file: File): Promise<FileUploadItem> => {
     const url =
       persistMode === "data-url"
         ? await new Promise<string>((resolve, reject) => {
@@ -58,13 +65,36 @@ export default function FileUpload({
           })
         : URL.createObjectURL(file);
 
-    onChange(url, file);
+    return { url, file };
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    const uploadItems = await Promise.all(
+      files.map((file) => createUploadItem(file)),
+    );
+
+    if (multiple) {
+      if (onFilesChange) {
+        onFilesChange(uploadItems);
+        return;
+      }
+
+      uploadItems.forEach(({ url, file }) => onChange?.(url, file));
+      return;
+    }
+
+    const [firstItem] = uploadItems;
+    if (!firstItem) return;
+
+    onChange?.(firstItem.url, firstItem.file);
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      void handleFile(file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) {
+      void handleFiles(files);
     }
     e.target.value = "";
   };
@@ -72,9 +102,9 @@ export default function FileUpload({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      void handleFile(file);
+    const files = Array.from(e.dataTransfer.files ?? []);
+    if (files.length > 0) {
+      void handleFiles(files);
     }
   };
 
@@ -174,6 +204,7 @@ export default function FileUpload({
         ref={inputRef}
         type="file"
         accept={acceptStr}
+        multiple={multiple}
         onChange={handleInput}
         className="hidden"
       />

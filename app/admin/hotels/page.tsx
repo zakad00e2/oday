@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
-import FileUpload from "@/components/admin/FileUpload";
+import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import {
   HotelServiceError,
   createHotel,
@@ -608,6 +608,72 @@ export default function AdminHotels() {
     setRoomAddOnInput(emptyRoomAddOnInput);
   };
 
+  const appendMainImages = (items: FileUploadItem[]) => {
+    const remainingSlots = Math.max(MAX_MAIN_IMAGES - form.mainImages.length, 0);
+    const acceptedItems = items.slice(0, remainingSlots);
+
+    if (acceptedItems.length > 0) {
+      setForm((current) => ({
+        ...current,
+        mainImages: [...current.mainImages, ...acceptedItems.map((item) => item.url)],
+      }));
+      setMainImageFiles((current) => {
+        const nextFiles = { ...current };
+
+        acceptedItems.forEach((item) => {
+          nextFiles[item.url] = item.file;
+        });
+
+        return nextFiles;
+      });
+    }
+
+    if (acceptedItems.length < items.length) {
+      setModalError(
+        remainingSlots === 0
+          ? "Main image limit reached."
+          : `Only ${remainingSlots} more main image${remainingSlots === 1 ? "" : "s"} can be added.`,
+      );
+    } else {
+      setModalError(null);
+    }
+
+    setMainImagesKey((value) => value + 1);
+  };
+
+  const appendGalleryImages = (items: FileUploadItem[]) => {
+    const remainingSlots = Math.max(MAX_GALLERY_IMAGES - form.gallery.length, 0);
+    const acceptedItems = items.slice(0, remainingSlots);
+
+    if (acceptedItems.length > 0) {
+      setForm((current) => ({
+        ...current,
+        gallery: [...current.gallery, ...acceptedItems.map((item) => item.url)],
+      }));
+      setGalleryFiles((current) => {
+        const nextFiles = { ...current };
+
+        acceptedItems.forEach((item) => {
+          nextFiles[item.url] = item.file;
+        });
+
+        return nextFiles;
+      });
+    }
+
+    if (acceptedItems.length < items.length) {
+      setModalError(
+        remainingSlots === 0
+          ? "Gallery image limit reached."
+          : `Only ${remainingSlots} more gallery image${remainingSlots === 1 ? "" : "s"} can be added.`,
+      );
+    } else {
+      setModalError(null);
+    }
+
+    setGalleryKey((value) => value + 1);
+  };
+
   const handleSave = async () => {
     setModalError(null);
 
@@ -1006,18 +1072,9 @@ export default function AdminHotels() {
                         key={mainImagesKey}
                         label="إضافة صورة رئيسية"
                         accept="image"
+                        multiple
                         previewHeight="h-24"
-                        onChange={(url, file) => {
-                          setForm((current) => ({
-                            ...current,
-                            mainImages: current.mainImages.length >= MAX_MAIN_IMAGES ? current.mainImages : [...current.mainImages, url],
-                          }));
-                          setMainImageFiles((current) => ({
-                            ...current,
-                            [url]: file,
-                          }));
-                          setMainImagesKey((value) => value + 1);
-                        }}
+                        onFilesChange={appendMainImages}
                       />
                     ) : (
                       <p className="text-xs text-[#9CA3AF]">تم الوصول للحد الأقصى للصور الرئيسية.</p>
@@ -1055,18 +1112,9 @@ export default function AdminHotels() {
                         key={galleryKey}
                         label="إضافة صورة للمعرض"
                         accept="image"
+                        multiple
                         previewHeight="h-24"
-                        onChange={(url, file) => {
-                          setForm((current) => ({
-                            ...current,
-                            gallery: current.gallery.length >= MAX_GALLERY_IMAGES ? current.gallery : [...current.gallery, url],
-                          }));
-                          setGalleryFiles((current) => ({
-                            ...current,
-                            [url]: file,
-                          }));
-                          setGalleryKey((value) => value + 1);
-                        }}
+                        onFilesChange={appendGalleryImages}
                       />
                     ) : (
                       <p className="text-xs text-[#9CA3AF]">تم الوصول للحد الأقصى لصور المعرض.</p>

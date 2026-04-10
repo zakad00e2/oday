@@ -31,6 +31,11 @@ interface AddOnInput {
   price: number;
 }
 
+type GalleryUploadItem = {
+  url: string;
+  file: File;
+};
+
 interface TripForm {
   slug: string;
   titleAr: string;
@@ -217,7 +222,7 @@ async function buildReplacementTripMedia({
   heroImage: string;
   heroFile: File | null;
   galleryImages: string[];
-  newGalleryItems: { url: string; file: File }[];
+  newGalleryItems: GalleryUploadItem[];
 }): Promise<TripMediaInput> {
   const resolveGalleryFile = async (url: string, index: number) => {
     if (isTemporaryPreviewUrl(url)) {
@@ -458,7 +463,7 @@ export default function AdminTrips() {
   const [heroFile, setHeroFile] = useState<File | null>(null);
   // Each new gallery item stores both the blob URL and the File together
   // so removing a preview also removes the corresponding file
-  const [newGalleryItems, setNewGalleryItems] = useState<{ url: string; file: File }[]>([]);
+  const [newGalleryItems, setNewGalleryItems] = useState<GalleryUploadItem[]>([]);
   const [deleteAssetIds, setDeleteAssetIds] = useState<string[]>([]);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -580,6 +585,40 @@ export default function AdminTrips() {
       return `${label}: حجم الملف (${sizeMB}MB) يتجاوز الحد المسموح (2MB). يرجى ضغط الصورة أو اختيار صورة أصغر.`;
     }
     return null;
+  };
+
+  const appendGalleryImages = (items: GalleryUploadItem[]) => {
+    const acceptedItems: GalleryUploadItem[] = [];
+    let rejectedCount = 0;
+
+    for (const item of items) {
+      if (validateFileSize(item.file, "صورة المعرض")) {
+        rejectedCount += 1;
+        continue;
+      }
+
+      acceptedItems.push(item);
+    }
+
+    if (acceptedItems.length > 0) {
+      setForm((current) => ({
+        ...current,
+        galleryImages: [...current.galleryImages, ...acceptedItems.map((item) => item.url)],
+      }));
+      setNewGalleryItems((current) => [...current, ...acceptedItems]);
+    }
+
+    if (rejectedCount > 0) {
+      setNotice({
+        type: "error",
+        message:
+          rejectedCount === 1
+            ? "تم تجاهل صورة واحدة لأن حجمها يتجاوز 2MB."
+            : `تم تجاهل ${rejectedCount} صور لأن حجمها يتجاوز 2MB.`,
+      });
+    }
+
+    setGalleryKey((value) => value + 1);
   };
 
   const handleSave = async () => {
@@ -869,9 +908,10 @@ export default function AdminTrips() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[980px]">
+            <table className="admin-trips-table w-full text-sm min-w-[980px]">
               <thead>
                 <tr className="border-b border-[#F3F4F6] bg-[#F9FAFB]">
+                  <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الإجراءات</th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الصورة</th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الرحلة</th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الجدولة</th>
@@ -884,6 +924,16 @@ export default function AdminTrips() {
               <tbody>
                 {trips.map((trip) => (
                   <tr key={trip.id} className="border-b border-[#F9FAFB] hover:bg-[#FAFBFC] transition-colors align-top">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => openEdit(trip)} className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111] transition-colors" title="تعديل">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+                        </button>
+                        <button onClick={() => setDeleteId(trip.id)} className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors" title="حذف">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                        </button>
+                      </div>
+                    </td>
                     <td className="px-5 py-3">
                       {trip.heroImage ? (
                         <FlexibleImage src={trip.heroImage} alt={trip.titleAr} width={64} height={48} sizes="64px" className="w-16 h-12 rounded-lg object-cover bg-[#F3F4F6]" />
@@ -931,6 +981,12 @@ export default function AdminTrips() {
                 ))}
               </tbody>
             </table>
+            <style jsx>{`
+              .admin-trips-table th:last-child,
+              .admin-trips-table td:last-child {
+                display: none;
+              }
+            `}</style>
           </div>
         )}
       </div>
@@ -1060,18 +1116,9 @@ export default function AdminTrips() {
                       key={galleryKey}
                       label="إضافة صورة للمعرض (حد أقصى 2MB)"
                       accept="image"
+                      multiple
                       previewHeight="h-24"
-                      onChange={(url, file) => {
-                        if (file.size > MAX_FILE_SIZE) {
-                          const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                          setNotice({ type: "error", message: `حجم الصورة (${sizeMB}MB) كبير جداً. الحد المسموح 2MB.` });
-                          setGalleryKey((v) => v + 1);
-                          return;
-                        }
-                        setForm((cur) => ({ ...cur, galleryImages: [...cur.galleryImages, url] }));
-                        setNewGalleryItems((prev) => [...prev, { url, file }]);
-                        setGalleryKey((v) => v + 1);
-                      }}
+                      onFilesChange={appendGalleryImages}
                     />
                   </div>
                 </div>
