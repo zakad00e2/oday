@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import Link from "next/link";
 import {
     NATIONALITY_OPTIONS,
     AIRLINES,
-    ACCEPTED_EXTENSIONS,
-    ACCEPTED_FILE_TYPES,
-    MAX_FILE_SIZE,
     type NationalityId,
 } from "@/lib/airport-config";
 import {
@@ -30,7 +27,6 @@ type AirlineChoice = "egyptair" | "other";
 interface FormErrors {
     nationalityId?: string;
     serviceType?: string;
-    file?: string;
     country?: string;
     airport?: string;
     airline?: string;
@@ -233,11 +229,6 @@ export default function AirportCoordination() {
     // ── Service type
     const [serviceType, setServiceType] = useState<ServiceType>(null);
 
-    // ── File upload
-    const [file, setFile] = useState<File | null>(null);
-    const [filePreview, setFilePreview] = useState<string | null>(null);
-    const fileRef = useRef<HTMLInputElement>(null);
-
     // ── Arrival details
     const [country, setCountry] = useState("");
     const [airport, setAirport] = useState("");
@@ -350,44 +341,6 @@ export default function AirportCoordination() {
         return found ? (isAr ? found.labelAr : found.labelEn) : "";
     }, [airlineChoice, otherAirlineId, customAirlineName, isAr, t]);
 
-    /* ─── File handler ─────────────────────────────────────────── */
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const f = e.target.files?.[0];
-        if (!f) return;
-
-        if (!ACCEPTED_FILE_TYPES.includes(f.type)) {
-            setErrors((prev) => ({
-                ...prev,
-                file: t("نوع الملف غير مدعوم. يُقبل: JPG, PNG, PDF", "Unsupported file type. Accepted: JPG, PNG, PDF"),
-            }));
-            return;
-        }
-        if (f.size > MAX_FILE_SIZE) {
-            setErrors((prev) => ({
-                ...prev,
-                file: t("حجم الملف يتجاوز 10 ميغابايت", "File size exceeds 10 MB"),
-            }));
-            return;
-        }
-
-        setFile(f);
-        setErrors((prev) => ({ ...prev, file: undefined }));
-
-        if (f.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = () => setFilePreview(reader.result as string);
-            reader.readAsDataURL(f);
-        } else {
-            setFilePreview(null);
-        }
-    }, [t]);
-
-    const removeFile = useCallback(() => {
-        setFile(null);
-        setFilePreview(null);
-        if (fileRef.current) fileRef.current.value = "";
-    }, []);
-
     /* ─── Validation ───────────────────────────────────────────── */
     const validate = useCallback((): boolean => {
         const errs: FormErrors = {};
@@ -412,7 +365,7 @@ export default function AirportCoordination() {
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [airlineChoice, country, customAirlineName, nationalityId, file, fullName, otherAirlineId, airport, serviceType, t, whatsapp, agreedToPolicies]);
+    }, [airlineChoice, country, customAirlineName, nationalityId, fullName, otherAirlineId, airport, serviceType, t, whatsapp, agreedToPolicies]);
 
     /* ─── Submit ───────────────────────────────────────────────── */
     const handleSubmit = useCallback(
@@ -430,7 +383,6 @@ export default function AirportCoordination() {
                 airlineName: resolvedAirlineName,
                 extraFee,
                 total,
-                fileName: file?.name || "",
                 country: country.trim(),
                 airport: airport.trim(),
                 travelDate,
@@ -450,7 +402,7 @@ export default function AirportCoordination() {
                 setLoading(false);
             }, 600);
         },
-        [validate, nationalityId, selectedNationalityLabel, serviceType, basePrice, resolvedAirlineName, extraFee, total, file, country, airport, travelDate, fullName, whatsapp, email, notes, lang]
+        [validate, nationalityId, selectedNationalityLabel, serviceType, basePrice, resolvedAirlineName, extraFee, total, country, airport, travelDate, fullName, whatsapp, email, notes, lang]
     );
 
     /* ─── Helpers ──────────────────────────────────────────────── */
@@ -524,8 +476,8 @@ export default function AirportCoordination() {
                             </h4>
                             <p className="text-sm text-[#475569] leading-relaxed">
                                 {t(
-                                    "اختر الجنسية ونوع الخدمة وارفع المستندات المطلوبة، وسنجهز لك الطلب مع المتابعة حتى إصدار الموافقة.",
-                                    "Choose the nationality, select the service type, upload the required document, and we will handle the follow-up until the approval is issued."
+                                    "اختر الجنسية ونوع الخدمة وجهز المستند المطلوب، وسنجهز لك الطلب مع المتابعة حتى إصدار الموافقة.",
+                                    "Choose the nationality, select the service type, prepare the required document, and we will handle the follow-up until the approval is issued."
                                 )}
                             </p>
                         </div>

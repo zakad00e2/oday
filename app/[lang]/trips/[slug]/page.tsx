@@ -267,7 +267,6 @@ export default function TripDetailPage() {
             <TripDetailHero
                 heroImage={trip.heroImage}
                 title={tripTitle}
-                kicker={isAr ? (trip.titleEn || "") : (trip.titleAr || "")}
                 tagline={isAr ? trip.taglineAr : (trip.taglineEn || trip.taglineAr)}
                 duration={tripDuration}
                 startingPrice={trip.startingPrice}

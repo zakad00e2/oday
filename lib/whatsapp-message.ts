@@ -8,7 +8,6 @@ export interface AirportFormData {
     airlineName: string;
     extraFee: number;
     total: number;
-    fileName: string;
     country: string;
     airport: string;
     travelDate: string;
@@ -36,10 +35,6 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
         `${isAr ? "• *شركة الطيران:*" : "• *Airline:*"} ${data.airlineName}`,
         `${isAr ? "• *رسوم إضافية:*" : "• *Extra fee:*"} $${data.extraFee}`,
         `${isAr ? "• *الإجمالي:*" : "• *Total:*"} $${data.total}`,
-        ``,
-        isAr
-            ? `• *المستند:* ${data.fileName} — تم إرفاق الملف (سيتم إرساله في المحادثة)`
-            : `• *Document:* ${data.fileName} — the file is attached and will be sent in the chat`,
         ``,
         `${isAr ? "• *بلد المغادرة:*" : "• *Departure country:*"} ${data.country}`,
         `${isAr ? "• *مطار المغادرة:*" : "• *Departure airport:*"} ${data.airport}`,

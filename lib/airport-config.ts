@@ -51,23 +51,6 @@ export const NATIONALITY_OPTIONS = [
 export type NationalityOption = (typeof NATIONALITY_OPTIONS)[number];
 export type NationalityId = NationalityOption["id"];
 
-/** Extra fee when using a non-EgyptAir airline (USD) */
-export const EXTRA_AIRLINE_FEE = 100;
-
-/** Accepted file types for document upload */
-export const ACCEPTED_FILE_TYPES = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "application/pdf",
-];
-
-/** Accepted file extensions (for the input accept attribute) */
-export const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
-
-/** Maximum file size in bytes (10 MB) */
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
 /** Predefined list of airlines */
 export const AIRLINES = [
     { id: "egyptair", labelAr: "مصر للطيران", labelEn: "EgyptAir", isEgyptAir: true },
