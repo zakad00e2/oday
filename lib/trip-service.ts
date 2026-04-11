@@ -190,6 +190,17 @@ function dedupe(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
+function dedupeByKey<T>(items: T[], getKey: (item: T) => string) {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = getKey(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function normalizeTripAssetKind(kind?: string) {
   return kind?.trim().toUpperCase() ?? "";
 }
@@ -263,7 +274,8 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
     ].filter(Boolean),
   );
 
-  const options: TripOption[] = (apiTrip.options ?? [])
+  const options = dedupeByKey(
+    (apiTrip.options ?? [])
     .filter((o) => !o.is_deleted)
     .map((option, index) => {
       const optAr = getOptionTranslation(option.translations, "ar");
@@ -276,9 +288,19 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
         descriptionEn: repairText(optEn?.description || optAr?.description),
         price: parseNumber(option.price),
       };
-    });
+    }),
+    (option) =>
+      [
+        option.price,
+        option.nameAr.trim(),
+        option.nameEn.trim(),
+        option.descriptionAr.trim(),
+        option.descriptionEn.trim(),
+      ].join("|"),
+  );
 
-  const addOns: TripAddOn[] = (apiTrip.addons ?? [])
+  const addOns = dedupeByKey(
+    (apiTrip.addons ?? [])
     .filter((a) => !a.is_deleted)
     .map((addon, index) => {
       const addAr = getAddonTranslation(addon.translations, "ar");
@@ -291,7 +313,16 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
         descriptionAr: repairText(addAr?.description || addEn?.description),
         descriptionEn: repairText(addEn?.description || addAr?.description),
       };
-    });
+    }),
+    (addOn) =>
+      [
+        addOn.price,
+        addOn.nameAr.trim(),
+        addOn.nameEn.trim(),
+        addOn.descriptionAr.trim(),
+        addOn.descriptionEn.trim(),
+      ].join("|"),
+  );
 
   return {
     id: apiTrip.id,
@@ -401,14 +432,14 @@ export interface TripMutationInput {
   durationEn: string;
   facilitiesAr: string[];
   facilitiesEn: string[];
-  options: {
+  options?: {
     price: number;
     nameAr: string;
     nameEn: string;
     descriptionAr: string;
     descriptionEn: string;
   }[];
-  addons: {
+  addons?: {
     price: number;
     nameAr: string;
     nameEn: string;
@@ -456,41 +487,47 @@ function buildTripFormData(
     },
   ];
 
-  const options = input.options.map((opt) => ({
-    price: Math.max(0, opt.price),
-    translations: [
-      {
-        language: "ar",
-        name: opt.nameAr.trim(),
-        description: opt.descriptionAr.trim(),
-      },
-      {
-        language: "en",
-        name: opt.nameEn.trim(),
-        description: opt.descriptionEn.trim(),
-      },
-    ],
-  }));
-
-  const addons = input.addons.map((addon) => ({
-    price: Math.max(0, addon.price),
-    translations: [
-      {
-        language: "ar",
-        name: addon.nameAr.trim(),
-        description: addon.descriptionAr.trim(),
-      },
-      {
-        language: "en",
-        name: addon.nameEn.trim(),
-        description: addon.descriptionEn.trim(),
-      },
-    ],
-  }));
-
   formData.set("translations", JSON.stringify(translations));
-  formData.set("options", JSON.stringify(options));
-  formData.set("addons", JSON.stringify(addons));
+
+  if (Array.isArray(input.options)) {
+    const options = input.options.map((opt) => ({
+      price: Math.max(0, opt.price),
+      translations: [
+        {
+          language: "ar",
+          name: opt.nameAr.trim(),
+          description: opt.descriptionAr.trim(),
+        },
+        {
+          language: "en",
+          name: opt.nameEn.trim(),
+          description: opt.descriptionEn.trim(),
+        },
+      ],
+    }));
+
+    formData.set("options", JSON.stringify(options));
+  }
+
+  if (Array.isArray(input.addons)) {
+    const addons = input.addons.map((addon) => ({
+      price: Math.max(0, addon.price),
+      translations: [
+        {
+          language: "ar",
+          name: addon.nameAr.trim(),
+          description: addon.descriptionAr.trim(),
+        },
+        {
+          language: "en",
+          name: addon.nameEn.trim(),
+          description: addon.descriptionEn.trim(),
+        },
+      ],
+    }));
+
+    formData.set("addons", JSON.stringify(addons));
+  }
 
   for (const file of media?.mainImageFiles ?? []) {
     formData.append("mainImages", file, file.name);

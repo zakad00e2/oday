@@ -148,6 +148,16 @@ function createTripMutationInput(form: TripForm, slug: string): TripMutationInpu
   };
 }
 
+function stripCollectionsFromMutationInput(
+  input: TripMutationInput,
+): TripMutationInput {
+  return {
+    ...input,
+    options: undefined,
+    addons: undefined,
+  };
+}
+
 function didTripCollectionsChange(originalTrip: TripRecord, form: TripForm) {
   const originalOptions = originalTrip.options.map((option) =>
     normalizeOptionForPersistence({
@@ -696,12 +706,13 @@ export default function AdminTrips() {
           );
           const temporarySlug = `${editing.slug || slug}-replacing-${Date.now()}`;
 
-          await updateTrip(editing.id, {
-            ...originalTripInput,
-            slug: temporarySlug,
-            options: [],
-            addons: [],
-          });
+          await updateTrip(
+            editing.id,
+            stripCollectionsFromMutationInput({
+              ...originalTripInput,
+              slug: temporarySlug,
+            }),
+          );
 
           let replacementTripId = "";
 
@@ -721,17 +732,22 @@ export default function AdminTrips() {
               await deleteTrip(replacementTripId).catch(() => undefined);
             }
 
-            await updateTrip(editing.id, {
-              ...originalTripInput,
-              slug: editing.slug,
-              options: [],
-              addons: [],
-            }).catch(() => undefined);
+            await updateTrip(
+              editing.id,
+              stripCollectionsFromMutationInput({
+                ...originalTripInput,
+                slug: editing.slug,
+              }),
+            ).catch(() => undefined);
 
             throw error;
           }
         } else {
-          await updateTrip(editing.id, mutationInput, media);
+          await updateTrip(
+            editing.id,
+            stripCollectionsFromMutationInput(mutationInput),
+            media,
+          );
         }
         setNotice({ type: "success", message: "تم تحديث الرحلة بنجاح" });
       } else {

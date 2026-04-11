@@ -921,8 +921,8 @@ export default function AirportCoordination() {
                                         <li className={`relative ${noteItemPaddingClass}`}>
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
-                                                "في حال رفض الطلب أمنياً يتم خصم 10% من المبلغ كمصاريف إدارية، واسترجاع المبلغ المتبقي خلال 5 إلى 15 يوم عمل.",
-                                                "If rejected, a 10% administrative fee will be deducted and the remaining amount refunded within 5-15 business days."
+                                                "في حال رفض الطلب أمنياً يتم خصم 5% من المبلغ كمصاريف إدارية، واسترجاع المبلغ المتبقي خلال 5 إلى 15 يوم عمل.",
+                                                "If rejected, a 5% administrative fee will be deducted and the remaining amount refunded within 5-15 business days."
                                             )}
                                         </li>
                                         <li className={`relative ${noteItemPaddingClass}`}>
