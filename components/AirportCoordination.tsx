@@ -865,9 +865,9 @@ export default function AirportCoordination() {
                                             <label htmlFor="agreement" className="text-xs text-[#0F172A] leading-tight font-medium">
                                                 {t("قرأت وأوافق على", "I have read and agree to")}
                                                 &nbsp;
-                                                <Link href={`/${lang}/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
+                                                <Link href={`/${lang}/airport-coordination/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
                                                 &nbsp;{isAr ? "و" : "and"}&nbsp;
-                                                <Link href={`/${lang}/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("سياسة الاسترداد", "Refund Policy")}</Link>
+                                                <Link href={`/${lang}/airport-coordination/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("سياسة الاسترداد", "Refund Policy")}</Link>
                                             </label>
                                         </div>
                                         {errors.agreement && <p className="text-xs text-red-500 mt-1.5 font-bold">{errors.agreement}</p>}
@@ -921,8 +921,8 @@ export default function AirportCoordination() {
                                         <li className={`relative ${noteItemPaddingClass}`}>
                                             <span className={`absolute ${noteItemBulletClass} top-1.5 w-1.5 h-1.5 rounded-full bg-amber-500`}></span>
                                             {t(
-                                                "في حال رفض الطلب أمنياً يتم خصم 5% من المبلغ كمصاريف إدارية، واسترجاع المبلغ المتبقي خلال 5 إلى 15 يوم عمل.",
-                                                "If rejected, a 5% administrative fee will be deducted and the remaining amount refunded within 5-15 business days."
+                                                "في حال رفض الطلب أمنياً يتم خصم 5% من المبلغ كمصاريف إدارية، واسترجاع المبلغ المتبقي خلال مدة تصل إلى 14 يوم عمل.",
+                                                "If rejected, a 5% administrative fee will be deducted and the remaining amount refunded within up to 14 business days."
                                             )}
                                         </li>
                                         <li className={`relative ${noteItemPaddingClass}`}>
