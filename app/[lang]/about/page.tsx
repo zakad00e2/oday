@@ -296,7 +296,7 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
                         <ScrollReveal key={s.title} delay={i * 100}>
                             <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#0EA5E9]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
                                 <div className="text-[#0EA5E9] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
-                                    {s.icon}
+                                    {renderServiceIcon(s.icon)}
                                 </div>
                                 <h3 className="text-lg font-bold text-[#111] mb-3">{s.title}</h3>
                                 <p className="text-[#6B7280] text-sm leading-relaxed">{s.desc}</p>
@@ -340,7 +340,7 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
                                 <ScrollReveal key={a.title} delay={100 + i * 50}>
                                     <div className="flex items-start gap-4 group">
                                         <div className="shrink-0 mt-1 w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] flex items-center justify-center text-[#0EA5E9] group-hover:bg-[#0EA5E9] group-hover:text-white transition-colors duration-300">
-                                            {a.icon}
+                                            {renderAdvantageIcon(a.icon)}
                                         </div>
                                         <div>
                                             <h3 className="text-[17px] font-bold text-[#111] mb-1 group-hover:text-[#0EA5E9] transition-colors">
@@ -467,26 +467,65 @@ function SparklesIcon() {
 
 /* ── Data ─────────────────────────────────────────────── */
 
+type ServiceIconKey = "hotel" | "ship" | "sun" | "suitcase";
+type AdvantageIconKey = "map-pin" | "clipboard-check" | "currency" | "chat-bubble" | "sparkles";
+
+function renderServiceIcon(icon: ServiceIconKey | React.ReactNode) {
+    if (typeof icon !== "string") {
+        return icon;
+    }
+
+    switch (icon) {
+        case "hotel":
+            return <HotelIcon />;
+        case "ship":
+            return <ShipIcon />;
+        case "sun":
+            return <SunIcon />;
+        case "suitcase":
+            return <SuitcaseIcon />;
+    }
+}
+
+function renderAdvantageIcon(icon: AdvantageIconKey | React.ReactNode) {
+    if (typeof icon !== "string") {
+        return icon;
+    }
+
+    switch (icon) {
+        case "map-pin":
+            return <MapPinIcon />;
+        case "clipboard-check":
+            return <ClipboardCheckIcon />;
+        case "currency":
+            return <CurrencyIcon />;
+        case "chat-bubble":
+            return <ChatBubbleIcon />;
+        case "sparkles":
+            return <SparklesIcon />;
+    }
+}
+
 const services = [
     {
         title: "حجز الفنادق والمنتجعات",
         desc: "نوفر لك أفضل خيارات الإقامة في شرم الشيخ، من الفنادق الفاخرة إلى المنتجعات المميزة بأسعار تنافسية.",
-        icon: <HotelIcon />,
+        icon: "hotel" as const,
     },
     {
         title: "الرحلات البحرية واليخوت",
         desc: "استمتع بأجمل الرحلات البحرية والغوص والسنوركلينج في مياه البحر الأحمر الساحرة.",
-        icon: <ShipIcon />,
+        icon: "ship" as const,
     },
     {
         title: "سفاري الصحراء والمغامرات",
         desc: "عش تجربة المغامرة في قلب الصحراء مع رحلات السفاري وركوب الدراجات والجمال.",
-        icon: <SunIcon />,
+        icon: "sun" as const,
     },
     {
         title: "باقات سياحية متكاملة",
         desc: "باقات شاملة تجمع بين الإقامة والرحلات والأنشطة لتجربة سفر مريحة ومتكاملة.",
-        icon: <SuitcaseIcon />,
+        icon: "suitcase" as const,
     },
 ];
 
@@ -494,27 +533,27 @@ const advantages = [
     {
         title: "خبرة سياحية احترافية",
         desc: "فريق متخصص بخبرة واسعة في تنظيم الرحلات السياحية وتقديم أفضل التجارب.",
-        icon: <MapPinIcon />,
+        icon: "map-pin" as const,
     },
     {
         title: "رحلات منظمة بعناية",
         desc: "كل رحلة مخططة بدقة لضمان تجربة آمنة وممتعة من البداية حتى النهاية.",
-        icon: <ClipboardCheckIcon />,
+        icon: "clipboard-check" as const,
     },
     {
         title: "أسعار تنافسية",
         desc: "نقدم أفضل العروض والأسعار مع الحفاظ على مستوى عالٍ من الجودة والخدمة.",
-        icon: <CurrencyIcon />,
+        icon: "currency" as const,
     },
     {
         title: "دعم عملاء مميز",
         desc: "فريقنا متواجد لمساعدتك قبل وأثناء وبعد الرحلة لضمان راحتك التامة.",
-        icon: <ChatBubbleIcon />,
+        icon: "chat-bubble" as const,
     },
     {
         title: "تجارب فريدة في شرم الشيخ",
         desc: "نعرف أسرار المدينة ونقدم لك تجارب حصرية لا تجدها في أي مكان آخر.",
-        icon: <SparklesIcon />,
+        icon: "sparkles" as const,
     },
 ];
 
@@ -522,27 +561,27 @@ const advantagesEn = [
     {
         title: "Professional travel expertise",
         desc: "Our team brings deep destination knowledge and practical experience to every itinerary we organize.",
-        icon: <MapPinIcon />,
+        icon: "map-pin" as const,
     },
     {
         title: "Carefully planned trips",
         desc: "Every booking is arranged with attention to timing, logistics, and comfort so your trip runs smoothly.",
-        icon: <ClipboardCheckIcon />,
+        icon: "clipboard-check" as const,
     },
     {
         title: "Competitive pricing",
         desc: "We work to deliver strong value without compromising on the quality of service or the overall experience.",
-        icon: <CurrencyIcon />,
+        icon: "currency" as const,
     },
     {
         title: "Reliable customer support",
         desc: "We stay available before, during, and after your trip to help with questions, updates, and peace of mind.",
-        icon: <ChatBubbleIcon />,
+        icon: "chat-bubble" as const,
     },
     {
         title: "Unique Sharm experiences",
         desc: "We know the destination well and help you enjoy standout experiences that go beyond the usual tourist plan.",
-        icon: <SparklesIcon />,
+        icon: "sparkles" as const,
     },
 ];
 
@@ -737,7 +776,7 @@ export default function AboutPage() {
                         <ScrollReveal key={s.title} delay={i * 100}>
                             <div className="rounded-3xl border border-[#E5E7EB] p-7 text-center h-full hover:border-[#0EA5E9]/30 hover:shadow-lg transition-all duration-300 group bg-[#FAFAFA] hover:bg-white">
                                 <div className="text-[#0EA5E9] mb-5 flex justify-center group-hover:scale-110 transition-transform duration-300">
-                                    {s.icon}
+                                    {renderServiceIcon(s.icon)}
                                 </div>
                                 <h3 className="text-lg font-bold text-[#111] mb-3">{s.title}</h3>
                                 <p className="text-[#6B7280] text-sm leading-relaxed">{s.desc}</p>
@@ -786,7 +825,7 @@ export default function AboutPage() {
                                 <ScrollReveal key={a.title} delay={100 + i * 50}>
                                     <div className="flex items-start gap-4 group">
                                         <div className="shrink-0 mt-1 w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] flex items-center justify-center text-[#0EA5E9] group-hover:bg-[#0EA5E9] group-hover:text-white transition-colors duration-300">
-                                            {a.icon}
+                                            {renderAdvantageIcon(a.icon)}
                                         </div>
                                         <div>
                                             <h3 className="text-[17px] font-bold text-[#111] mb-1 group-hover:text-[#0EA5E9] transition-colors">

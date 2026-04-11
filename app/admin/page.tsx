@@ -10,6 +10,8 @@ interface Counts {
   trips: number | null;
 }
 
+type DashboardIconKey = "hotels" | "trips";
+
 function StatSkeleton() {
   return (
     <div className="bg-white rounded-2xl border border-[#F3F4F6] p-5 animate-pulse">
@@ -18,6 +20,23 @@ function StatSkeleton() {
       <div className="h-8 w-10 bg-[#F3F4F6] rounded" />
     </div>
   );
+}
+
+function renderDashboardIcon(icon: DashboardIconKey) {
+  switch (icon) {
+    case "hotels":
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 7.5h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+        </svg>
+      );
+    case "trips":
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+        </svg>
+      );
+  }
 }
 
 export default function AdminDashboard() {
@@ -53,22 +72,14 @@ export default function AdminDashboard() {
       value: counts.hotels,
       href: "/admin/hotels",
       color: "from-[#8B5CF6] to-[#A78BFA]",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 7.5h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-        </svg>
-      ),
+      icon: "hotels" as const,
     },
     {
       label: "الرحلات",
       value: counts.trips,
       href: "/admin/trips",
       color: "from-[#F59E0B] to-[#FBBF24]",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-        </svg>
-      ),
+      icon: "trips" as const,
     },
   ];
 
@@ -104,7 +115,7 @@ export default function AdminDashboard() {
               <div
                 className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300`}
               >
-                {stat.icon}
+                {renderDashboardIcon(stat.icon)}
               </div>
               <p className="text-sm text-[#6B7280] mb-1">{stat.label}</p>
               <div className="flex items-baseline gap-2">

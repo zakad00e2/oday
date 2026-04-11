@@ -190,6 +190,36 @@ function dedupe(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
+function normalizeTripAssetKind(kind?: string) {
+  return kind?.trim().toUpperCase() ?? "";
+}
+
+function isMainTripAsset(asset: ApiTripAsset) {
+  const kind = normalizeTripAssetKind(asset.kind);
+  return kind === "TRIP_MAIN_IMAGE" || kind === "MAIN";
+}
+
+function isGalleryTripAsset(asset: ApiTripAsset) {
+  const kind = normalizeTripAssetKind(asset.kind);
+  return kind === "TRIP_GALLERY_IMAGE" || kind === "GALLERY";
+}
+
+function isDisplayableTripImageAsset(asset: ApiTripAsset) {
+  if (!asset.url) return false;
+
+  const fileType = asset.fileType?.trim().toLowerCase();
+  if (fileType) {
+    return fileType.startsWith("image/");
+  }
+
+  const kind = normalizeTripAssetKind(asset.kind);
+  if (kind.includes("VIDEO")) {
+    return false;
+  }
+
+  return !/\.(mp4|mov|webm|avi|mkv|m3u8|pdf)(?:[?#].*)?$/i.test(asset.url);
+}
+
 // ── Mapping API → TripRecord ────────────────────────────────────────────────
 
 function createTripRecord(apiTrip: ApiTrip): TripRecord {
@@ -207,13 +237,31 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
     }
   }
 
-  const mainAssets = assets.filter((a) => a.kind === "TRIP_MAIN_IMAGE");
-  const galleryAssets = assets.filter(
-    (a) => a.kind !== "TRIP_MAIN_IMAGE" && a.url,
+  const explicitMainAssets = assets.filter(
+    (asset) => isMainTripAsset(asset) && isDisplayableTripImageAsset(asset),
   );
-  const mainImageUrls = dedupe(mainAssets.map((a) => a.url));
-  const galleryImages = dedupe(galleryAssets.map((a) => a.url));
-  const heroImage = mainImageUrls.at(-1) || galleryImages[0] || "";
+  const explicitGalleryAssets = assets.filter(
+    (asset) => isGalleryTripAsset(asset) && isDisplayableTripImageAsset(asset),
+  );
+  const fallbackAssets = assets.filter(
+    (asset) =>
+      !isMainTripAsset(asset) &&
+      !isGalleryTripAsset(asset) &&
+      isDisplayableTripImageAsset(asset),
+  );
+  const mainImageUrls = dedupe(
+    explicitMainAssets.map((asset) => asset.url).filter(Boolean),
+  );
+  const fallbackImage = fallbackAssets[0]?.url || explicitGalleryAssets[0]?.url || "";
+  const heroImage = mainImageUrls.at(-1) || fallbackImage;
+  const galleryImages = dedupe(
+    [
+      ...explicitGalleryAssets.map((asset) => asset.url),
+      ...fallbackAssets
+        .map((asset) => asset.url)
+        .filter((url) => url && !mainImageUrls.includes(url) && url !== heroImage),
+    ].filter(Boolean),
+  );
 
   const options: TripOption[] = (apiTrip.options ?? [])
     .filter((o) => !o.is_deleted)

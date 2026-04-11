@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import FlexibleImage from "@/components/FlexibleImage";
 import ScrollReveal from "../ScrollReveal";
 
@@ -83,7 +82,7 @@ export default function TripGallery({
                                 className="block h-full w-full overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm"
                             >
                                 <div className="relative aspect-[4/3] min-h-[260px] md:h-full md:min-h-0 md:aspect-auto">
-                                    <Image
+                                    <FlexibleImage
                                         src={img}
                                         alt={`${tripTitle} - ${imageLabel} ${i + 1}`}
                                         fill
