@@ -32,6 +32,7 @@ const socials = [
 
 export default function Footer() {
   const { dict, lang } = useI18n();
+  const phoneNumber = "+201032549630";
 
   const quickLinks = [
     { label: dict.nav.home, href: `/${lang}` },
@@ -48,7 +49,7 @@ export default function Footer() {
 
   const contactInfo = [
     "hello@odaytourism.com",
-    "+20 103 254 9630",
+    phoneNumber,
     dict.footer.location,
   ];
 
@@ -114,7 +115,14 @@ export default function Footer() {
             <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.contactInfo}</h4>
             <ul className="space-y-3">
               {contactInfo.map((line, i) => (
-                <li key={i} className="text-sm text-[#6B7280]">{line}</li>
+                <li
+                  key={i}
+                  className={`text-sm text-[#6B7280] ${line === phoneNumber && lang === "ar" ? "text-right" : ""}`}
+                  dir={line === phoneNumber ? "ltr" : undefined}
+                  style={line === phoneNumber ? { unicodeBidi: "isolate" } : undefined}
+                >
+                  {line}
+                </li>
               ))}
             </ul>
           </div>

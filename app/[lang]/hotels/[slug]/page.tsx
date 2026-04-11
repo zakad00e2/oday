@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import HotelDetailSkeleton from "@/components/detail-skeletons/HotelDetailSkeleton";
+import FlexibleImage from "@/components/FlexibleImage";
 import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useCart } from "@/lib/cart-context";
@@ -313,13 +314,14 @@ function HotelHero({
                 <div className="relative mb-3 flex h-[58vh] flex-col justify-end overflow-hidden rounded-[2rem] shadow-2xl sm:h-[65vh] md:h-[78vh]">
                     {images.length > 0 ? (
                         images.map((src, index) => (
-                            <Image
+                            <FlexibleImage
                                 key={`${src}-${index}`}
                                 src={src}
                                 alt={`${hotel.name} - ${index + 1}`}
                                 fill
                                 priority={index === 0}
-                                sizes="100vw"
+                                quality={100}
+                                sizes="(max-width: 1600px) 100vw, 1600px"
                                 className={`object-cover transition-opacity duration-700 ${
                                     index === imageIndex ? "opacity-100" : "opacity-0"
                                 }`}

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import FlexibleImage from "@/components/FlexibleImage";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripDetailHero({
@@ -25,12 +25,13 @@ export default function TripDetailHero({
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col justify-end mx-auto max-w-[1600px] shadow-2xl">
 
                 {heroImage ? (
-                    <Image
+                    <FlexibleImage
                         src={heroImage}
                         alt={title}
                         fill
                         priority
-                        sizes="100vw"
+                        quality={100}
+                        sizes="(max-width: 1600px) 100vw, 1600px"
                         className="object-cover"
                     />
                 ) : (
