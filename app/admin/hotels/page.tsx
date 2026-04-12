@@ -482,6 +482,8 @@ export default function AdminHotels() {
   const [amenityInput, setAmenityInput] = useState<Amenity>(emptyAmenityInput);
   const [roomInput, setRoomInput] = useState<Room>(emptyRoomInput);
   const [roomAddOnInput, setRoomAddOnInput] = useState<RoomAddOn>(emptyRoomAddOnInput);
+  const [editingRoomIndex, setEditingRoomIndex] = useState<number | null>(null);
+  const [editingRoomAddOnIndex, setEditingRoomAddOnIndex] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [mainImagesKey, setMainImagesKey] = useState(0);
   const [galleryKey, setGalleryKey] = useState(0);
@@ -525,6 +527,8 @@ export default function AdminHotels() {
     setAmenityInput(emptyAmenityInput);
     setRoomInput(emptyRoomInput);
     setRoomAddOnInput(emptyRoomAddOnInput);
+    setEditingRoomIndex(null);
+    setEditingRoomAddOnIndex(null);
     setMainImageFiles({});
     setGalleryFiles({});
     setMainImagesKey((value) => value + 1);
@@ -546,6 +550,8 @@ export default function AdminHotels() {
     setAmenityInput(emptyAmenityInput);
     setRoomInput(emptyRoomInput);
     setRoomAddOnInput(emptyRoomAddOnInput);
+    setEditingRoomIndex(null);
+    setEditingRoomAddOnIndex(null);
     setMainImageFiles({});
     setGalleryFiles({});
     setMainImagesKey((value) => value + 1);
@@ -572,40 +578,74 @@ export default function AdminHotels() {
 
   const addRoom = () => {
     if (!roomInput.nameAr.trim()) return;
+    const newRoom = {
+      nameAr: roomInput.nameAr.trim(),
+      nameEn: roomInput.nameEn.trim(),
+      price: roomInput.price,
+      descriptionAr: roomInput.descriptionAr.trim(),
+      descriptionEn: roomInput.descriptionEn.trim(),
+    };
 
-    setForm((current) => ({
-      ...current,
-      rooms: [
-        ...current.rooms,
-        {
-          nameAr: roomInput.nameAr.trim(),
-          nameEn: roomInput.nameEn.trim(),
-          price: roomInput.price,
-          descriptionAr: roomInput.descriptionAr.trim(),
-          descriptionEn: roomInput.descriptionEn.trim(),
-        },
-      ],
-    }));
+    if (editingRoomIndex !== null) {
+      setForm((current) => ({
+        ...current,
+        rooms: current.rooms.map((r, i) => (i === editingRoomIndex ? newRoom : r)),
+      }));
+      setEditingRoomIndex(null);
+    } else {
+      setForm((current) => ({
+        ...current,
+        rooms: [...current.rooms, newRoom],
+      }));
+    }
     setRoomInput(emptyRoomInput);
+  };
+
+  const startEditRoom = (index: number) => {
+    const room = form.rooms[index];
+    setRoomInput({ ...room });
+    setEditingRoomIndex(index);
+  };
+
+  const cancelEditRoom = () => {
+    setRoomInput(emptyRoomInput);
+    setEditingRoomIndex(null);
   };
 
   const addRoomAddOn = () => {
     if (!roomAddOnInput.nameAr.trim()) return;
+    const newAddOn = {
+      nameAr: roomAddOnInput.nameAr.trim(),
+      nameEn: roomAddOnInput.nameEn.trim(),
+      price: roomAddOnInput.price,
+      descriptionAr: roomAddOnInput.descriptionAr.trim(),
+      descriptionEn: roomAddOnInput.descriptionEn.trim(),
+    };
 
-    setForm((current) => ({
-      ...current,
-      roomAddOns: [
-        ...current.roomAddOns,
-        {
-          nameAr: roomAddOnInput.nameAr.trim(),
-          nameEn: roomAddOnInput.nameEn.trim(),
-          price: roomAddOnInput.price,
-          descriptionAr: roomAddOnInput.descriptionAr.trim(),
-          descriptionEn: roomAddOnInput.descriptionEn.trim(),
-        },
-      ],
-    }));
+    if (editingRoomAddOnIndex !== null) {
+      setForm((current) => ({
+        ...current,
+        roomAddOns: current.roomAddOns.map((a, i) => (i === editingRoomAddOnIndex ? newAddOn : a)),
+      }));
+      setEditingRoomAddOnIndex(null);
+    } else {
+      setForm((current) => ({
+        ...current,
+        roomAddOns: [...current.roomAddOns, newAddOn],
+      }));
+    }
     setRoomAddOnInput(emptyRoomAddOnInput);
+  };
+
+  const startEditRoomAddOn = (index: number) => {
+    const addOn = form.roomAddOns[index];
+    setRoomAddOnInput({ ...addOn });
+    setEditingRoomAddOnIndex(index);
+  };
+
+  const cancelEditRoomAddOn = () => {
+    setRoomAddOnInput(emptyRoomAddOnInput);
+    setEditingRoomAddOnIndex(null);
   };
 
   const appendMainImages = (items: FileUploadItem[]) => {
@@ -1156,24 +1196,41 @@ export default function AdminHotels() {
                     <input value={roomInput.descriptionAr} onChange={(e) => setRoomInput({ ...roomInput, descriptionAr: e.target.value })} placeholder="الوصف بالعربي مثل: شخصين" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                     <input value={roomInput.descriptionEn} onChange={(e) => setRoomInput({ ...roomInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                    <button type="button" onClick={addRoom} className="bg-[#F3F4F6] rounded-xl text-sm font-medium hover:bg-[#E5E7EB] transition-colors">+ إضافة غرفة</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={addRoom} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
+                      {editingRoomIndex !== null ? "حفظ التعديل" : "+ إضافة غرفة"}
+                    </button>
+                    {editingRoomIndex !== null && (
+                      <button type="button" onClick={cancelEditRoom} className="px-4 py-2.5 border border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] hover:bg-[#F3F4F6] transition-colors">
+                        إلغاء
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {form.rooms.map((room, index) => (
-                    <div key={`${room.nameAr}-${index}`} className="flex flex-col gap-2 bg-[#F9FAFB] rounded-xl px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="font-medium text-[#111]">{room.nameAr}</p>
-                        <p className="text-xs text-[#9CA3AF] mt-1" dir="ltr">{room.nameEn || "—"}</p>
+                    <div key={`${room.nameAr}-${index}`} className={`rounded-xl px-4 py-3 text-sm transition-colors ${editingRoomIndex === index ? "bg-[#EFF6FF] border border-[#BFDBFE]" : "bg-[#F9FAFB]"}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[#111]">{room.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {room.nameEn || "—"}</span></p>
+                        </div>
+                        <div className="flex items-center gap-2 mr-3">
+                          <span className="font-semibold text-[#111] text-xs">${room.price}</span>
+                          <button type="button" onClick={() => startEditRoom(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+                          </button>
+                          <button type="button" onClick={() => { if (editingRoomIndex === index) cancelEditRoom(); setForm((current) => ({ ...current, rooms: current.rooms.filter((_, itemIndex) => itemIndex !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                        </div>
+                      </div>
+                      {room.descriptionAr && (
                         <p className="text-xs text-[#6B7280] mt-1">{room.descriptionAr}</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-1" dir="ltr">{room.descriptionEn || "—"}</p>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-[#6B7280]">
-                        <span className="font-semibold text-[#111]">${room.price}</span>
-                        <button type="button" onClick={() => setForm((current) => ({ ...current, rooms: current.rooms.filter((_, itemIndex) => itemIndex !== index) }))} className="text-[#9CA3AF] hover:text-[#EF4444]">×</button>
-                      </div>
+                      )}
+                      {room.descriptionEn && (
+                        <p className="text-xs text-[#9CA3AF] mt-0.5" dir="ltr">{room.descriptionEn}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1190,24 +1247,41 @@ export default function AdminHotels() {
                     <input value={roomAddOnInput.descriptionAr} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, descriptionAr: e.target.value })} placeholder="وصف الإضافة بالعربي" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                     <input value={roomAddOnInput.descriptionEn} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, descriptionEn: e.target.value })} placeholder="Add-on description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                    <button type="button" onClick={addRoomAddOn} className="bg-[#F3F4F6] rounded-xl text-sm font-medium hover:bg-[#E5E7EB] transition-colors">+ إضافة إضافة غرفة</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={addRoomAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
+                      {editingRoomAddOnIndex !== null ? "حفظ التعديل" : "+ إضافة إضافة غرفة"}
+                    </button>
+                    {editingRoomAddOnIndex !== null && (
+                      <button type="button" onClick={cancelEditRoomAddOn} className="px-4 py-2.5 border border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] hover:bg-[#F3F4F6] transition-colors">
+                        إلغاء
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {form.roomAddOns.map((addOn, index) => (
-                    <div key={`${addOn.nameAr}-${index}`} className="flex flex-col gap-2 bg-[#F9FAFB] rounded-xl px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="font-medium text-[#111]">{addOn.nameAr}</p>
-                        <p className="text-xs text-[#9CA3AF] mt-1" dir="ltr">{addOn.nameEn || "—"}</p>
+                    <div key={`${addOn.nameAr}-${index}`} className={`rounded-xl px-4 py-3 text-sm transition-colors ${editingRoomAddOnIndex === index ? "bg-[#EFF6FF] border border-[#BFDBFE]" : "bg-[#F9FAFB]"}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
+                        </div>
+                        <div className="flex items-center gap-2 mr-3">
+                          <span className="font-semibold text-[#111] text-xs">${addOn.price}</span>
+                          <button type="button" onClick={() => startEditRoomAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+                          </button>
+                          <button type="button" onClick={() => { if (editingRoomAddOnIndex === index) cancelEditRoomAddOn(); setForm((current) => ({ ...current, roomAddOns: current.roomAddOns.filter((_, itemIndex) => itemIndex !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                        </div>
+                      </div>
+                      {addOn.descriptionAr && (
                         <p className="text-xs text-[#6B7280] mt-1">{addOn.descriptionAr}</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-1" dir="ltr">{addOn.descriptionEn || "—"}</p>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-[#6B7280]">
-                        <span className="font-semibold text-[#111]">${addOn.price}</span>
-                        <button type="button" onClick={() => setForm((current) => ({ ...current, roomAddOns: current.roomAddOns.filter((_, itemIndex) => itemIndex !== index) }))} className="text-[#9CA3AF] hover:text-[#EF4444]">×</button>
-                      </div>
+                      )}
+                      {addOn.descriptionEn && (
+                        <p className="text-xs text-[#9CA3AF] mt-0.5" dir="ltr">{addOn.descriptionEn}</p>
+                      )}
                     </div>
                   ))}
                 </div>
