@@ -13,6 +13,10 @@ import {
   calculateHotelLineCost,
   calculateTripLineCost,
 } from "./cart-pricing";
+import type {
+  CartHotelAddOn,
+  CartHotelRoomSelection,
+} from "./cart-hotel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -32,7 +36,8 @@ export interface CartHotel {
   roomName?: string;
   roomNameAr?: string;
   roomNameEn?: string;
-  selectedAddOns?: { name: string; nameAr?: string; nameEn?: string; price: number }[];
+  selectedRooms?: CartHotelRoomSelection[];
+  selectedAddOns?: CartHotelAddOn[];
 }
 
 export interface CartTrip {

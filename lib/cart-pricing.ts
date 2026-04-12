@@ -1,16 +1,25 @@
+import type {
+  CartHotelAddOn,
+  CartHotelRoomSelection,
+} from "./cart-hotel";
+import {
+  getCartHotelAddOnsCost,
+  getCartHotelBaseCost,
+} from "./cart-hotel";
+
 export interface CartPricingGuests {
   adults: number;
   children: number;
 }
 
-export interface CartPricingHotelAddOn {
-  price: number;
-}
-
 export interface CartPricingHotel {
   pricePerNight: number;
   roomsCount?: number;
-  selectedAddOns?: CartPricingHotelAddOn[];
+  roomName?: string;
+  roomNameAr?: string;
+  roomNameEn?: string;
+  selectedRooms?: CartHotelRoomSelection[];
+  selectedAddOns?: CartHotelAddOn[];
 }
 
 export interface CartPricingTripSelection {
@@ -33,14 +42,7 @@ export function calculateHotelLineCost(
   hotel: CartPricingHotel,
   nights: number,
 ): number {
-  const roomCount = hotel.roomsCount || 1;
-  const hotelBaseCost = hotel.pricePerNight * nights * roomCount;
-  const hotelAddOnsCost =
-    (hotel.selectedAddOns ?? []).reduce((sum, addOn) => sum + addOn.price, 0) *
-    nights *
-    roomCount;
-
-  return hotelBaseCost + hotelAddOnsCost;
+  return getCartHotelBaseCost(hotel, nights) + getCartHotelAddOnsCost(hotel, nights);
 }
 
 export function calculateTripLineCost(

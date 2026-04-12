@@ -9,10 +9,13 @@ import FlexibleImage from "@/components/FlexibleImage";
 import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useCart } from "@/lib/cart-context";
+import {
+    getCartHotelSelectedRooms,
+    type CartHotelRoomSelection,
+} from "@/lib/cart-hotel";
 import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
-import Breadcrumb from "@/components/Breadcrumb";
 
 interface LocalizedHotelRoom {
     id: string;
@@ -172,23 +175,79 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): Loc
     };
 }
 
-function resolveRoomIndexFromCart(
+function getDefaultRoomCounts(hotel: LocalizedHotelView | null): Record<string, number> {
+    if (!hotel?.rooms.length) {
+        return {};
+    }
+
+    return { [hotel.rooms[0].id]: 1 };
+}
+
+function resolveRoomCountsFromCart(
     hotel: LocalizedHotelView | null,
     cartHotel: ReturnType<typeof useCart>["cart"]["hotel"],
 ) {
-    if (!hotel || !cartHotel) return -1;
+    if (!hotel || !cartHotel) return {};
 
-    const roomNames = [cartHotel.roomName, cartHotel.roomNameAr, cartHotel.roomNameEn].filter(
-        (value): value is string => Boolean(value),
-    );
+    const roomCounts: Record<string, number> = {};
+    const selectedRooms = getCartHotelSelectedRooms(cartHotel);
 
-    if (roomNames.length === 0) return -1;
+    for (const selectedRoom of selectedRooms) {
+        const roomNames = [selectedRoom.name, selectedRoom.nameAr, selectedRoom.nameEn].filter(
+            (value): value is string => Boolean(value),
+        );
 
-    return hotel.rooms.findIndex((room) =>
-        roomNames.includes(room.name) ||
-        roomNames.includes(room.nameAr) ||
-        roomNames.includes(room.nameEn),
-    );
+        const matchedRoom = hotel.rooms.find((room) =>
+            room.id === selectedRoom.id ||
+            roomNames.includes(room.name) ||
+            roomNames.includes(room.nameAr) ||
+            roomNames.includes(room.nameEn),
+        );
+
+        if (matchedRoom) {
+            roomCounts[matchedRoom.id] = Math.max(1, selectedRoom.count);
+        }
+    }
+
+    return roomCounts;
+}
+
+function buildSelectedRoomsFromCounts(
+    hotel: LocalizedHotelView | null,
+    roomCounts: Record<string, number>,
+): CartHotelRoomSelection[] {
+    if (!hotel) {
+        return [];
+    }
+
+    return hotel.rooms.flatMap((room) => {
+        const count = roomCounts[room.id] ?? 0;
+        if (count <= 0) {
+            return [];
+        }
+
+        return [{
+            id: room.id,
+            name: room.name,
+            nameAr: room.nameAr,
+            nameEn: room.nameEn,
+            pricePerNight: room.price,
+            count,
+        }];
+    });
+}
+
+function areRoomSelectionsEqual(
+    currentRooms: CartHotelRoomSelection[],
+    cartRooms: CartHotelRoomSelection[],
+) {
+    if (currentRooms.length !== cartRooms.length) {
+        return false;
+    }
+
+    const cartRoomCounts = new Map(cartRooms.map((room) => [room.id, room.count]));
+
+    return currentRooms.every((room) => cartRoomCounts.get(room.id) === room.count);
 }
 
 function resolveAddOnIdFromCart(
@@ -561,7 +620,6 @@ export default function HotelDetailClient() {
     );
 
     const isInCart = cart.hotel?.id === hotel?.id;
-    const cartRoomIndex = resolveRoomIndexFromCart(hotel, cart.hotel);
     const cartAddonId = resolveAddOnIdFromCart(hotel, cart.hotel);
 
     const today = formatIsoDate(new Date());
@@ -569,22 +627,30 @@ export default function HotelDetailClient() {
     tomorrowDate.setDate(tomorrowDate.getDate() + 1);
     const tomorrow = formatIsoDate(tomorrowDate);
 
-    const [selectedRoom, setSelectedRoom] = useState(0);
-    const [roomsCount, setRoomsCount] = useState(1);
+    const [roomCounts, setRoomCounts] = useState<Record<string, number>>({});
     const [selectedAddOnId, setSelectedAddOnId] = useState<string | null>(null);
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
 
     useEffect(() => {
-        if (!hotel || !isInCart || !cart.hotel) return;
-
-        if (cartRoomIndex >= 0) {
-            setSelectedRoom((current) => (current === cartRoomIndex ? current : cartRoomIndex));
+        if (!hotel) {
+            return;
         }
 
-        setRoomsCount((current) => (current === (cart.hotel?.roomsCount || 1) ? current : (cart.hotel?.roomsCount || 1)));
-        setSelectedAddOnId((current) => (current === cartAddonId ? current : cartAddonId));
-    }, [hotel, isInCart, cart.hotel, cartRoomIndex, cartAddonId]);
+        if (isInCart && cart.hotel) {
+            const nextRoomCounts = resolveRoomCountsFromCart(hotel, cart.hotel);
+            setRoomCounts(
+                Object.keys(nextRoomCounts).length > 0
+                    ? nextRoomCounts
+                    : getDefaultRoomCounts(hotel),
+            );
+            setSelectedAddOnId(cartAddonId);
+            return;
+        }
+
+        setRoomCounts(getDefaultRoomCounts(hotel));
+        setSelectedAddOnId(null);
+    }, [hotel?.id, isInCart, cart.hotel, cartAddonId]);
 
     useEffect(() => {
         if (checkOut <= checkIn) {
@@ -600,7 +666,19 @@ export default function HotelDetailClient() {
     );
     const minimumCheckOut = formatIsoDate(new Date(new Date(checkIn).getTime() + 86400000));
 
-    const room = hotel?.rooms[selectedRoom] ?? null;
+    const selectedRooms = useMemo(
+        () => buildSelectedRoomsFromCounts(hotel, roomCounts),
+        [hotel, roomCounts],
+    );
+    const cartSelectedRooms = useMemo(
+        () => buildSelectedRoomsFromCounts(hotel, resolveRoomCountsFromCart(hotel, cart.hotel)),
+        [hotel, cart.hotel],
+    );
+    const selectedRoomCount = selectedRooms.reduce((sum, room) => sum + room.count, 0);
+    const selectedRoomBaseCost = selectedRooms.reduce(
+        (sum, room) => sum + room.pricePerNight * room.count * nights,
+        0,
+    );
     const selectedAddon = hotel?.addons.find((addon) => addon.id === selectedAddOnId) ?? null;
     const selectedAddOns = selectedAddon
         ? [{
@@ -611,14 +689,13 @@ export default function HotelDetailClient() {
         }]
         : [];
 
-    const totalPrice = room
-        ? (room.price * roomsCount * nights) + (selectedAddon ? selectedAddon.price * roomsCount * nights : 0)
-        : 0;
+    const totalPrice = selectedRoomBaseCost + (
+        selectedAddon ? selectedAddon.price * selectedRoomCount * nights : 0
+    );
 
     const hasChanges = Boolean(
         isInCart && hotel && (
-            selectedRoom !== cartRoomIndex ||
-            roomsCount !== (cart.hotel?.roomsCount || 1) ||
+            !areRoomSelectionsEqual(selectedRooms, cartSelectedRooms) ||
             nights !== cart.nights ||
             selectedAddOnId !== cartAddonId
         ),
@@ -656,17 +733,8 @@ export default function HotelDetailClient() {
         );
     }
 
-    const breadcrumbItems = [
-        { label: isAr ? "الرئيسية" : "Home", href: `/${lang}` },
-        { label: isAr ? "الفنادق" : "Hotels", href: `/${lang}/hotels` },
-        { label: hotel.name },
-    ];
-
     return (
         <main className="bg-[#FAFAFA]">
-            <div className="mx-auto max-w-[1600px] px-4 md:px-6 pt-24 pb-2">
-                <Breadcrumb items={breadcrumbItems} isRtl={isAr} />
-            </div>
             <HotelHero
                 hotel={hotel}
                 isAr={isAr}
@@ -728,18 +796,38 @@ export default function HotelDetailClient() {
 
                                 {hotel.rooms.length > 0 ? (
                                     <div className="flex flex-col gap-3">
-                                        {hotel.rooms.map((hotelRoom, index) => {
-                                            const isSelected = selectedRoom === index;
+                                        {hotel.rooms.map((hotelRoom) => {
+                                            const roomCount = roomCounts[hotelRoom.id] ?? 0;
+                                            const isSelected = roomCount > 0;
                                             return (
                                                 <div
                                                     key={hotelRoom.id}
-                                                    role="radio"
-                                                    aria-checked={isSelected}
+                                                    role="button"
+                                                    aria-pressed={isSelected}
                                                     tabIndex={0}
-                                                    onClick={() => setSelectedRoom(index)}
+                                                    onClick={() => {
+                                                        setRoomCounts((current) => {
+                                                            if (current[hotelRoom.id]) {
+                                                                const next = { ...current };
+                                                                delete next[hotelRoom.id];
+                                                                return next;
+                                                            }
+
+                                                            return { ...current, [hotelRoom.id]: 1 };
+                                                        });
+                                                    }}
                                                     onKeyDown={(event) => {
-                                                        if (event.key === "Enter") {
-                                                            setSelectedRoom(index);
+                                                        if (event.key === "Enter" || event.key === " ") {
+                                                            event.preventDefault();
+                                                            setRoomCounts((current) => {
+                                                                if (current[hotelRoom.id]) {
+                                                                    const next = { ...current };
+                                                                    delete next[hotelRoom.id];
+                                                                    return next;
+                                                                }
+
+                                                                return { ...current, [hotelRoom.id]: 1 };
+                                                            });
                                                         }
                                                     }}
                                                     className={`cursor-pointer rounded-2xl border-2 p-5 transition-all ${
@@ -751,13 +839,15 @@ export default function HotelDetailClient() {
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="flex flex-1 items-start gap-2.5">
                                                             <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                                                                isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1]"
+                                                                isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1] bg-white"
                                                             }`}>
                                                                 {isSelected ? (
                                                                     <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                                     </svg>
-                                                                ) : null}
+                                                                ) : (
+                                                                    <div className="h-2 w-2 rounded-full bg-[#cbd5e1]" />
+                                                                )}
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-bold leading-tight text-[#0f172a]">{hotelRoom.name}</p>
@@ -769,31 +859,50 @@ export default function HotelDetailClient() {
                                                         </span>
                                                     </div>
 
-                                                    {isSelected ? (
-                                                        <div
-                                                            className="mt-3 flex items-center justify-between border-t border-[#0EA5E9]/20 pt-3"
-                                                            onClick={(event) => event.stopPropagation()}
-                                                        >
-                                                            <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setRoomsCount((current) => Math.max(1, current - 1))}
-                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20"
-                                                                >
-                                                                    -
-                                                                </button>
-                                                                <span className="w-5 text-center text-sm font-bold text-[#0f172a]">{roomsCount}</span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setRoomsCount((current) => current + 1)}
-                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20"
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            </div>
+                                                    <div
+                                                        className={`mt-3 flex items-center justify-between border-t pt-3 ${
+                                                            isSelected ? "border-[#0EA5E9]/20" : "border-[#e2e8f0]"
+                                                        }`}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                    >
+                                                        <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setRoomCounts((current) => {
+                                                                        const nextCount = Math.max(0, (current[hotelRoom.id] ?? 0) - 1);
+                                                                        const next = { ...current };
+
+                                                                        if (nextCount === 0) {
+                                                                            delete next[hotelRoom.id];
+                                                                        } else {
+                                                                            next[hotelRoom.id] = nextCount;
+                                                                        }
+
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                disabled={!isSelected}
+                                                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="w-5 text-center text-sm font-bold text-[#0f172a]">{roomCount}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setRoomCounts((current) => ({
+                                                                        ...current,
+                                                                        [hotelRoom.id]: (current[hotelRoom.id] ?? 0) + 1,
+                                                                    }));
+                                                                }}
+                                                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] transition hover:bg-[#0EA5E9]/20"
+                                                            >
+                                                                +
+                                                            </button>
                                                         </div>
-                                                    ) : null}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -909,19 +1018,38 @@ export default function HotelDetailClient() {
                                     <span className="text-4xl font-bold text-[#0EA5E9]">
                                         {formatPrice(totalPrice, lang)}
                                     </span>
-                                    {room ? (
-                                        <span className="text-sm text-[#94a3b8]">
-                                            {roomsCount > 1 ? `x${roomsCount} ` : ""}({room.name}{selectedAddon ? ` + ${selectedAddon.name}` : ""})
-                                        </span>
-                                    ) : null}
                                 </div>
+                                {selectedRooms.length > 0 ? (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {selectedRooms.map((room) => (
+                                            <span
+                                                key={room.id}
+                                                className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#0f172a]"
+                                            >
+                                                <span>{room.name}</span>
+                                                <span className="text-[#0EA5E9]">x{room.count}</span>
+                                            </span>
+                                        ))}
+                                        {selectedAddon ? (
+                                            <span className="inline-flex items-center rounded-full bg-[#FFFBEB] px-3 py-1 text-xs font-semibold text-[#92400E]">
+                                                + {selectedAddon.name}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-[#94a3b8]">
+                                        {isAr ? "اختر غرفة واحدة على الأقل" : "Select at least one room"}
+                                    </p>
+                                )}
                             </div>
 
                             <button
                                 type="button"
-                                disabled={!room}
+                                disabled={selectedRoomCount === 0}
                                 onClick={() => {
-                                    if (!room) return;
+                                    if (selectedRooms.length === 0) return;
+
+                                    const primaryRoom = selectedRooms[0];
 
                                     setHotel({
                                         id: hotel.id,
@@ -933,19 +1061,20 @@ export default function HotelDetailClient() {
                                         cityAr: hotel.cityAr,
                                         cityEn: hotel.cityEn,
                                         image: hotel.image,
-                                        pricePerNight: room.price,
+                                        pricePerNight: primaryRoom.pricePerNight,
                                         stars: hotel.stars,
-                                        roomName: room.name,
-                                        roomNameAr: room.nameAr,
-                                        roomNameEn: room.nameEn,
-                                        roomsCount,
+                                        roomName: primaryRoom.name,
+                                        roomNameAr: primaryRoom.nameAr,
+                                        roomNameEn: primaryRoom.nameEn,
+                                        roomsCount: selectedRoomCount,
+                                        selectedRooms,
                                         selectedAddOns,
                                     });
                                     setNights(nights);
                                     openCart();
                                 }}
                                 className={`inline-flex w-full items-center justify-center gap-3 rounded-2xl px-7 py-3.5 text-base font-bold transition-all duration-300 active:scale-[0.97] sm:w-auto ${
-                                    !room
+                                    selectedRoomCount === 0
                                         ? "cursor-not-allowed bg-[#E2E8F0] text-[#94A3B8]"
                                         : hasChanges
                                             ? "bg-[#0284C7] text-white hover:bg-[#0369A1]"

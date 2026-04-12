@@ -3,8 +3,13 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
+import {
+  getCartHotelRoomCount,
+  getCartHotelSelectedRoomName,
+  getCartHotelSelectedRooms,
+} from "@/lib/cart-hotel";
 import { useCart } from "@/lib/cart-context";
-import { calculateTripQuantity } from "@/lib/cart-pricing";
+import { calculateHotelLineCost, calculateTripQuantity } from "@/lib/cart-pricing";
 import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
@@ -40,7 +45,6 @@ export default function CartDrawer() {
 
   const getHotelName = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.nameAr ?? hotel.name) : (hotel.nameEn ?? hotel.name);
   const getHotelCity = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.cityAr ?? hotel.city) : (hotel.cityEn ?? hotel.city);
-  const getHotelRoomName = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.roomNameAr ?? hotel.roomName) : (hotel.roomNameEn ?? hotel.roomName);
   const getHotelAddOnName = (addOn: NonNullable<NonNullable<typeof cart.hotel>["selectedAddOns"]>[number]) => isAr ? (addOn.nameAr ?? addOn.name) : (addOn.nameEn ?? addOn.name);
   const getTripTitle = (trip: typeof cart.trips[number]) => isAr ? trip.titleAr : (trip.titleEn ?? trip.titleAr);
   const getTripOptionName = (option: NonNullable<typeof cart.trips[number]["selectedOptions"]>[number]) => isAr ? option.nameAr : (option.nameEn ?? option.nameAr);
@@ -52,17 +56,20 @@ export default function CartDrawer() {
   }, [isOpen]);
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
-  const hotelBaseCost = cart.hotel ? cart.hotel.pricePerNight * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-  const hotelAddOnsCost = cart.hotel?.selectedAddOns ? cart.hotel.selectedAddOns.reduce((s, a) => s + a.price, 0) * cart.nights * (cart.hotel.roomsCount || 1) : 0;
-  const hotelCost = hotelBaseCost + hotelAddOnsCost;
+  const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];
+  const hotelRoomCount = cart.hotel ? getCartHotelRoomCount(cart.hotel) : 0;
+  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
 
   const buildWhatsAppMsg = () => {
     const wa = d.whatsapp;
     let msg = `*${wa.header}*\n\n`;
     if (cart.hotel) {
       msg += `*${wa.hotel}* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
-      if (getHotelRoomName(cart.hotel)) {
-        msg += `*${wa.roomLabel}* ${getHotelRoomName(cart.hotel)} × ${cart.hotel.roomsCount || 1}\n`;
+      if (hotelSelectedRooms.length > 0) {
+        msg += `*${wa.roomLabel}*\n`;
+        hotelSelectedRooms.forEach((room) => {
+          msg += `- ${getCartHotelSelectedRoomName(room, lang)} × ${room.count}\n`;
+        });
       }
       if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
         msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
@@ -203,10 +210,17 @@ export default function CartDrawer() {
                       </div>
                       <h4 className="font-bold text-white text-sm leading-tight truncate">{getHotelName(cart.hotel)}</h4>
                       <p className="text-[11px] text-white/70">{getHotelCity(cart.hotel)}</p>
-                      {getHotelRoomName(cart.hotel) && (
-                        <p className="text-[11px] text-white/90 font-medium mt-1">
-                          {getHotelRoomName(cart.hotel)} &times; {cart.hotel.roomsCount || 1}
-                        </p>
+                      {hotelSelectedRooms.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {hotelSelectedRooms.map((room) => (
+                            <span
+                              key={room.id}
+                              className="rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm"
+                            >
+                              {getCartHotelSelectedRoomName(room, lang)} &times; {room.count}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <button
@@ -223,7 +237,7 @@ export default function CartDrawer() {
                       <svg className="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                       <span className="text-xs text-[#64748B]">
                         {cart.nights} {d.nights}
-                        {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} ${d.room}` : ''}
+                        {hotelRoomCount ? ` • ${hotelRoomCount} ${d.room}` : ''}
                       </span>
                       <span className="text-base font-extrabold text-[#0F172A] ms-1">{formatPrice(hotelCost, lang)}</span>
                     </div>
