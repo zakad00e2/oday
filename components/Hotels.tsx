@@ -143,7 +143,7 @@ function HotelCard({
             <Image
               key={`${hotel.id}-${src}-${index}`}
               src={src}
-              alt={`${hotelName} - ${index + 1}`}
+              alt={`${hotelName} in ${hotelCity}${index > 0 ? ` - photo ${index + 1}` : ""}`}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className={`object-cover transition-all duration-500 ${

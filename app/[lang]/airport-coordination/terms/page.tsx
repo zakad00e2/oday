@@ -1,24 +1,28 @@
+import type { Metadata } from "next";
 import PolicyDocumentView from "@/components/legal/PolicyDocumentView";
-import { i18n, type Locale } from "@/lib/i18n/config";
+import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
 import { getSecurityApprovalLegalContent } from "@/lib/security-approval-legal-content";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: string }>;
-}) {
+}): Promise<Metadata> {
   const { lang } = await params;
-  const locale = (i18n.locales.includes(lang as Locale) ? lang : i18n.defaultLocale) as Locale;
+  const locale = (isValidLocale(lang) ? lang : i18n.defaultLocale) as Locale;
   const isAr = locale === "ar";
 
-  return {
+  return buildPageMetadata({
+    lang: locale,
     title: isAr
-      ? "الشروط والأحكام | التنسيق الأمني | Oday Tourism"
-      : "Terms & Conditions | Security Coordination | Oday Tourism",
+      ? "الشروط والأحكام | التنسيق الأمني"
+      : "Terms & Conditions | Security Coordination",
     description: isAr
-      ? "الشروط والأحكام الخاصة بخدمة التنسيق الأمني من Oday Tourism."
-      : "Terms and conditions for Oday Tourism's security coordination service.",
-  };
+      ? "الشروط والأحكام الخاصة بخدمة التنسيق الأمني وتأشيرات مصر من Oday Tourism."
+      : "Terms and conditions for Oday Tourism's security coordination and Egypt visa service.",
+    path: "/airport-coordination/terms",
+  });
 }
 
 export default async function SecurityApprovalTermsPage({

@@ -1,24 +1,28 @@
+import type { Metadata } from "next";
 import PolicyDocumentView from "@/components/legal/PolicyDocumentView";
-import { i18n, type Locale } from "@/lib/i18n/config";
+import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
 import { getSecurityApprovalLegalContent } from "@/lib/security-approval-legal-content";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: string }>;
-}) {
+}): Promise<Metadata> {
   const { lang } = await params;
-  const locale = (i18n.locales.includes(lang as Locale) ? lang : i18n.defaultLocale) as Locale;
+  const locale = (isValidLocale(lang) ? lang : i18n.defaultLocale) as Locale;
   const isAr = locale === "ar";
 
-  return {
+  return buildPageMetadata({
+    lang: locale,
     title: isAr
-      ? "سياسة الاسترداد | التنسيق الأمني | Oday Tourism"
-      : "Refund Policy | Security Coordination | Oday Tourism",
+      ? "سياسة الاسترداد | التنسيق الأمني"
+      : "Refund Policy | Security Coordination",
     description: isAr
-      ? "سياسة الاسترداد الخاصة بخدمة التنسيق الأمني من Oday Tourism."
-      : "Refund policy for Oday Tourism's security coordination service.",
-  };
+      ? "سياسة الاسترداد الخاصة بخدمة التنسيق الأمني وتأشيرات مصر من Oday Tourism."
+      : "Refund policy for Oday Tourism's security coordination and Egypt visa service.",
+    path: "/airport-coordination/refund-policy",
+  });
 }
 
 export default async function SecurityApprovalRefundPolicyPage({

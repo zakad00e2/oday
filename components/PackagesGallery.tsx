@@ -209,7 +209,7 @@ export default function PackagesGallery() {
 
                     {/* WhatsApp Button */}
                     <a
-                      href={`https://wa.me/?text=${encodeURIComponent(isAr ? `مرحباً، أود الحجز والاستفسار عن: ${pkg.title}` : `Hello, I would like to book: ${pkg.title}`)}`}
+                      href="https://wa.me/201032549630"
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`absolute bottom-6 left-1/2 z-20 flex w-[85%] -translate-x-1/2 items-center justify-center gap-2 rounded-[16px] bg-white/95 px-4 py-3.5 text-center font-semibold text-[#111] shadow-xl backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:bg-white ${

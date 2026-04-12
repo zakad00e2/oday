@@ -1,6 +1,28 @@
+import type { Metadata } from "next";
 import PolicyDocumentView from "@/components/legal/PolicyDocumentView";
 import { getLegalContent } from "@/lib/legal-content";
-import { i18n, type Locale } from "@/lib/i18n/config";
+import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
+import { buildPageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const locale = (isValidLocale(lang) ? lang : i18n.defaultLocale) as Locale;
+  const isAr = locale === "ar";
+
+  return buildPageMetadata({
+    lang: locale,
+    title: isAr ? "الشروط والأحكام" : "Terms & Conditions",
+    description: isAr
+      ? "الشروط والأحكام الخاصة بخدمات Oday Tourism، تشمل قواعد الحجز، الإلغاء، والاستخدام."
+      : "Terms and conditions for Oday Tourism services, including booking rules, cancellation, and usage policies.",
+    path: "/terms",
+    noIndex: false,
+  });
+}
 
 export default async function TermsPage({
   params,
