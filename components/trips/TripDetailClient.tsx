@@ -11,6 +11,7 @@ import TripSchedule from "@/components/trips/TripSchedule";
 import TripIncludes from "@/components/trips/TripIncludes";
 import TripGallery from "@/components/trips/TripGallery";
 import { useCart } from "@/lib/cart-context";
+import { formatPrice } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { isYouTubeShortUrl, toYouTubeEmbedUrl } from "@/lib/youtube";
 
@@ -361,7 +362,7 @@ export default function TripDetailClient() {
                                                             <span className={`font-black shrink-0 ${
                                                                 isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"
                                                             }`}>
-                                                                {option.price > 0 ? `$${option.price}` : "—"}
+                                                                {option.price > 0 ? formatPrice(option.price, lang) : "—"}
                                                             </span>
                                                         </div>
                                                         {isSelected && (
@@ -376,7 +377,7 @@ export default function TripDetailClient() {
                                                                     <button onClick={(e) => { e.stopPropagation(); setPersonCounts((prev) => ({ ...prev, [option.id]: (prev[option.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">+</button>
                                                                 </div>
                                                                 {option.price > 0 && (personCounts[option.id] || 1) > 1 && (
-                                                                    <span className="text-xs font-bold text-[#0EA5E9]">= ${option.price * (personCounts[option.id] || 1)}</span>
+                                                                    <span className="text-xs font-bold text-[#0EA5E9]">= {formatPrice(option.price * (personCounts[option.id] || 1), lang)}</span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -428,7 +429,7 @@ export default function TripDetailClient() {
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
-                                                                {addOn.price > 0 ? `$${addOn.price}` : "—"}
+                                                                {addOn.price > 0 ? formatPrice(addOn.price, lang) : "—"}
                                                             </span>
                                                         </div>
                                                         {isAddonSelected && (
@@ -443,7 +444,7 @@ export default function TripDetailClient() {
                                                                     <button onClick={(e) => { e.stopPropagation(); setAddOnPersonCounts((prev) => ({ ...prev, [addOn.id]: (prev[addOn.id] || 1) + 1 })); }} className="px-2.5 py-1 text-[#64748b] text-sm font-bold hover:bg-[#f1f5f9] transition cursor-pointer">+</button>
                                                                 </div>
                                                                 {addOn.price > 0 && (addOnPersonCounts[addOn.id] || 1) > 1 && (
-                                                                    <span className="text-xs font-bold text-[#F59E0B]">= ${addOn.price * (addOnPersonCounts[addOn.id] || 1)}</span>
+                                                                    <span className="text-xs font-bold text-[#F59E0B]">= {formatPrice(addOn.price * (addOnPersonCounts[addOn.id] || 1), lang)}</span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -468,9 +469,9 @@ export default function TripDetailClient() {
                                     <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-0.5 sm:gap-1.5">
                                         <span className="text-2xl font-black text-[#0EA5E9]">
                                             {totalPriceGroup > 0
-                                                ? `$${totalPriceGroup}`
+                                                ? formatPrice(totalPriceGroup, lang)
                                                 : trip.startingPrice > 0
-                                                    ? `${isAr ? "يبدأ من" : "From"} $${trip.startingPrice}`
+                                                    ? `${isAr ? "يبدأ من" : "From"} ${formatPrice(trip.startingPrice, lang)}`
                                                     : isAr ? "عند الطلب" : "On request"}
                                         </span>
                                         {totalPriceGroup > 0 && (

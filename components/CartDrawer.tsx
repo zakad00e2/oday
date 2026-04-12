@@ -5,6 +5,7 @@ import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import { useCart } from "@/lib/cart-context";
 import { calculateTripQuantity } from "@/lib/cart-pricing";
+import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 /* ── Counter sub-component ── */
@@ -67,7 +68,7 @@ export default function CartDrawer() {
         msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
       }
       msg += `${wa.nightsLabel} ${cart.nights}\n`;
-      msg += `${wa.stayCost} $${hotelCost}\n\n`;
+      msg += `${wa.stayCost} ${formatPrice(hotelCost, lang)}\n\n`;
     }
     if (cart.trips.length > 0) {
       msg += `*${wa.tripsLabel}*\n`;
@@ -77,15 +78,15 @@ export default function CartDrawer() {
         if (t.selectedOptions && t.selectedOptions.length > 0) {
           const optTotal = t.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
           msg += ` — ${t.selectedOptions.map((o) => getTripOptionName(o)).join(isAr ? "، " : ", ")}`;
-          if (optTotal > 0) msg += ` ($${optTotal})`;
+          if (optTotal > 0) msg += ` (${formatPrice(optTotal, lang)})`;
         } else if (t.startingPrice > 0) {
-          msg += ` — $${t.startingPrice * guestsTotal}`;
+          msg += ` — ${formatPrice(t.startingPrice * guestsTotal, lang)}`;
         }
         msg += "\n";
         if (t.selectedAddOns && t.selectedAddOns.length > 0) {
           t.selectedAddOns.forEach((a) => {
             msg += `    + ${getTripAddOnName(a)}`;
-            if (a.price > 0) msg += ` ($${a.price})`;
+            if (a.price > 0) msg += ` (${formatPrice(a.price, lang)})`;
             msg += "\n";
           });
         }
@@ -93,7 +94,7 @@ export default function CartDrawer() {
       msg += "\n";
     }
     if (cart.travelDate) msg += `${wa.travelDate} ${cart.travelDate}\n`;
-    if (totalPrice > 0) msg += `\n*${wa.estimatedTotal} $${totalPrice}*`;
+    if (totalPrice > 0) msg += `\n*${wa.estimatedTotal} ${formatPrice(totalPrice, lang)}*`;
     return msg;
   };
 
@@ -224,7 +225,7 @@ export default function CartDrawer() {
                         {cart.nights} {d.nights}
                         {cart.hotel.roomsCount ? ` • ${cart.hotel.roomsCount} ${d.room}` : ''}
                       </span>
-                      <span className="text-base font-extrabold text-[#0F172A] ms-1">${hotelCost}</span>
+                      <span className="text-base font-extrabold text-[#0F172A] ms-1">{formatPrice(hotelCost, lang)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Edit button */}
@@ -314,7 +315,7 @@ export default function CartDrawer() {
                                   )}
                                 </div>
                                 <span className="text-xs font-bold text-[#0F172A] shrink-0 ms-2">
-                                  {o.price > 0 ? `$${o.price * (o.persons ?? 1)}` : "—"}
+                                  {o.price > 0 ? formatPrice(o.price * (o.persons ?? 1), lang) : "—"}
                                 </span>
                               </div>
                             ))}
@@ -331,7 +332,7 @@ export default function CartDrawer() {
                                   <span className="text-xs font-semibold text-[#92400E] truncate">{getTripAddOnName(a)}</span>
                                 </div>
                                 <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
-                                  {a.price > 0 ? `+$${a.price}` : d.free}
+                                  {a.price > 0 ? formatPriceWithSign(a.price, lang) : d.free}
                                 </span>
                               </div>
                             ))}
@@ -340,10 +341,10 @@ export default function CartDrawer() {
 
                         {/* Trip controls */}
                         <div className="px-4 py-3 flex items-center justify-between border-t border-[#F1F5F9]">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs text-[#64748B]">{d.total}</span>
-                            <span className="text-base font-extrabold text-[#0F172A]">${price}</span>
-                          </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-[#64748B]">{d.total}</span>
+                            <span className="text-base font-extrabold text-[#0F172A]">{formatPrice(price, lang)}</span>
+                        </div>
                           <div className="flex items-center gap-2">
                             {/* Edit button */}
                             <Link
@@ -383,7 +384,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#94A3B8]">{d.estimatedTotal}</span>
               <span className="text-2xl font-black text-[#0F172A] tracking-tight">
-                {totalPrice > 0 ? `$${totalPrice}` : d.onRequest}
+                {totalPrice > 0 ? formatPrice(totalPrice, lang) : d.onRequest}
               </span>
             </div>
 

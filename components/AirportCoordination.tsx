@@ -13,6 +13,7 @@ import {
     buildWhatsAppUrl,
     AirportFormData,
 } from "@/lib/whatsapp-message";
+import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import {
     listNationalityPricing,
     listAirlinePricing,
@@ -315,8 +316,8 @@ export default function AirportCoordination() {
         if (!airlineChoice) return "—";
         if (airlineChoice === "egyptair") return t("مجاناً", "Free");
         if (!otherAirlineId || otherAirlineId === "other") return "—";
-        return extraFee > 0 ? `+$${extraFee}` : t("مجاناً", "Free");
-    }, [airlineChoice, otherAirlineId, extraFee, t]);
+        return extraFee > 0 ? formatPriceWithSign(extraFee, lang) : t("مجاناً", "Free");
+    }, [airlineChoice, otherAirlineId, extraFee, lang, t]);
 
     const otherAirlineFeeHint = useMemo(() => {
         if (!otherAirlineId || otherAirlineId === "other") {
@@ -326,9 +327,9 @@ export default function AirportCoordination() {
             );
         }
         return extraFee > 0
-            ? `${t("رسوم الشركة المختارة", "Selected airline fee")} +$${extraFee}`
+            ? `${t("رسوم الشركة المختارة", "Selected airline fee")} ${formatPriceWithSign(extraFee, lang)}`
             : t("بدون رسوم إضافية", "No extra fee");
-    }, [otherAirlineId, extraFee, t]);
+    }, [otherAirlineId, extraFee, lang, t]);
 
     const total = selectedNationality && serviceType ? basePrice + extraFee : 0;
 
@@ -527,7 +528,7 @@ export default function AirportCoordination() {
                                             )}
                                         </p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
-                                            {selectedNationality ? `$${resolvedPrice24}` : "—"}
+                                            {selectedNationality ? formatPrice(resolvedPrice24, lang) : "—"}
                                         </div>
                                     </button>
 
@@ -560,7 +561,7 @@ export default function AirportCoordination() {
                                             )}
                                         </p>
                                         <div className="mt-3 text-xl font-bold text-[#0EA5E9]">
-                                            {selectedNationality ? `$${resolvedPrice72}` : "—"}
+                                            {selectedNationality ? formatPrice(resolvedPrice72, lang) : "—"}
                                         </div>
                                     </button>
                                 </div>
@@ -835,7 +836,7 @@ export default function AirportCoordination() {
                                         <div className="flex justify-between items-center">
                                             <span className="text-[#6B7280]">{t("السعر الأساسي", "Base price")}</span>
                                             <span className="font-bold text-[#111]">
-                                                {selectedNationality && serviceType ? `$${basePrice}` : "—"}
+                                                {selectedNationality && serviceType ? formatPrice(basePrice, lang) : "—"}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
@@ -848,7 +849,7 @@ export default function AirportCoordination() {
                                         <div className="flex justify-between items-center">
                                             <span className="font-bold text-[#111] text-base">{t("الإجمالي", "Total")}</span>
                                             <span className="text-xl font-bold text-[#0EA5E9]">
-                                                {selectedNationality && serviceType ? `$${total}` : "—"}
+                                                {selectedNationality && serviceType ? formatPrice(total, lang) : "—"}
                                             </span>
                                         </div>
                                     </div>

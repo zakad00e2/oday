@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
 import Skeleton from "./ui/Skeleton";
+import { formatPrice } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { type HotelRecord, listHotels } from "@/lib/hotel-service";
 
@@ -237,15 +238,14 @@ function HotelCard({
             <div className="flex items-baseline gap-2">
               {hotel.originalPrice && hotel.originalPrice > hotel.initialPrice ? (
                 <span className="relative inline-flex items-center text-sm font-medium leading-none text-[#9CA3AF]">
-                  <span>{hotel.originalPrice.toLocaleString("en-US")}$</span>
+                  <span>{formatPrice(hotel.originalPrice, lang)}</span>
                   <span aria-hidden="true" className="absolute start-0 end-0 top-1/2 h-px -translate-y-1/2 bg-[#9CA3AF]" />
                 </span>
               ) : null}
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-bold leading-none text-[#0EA5E9]">
-                  {hotel.initialPrice.toLocaleString("en-US")}
+                  {formatPrice(hotel.initialPrice, lang)}
                 </span>
-                <span className="text-2xl font-semibold leading-none text-[#0EA5E9]">$</span>
               </div>
               <span className="text-xs text-[#94A3B8]">{labels.perNight}</span>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import FlexibleImage from "@/components/FlexibleImage";
+import { formatPrice } from "@/lib/currency";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripDetailHero({
@@ -92,7 +93,7 @@ export default function TripDetailHero({
                             </div>
                             {startingPrice > 0 && (
                                 <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
-                                    {isAr ? "يبدأ من" : "From"} <span className="text-[#60A5FA] text-lg font-bold">${startingPrice}</span>
+                                    {isAr ? "يبدأ من" : "From"} <span className="text-[#60A5FA] text-lg font-bold">{formatPrice(startingPrice, isAr ? "ar" : "en")}</span>
                                 </div>
                             )}
                         </div>

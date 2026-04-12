@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
+import { formatPrice } from "@/lib/currency";
 import {
   HotelServiceError,
   createHotel,
@@ -903,7 +904,7 @@ export default function AdminHotels() {
                     <p className="text-[11px] text-[#9CA3AF] mt-0.5" dir="ltr">{hotel.nameEn || "—"}</p>
                   </div>
                   <span className="text-sm font-semibold text-[#111] shrink-0">
-                    ${hotel.price}<span className="text-[10px] text-[#9CA3AF] font-normal">/ليلة</span>
+                    {formatPrice(hotel.price, "ar")}<span className="text-[10px] text-[#9CA3AF] font-normal">/ليلة</span>
                   </span>
                 </div>
                 <p className="text-xs text-[#6B7280] mb-3 line-clamp-2">{hotel.descriptionAr}</p>
@@ -1003,7 +1004,7 @@ export default function AdminHotels() {
                     <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="hotel-name-slug" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي ($/ليلة)</label>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي (ج.م/ليلة)</label>
                     <input type="number" value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
@@ -1074,7 +1075,7 @@ export default function AdminHotels() {
                           <input value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} placeholder="20%" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-[#9CA3AF] mb-1">السعر الأصلي (قبل الخصم $)</label>
+                          <label className="block text-[10px] text-[#9CA3AF] mb-1">السعر الأصلي (قبل الخصم ج.م)</label>
                           <input type="number" value={form.originalPrice || ""} onChange={(e) => setForm({ ...form, originalPrice: e.target.value ? Number(e.target.value) : undefined })} placeholder="150" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                         </div>
                       </div>
@@ -1197,7 +1198,7 @@ export default function AdminHotels() {
                     <input value={roomInput.descriptionEn} onChange={(e) => setRoomInput({ ...roomInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoom} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1218,7 +1219,7 @@ export default function AdminHotels() {
                           <p className="font-medium text-[#111]">{room.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {room.nameEn || "—"}</span></p>
                         </div>
                         <div className="flex items-center gap-2 mr-3">
-                          <span className="font-semibold text-[#111] text-xs">${room.price}</span>
+                          <span className="font-semibold text-[#111] text-xs">{formatPrice(room.price, "ar")}</span>
                           <button type="button" onClick={() => startEditRoom(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>
@@ -1248,7 +1249,7 @@ export default function AdminHotels() {
                     <input value={roomAddOnInput.descriptionEn} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, descriptionEn: e.target.value })} placeholder="Add-on description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoomAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1269,7 +1270,7 @@ export default function AdminHotels() {
                           <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
                         </div>
                         <div className="flex items-center gap-2 mr-3">
-                          <span className="font-semibold text-[#111] text-xs">${addOn.price}</span>
+                          <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}</span>
                           <button type="button" onClick={() => startEditRoomAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>

@@ -9,6 +9,7 @@ import FlexibleImage from "@/components/FlexibleImage";
 import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useCart } from "@/lib/cart-context";
+import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -764,7 +765,7 @@ export default function HotelDetailClient() {
                                                             </div>
                                                         </div>
                                                         <span className={`shrink-0 font-semibold ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
-                                                            ${hotelRoom.price.toLocaleString("en-US")}
+                                                            {formatPrice(hotelRoom.price, lang)}
                                                         </span>
                                                     </div>
 
@@ -842,7 +843,7 @@ export default function HotelDetailClient() {
                                                         </div>
                                                     </div>
                                                     <span className={`mt-0.5 shrink-0 font-semibold ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
-                                                        +{addon.price}$
+                                                        {formatPriceWithSign(addon.price, lang)}
                                                     </span>
                                                 </button>
                                             );
@@ -906,7 +907,7 @@ export default function HotelDetailClient() {
                                 </p>
                                 <div className="flex flex-wrap items-baseline gap-1.5">
                                     <span className="text-4xl font-bold text-[#0EA5E9]">
-                                        ${totalPrice.toLocaleString("en-US")}
+                                        {formatPrice(totalPrice, lang)}
                                     </span>
                                     {room ? (
                                         <span className="text-sm text-[#94a3b8]">

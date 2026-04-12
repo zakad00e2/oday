@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload from "@/components/admin/FileUpload";
+import { formatPrice } from "@/lib/currency";
 import { toYouTubeEmbedUrl } from "@/lib/youtube";
 import {
   listTrips,
@@ -1013,7 +1014,7 @@ export default function AdminTrips() {
                       <p>{trip.schedule.durationAr || "—"}</p>
                       <p className="text-[11px] text-[#9CA3AF] mt-1" dir="ltr">{trip.schedule.startTime || "—"} - {trip.schedule.endTime || "—"}</p>
                     </td>
-                    <td className="px-5 py-3 font-semibold text-[#111]">${trip.startingPrice}</td>
+                    <td className="px-5 py-3 font-semibold text-[#111]">{formatPrice(trip.startingPrice, "ar")}</td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap gap-2">
                         <span className="bg-[#EFF6FF] text-[#2563EB] text-[10px] font-medium px-2 py-0.5 rounded-full">{trip.galleryImages.length} صور</span>
@@ -1080,7 +1081,7 @@ export default function AdminTrips() {
                     <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="trip-name-slug" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي ($)</label>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي (ج.م)</label>
                     <input type="number" value={form.startingPrice || ""} onChange={(e) => setForm({ ...form, startingPrice: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
@@ -1217,7 +1218,7 @@ export default function AdminTrips() {
                     <textarea value={optionInput.descriptionEn} onChange={(e) => setOptionInput({ ...optionInput, descriptionEn: e.target.value })} placeholder="Option description in English" dir="ltr" rows={3} className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={optionInput.price || ""} onChange={(e) => setOptionInput({ ...optionInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={optionInput.price || ""} onChange={(e) => setOptionInput({ ...optionInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addOption} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1239,7 +1240,7 @@ export default function AdminTrips() {
                             <p className="font-medium text-[#111]">{option.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {option.nameEn || "—"}</span></p>
                           </div>
                           <div className="flex items-center gap-2 mr-3">
-                            <span className="font-semibold text-[#111] text-xs">${option.price}</span>
+                            <span className="font-semibold text-[#111] text-xs">{formatPrice(option.price, "ar")}</span>
                             <button type="button" onClick={() => startEditOption(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                             </button>
@@ -1271,7 +1272,7 @@ export default function AdminTrips() {
                     <input value={addOnInput.descriptionEn} onChange={(e) => setAddOnInput({ ...addOnInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={addOnInput.price || ""} onChange={(e) => setAddOnInput({ ...addOnInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={addOnInput.price || ""} onChange={(e) => setAddOnInput({ ...addOnInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1293,7 +1294,7 @@ export default function AdminTrips() {
                             <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
                           </div>
                           <div className="flex items-center gap-2 mr-3">
-                            <span className="font-semibold text-[#111] text-xs">${addOn.price}</span>
+                            <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}</span>
                             <button type="button" onClick={() => startEditAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                             </button>

@@ -1,4 +1,5 @@
 import { ADMIN_WHATSAPP, NationalityId } from "./airport-config";
+import { formatPrice } from "./currency";
 
 export interface AirportFormData {
     nationalityId: NationalityId;
@@ -31,10 +32,10 @@ export function buildWhatsAppMessage(data: AirportFormData, locale: AirportMessa
         ``,
         `${isAr ? "• *الجنسية:*" : "• *Nationality:*"} ${data.nationalityLabel}`,
         `${isAr ? "• *نوع الخدمة:*" : "• *Service type:*"} ${serviceLabel}`,
-        `${isAr ? "• *السعر الأساسي:*" : "• *Base price:*"} $${data.basePrice}`,
+        `${isAr ? "• *السعر الأساسي:*" : "• *Base price:*"} ${formatPrice(data.basePrice, locale)}`,
         `${isAr ? "• *شركة الطيران:*" : "• *Airline:*"} ${data.airlineName}`,
-        `${isAr ? "• *رسوم إضافية:*" : "• *Extra fee:*"} $${data.extraFee}`,
-        `${isAr ? "• *الإجمالي:*" : "• *Total:*"} $${data.total}`,
+        `${isAr ? "• *رسوم إضافية:*" : "• *Extra fee:*"} ${formatPrice(data.extraFee, locale)}`,
+        `${isAr ? "• *الإجمالي:*" : "• *Total:*"} ${formatPrice(data.total, locale)}`,
         ``,
         `${isAr ? "• *بلد المغادرة:*" : "• *Departure country:*"} ${data.country}`,
         `${isAr ? "• *مطار المغادرة:*" : "• *Departure airport:*"} ${data.airport}`,

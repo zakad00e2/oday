@@ -99,7 +99,7 @@ export default async function HotelDetailPage({ params }: Props) {
               ratingValue: starsMap[hotel.stars] ?? hotel.stars,
             }
           : undefined,
-        priceRange: hotel.initialPrice > 0 ? `$${hotel.initialPrice}+` : undefined,
+        priceRange: hotel.initialPrice > 0 ? `EGP ${hotel.initialPrice}+` : undefined,
         containsPlace: hotel.rooms.map((room) => ({
           "@type": "HotelRoom",
           name: isAr ? room.nameAr : (room.nameEn || room.nameAr),
@@ -108,11 +108,11 @@ export default async function HotelDetailPage({ params }: Props) {
             : (room.descriptionEn || room.descriptionAr),
           offers: room.price > 0
             ? {
-                "@type": "Offer",
-                price: room.price,
-                priceCurrency: "USD",
-                availability: "https://schema.org/InStock",
-              }
+              "@type": "Offer",
+              price: room.price,
+              priceCurrency: "EGP",
+              availability: "https://schema.org/InStock",
+            }
             : undefined,
         })),
         amenityFeature: hotel.facilitiesEn.map((f) => ({
