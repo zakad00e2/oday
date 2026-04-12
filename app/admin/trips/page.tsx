@@ -470,6 +470,9 @@ export default function AdminTrips() {
   const [optionInput, setOptionInput] = useState<OptionInput>({ ...emptyOptionInput });
   const [addOnInput, setAddOnInput] = useState<AddOnInput>({ ...emptyAddOnInput });
 
+  const [editingOptionIndex, setEditingOptionIndex] = useState<number | null>(null);
+  const [editingAddOnIndex, setEditingAddOnIndex] = useState<number | null>(null);
+
   const [heroFile, setHeroFile] = useState<File | null>(null);
   // Each new gallery item stores both the blob URL and the File together
   // so removing a preview also removes the corresponding file
@@ -510,6 +513,8 @@ export default function AdminTrips() {
     setForm({ ...emptyForm });
     setOptionInput({ ...emptyOptionInput });
     setAddOnInput({ ...emptyAddOnInput });
+    setEditingOptionIndex(null);
+    setEditingAddOnIndex(null);
     setHeroFile(null);
     setNewGalleryItems([]);
     setDeleteAssetIds([]);
@@ -543,6 +548,8 @@ export default function AdminTrips() {
     setForm(tripRecordToForm(trip));
     setOptionInput({ ...emptyOptionInput });
     setAddOnInput({ ...emptyAddOnInput });
+    setEditingOptionIndex(null);
+    setEditingAddOnIndex(null);
     setHeroFile(null);
     setNewGalleryItems([]);
     setDeleteAssetIds([]);
@@ -552,38 +559,74 @@ export default function AdminTrips() {
 
   const addOption = () => {
     if (!optionInput.nameAr.trim()) return;
-    setForm((cur) => ({
-      ...cur,
-      options: [
-        ...cur.options,
-        {
-          nameAr: optionInput.nameAr.trim(),
-          nameEn: optionInput.nameEn.trim(),
-          descriptionAr: optionInput.descriptionAr.trim(),
-          descriptionEn: optionInput.descriptionEn.trim() || optionInput.descriptionAr.trim(),
-          price: optionInput.price,
-        },
-      ],
-    }));
+    const newOption = {
+      nameAr: optionInput.nameAr.trim(),
+      nameEn: optionInput.nameEn.trim(),
+      descriptionAr: optionInput.descriptionAr.trim(),
+      descriptionEn: optionInput.descriptionEn.trim() || optionInput.descriptionAr.trim(),
+      price: optionInput.price,
+    };
+
+    if (editingOptionIndex !== null) {
+      setForm((cur) => ({
+        ...cur,
+        options: cur.options.map((o, i) => (i === editingOptionIndex ? newOption : o)),
+      }));
+      setEditingOptionIndex(null);
+    } else {
+      setForm((cur) => ({
+        ...cur,
+        options: [...cur.options, newOption],
+      }));
+    }
     setOptionInput({ ...emptyOptionInput });
+  };
+
+  const startEditOption = (index: number) => {
+    const option = form.options[index];
+    setOptionInput({ ...option });
+    setEditingOptionIndex(index);
+  };
+
+  const cancelEditOption = () => {
+    setOptionInput({ ...emptyOptionInput });
+    setEditingOptionIndex(null);
   };
 
   const addAddOn = () => {
     if (!addOnInput.nameAr.trim()) return;
-    setForm((cur) => ({
-      ...cur,
-      addOns: [
-        ...cur.addOns,
-        {
-          nameAr: addOnInput.nameAr.trim(),
-          nameEn: addOnInput.nameEn.trim(),
-          descriptionAr: addOnInput.descriptionAr.trim(),
-          descriptionEn: addOnInput.descriptionEn.trim() || addOnInput.descriptionAr.trim(),
-          price: addOnInput.price,
-        },
-      ],
-    }));
+    const newAddOn = {
+      nameAr: addOnInput.nameAr.trim(),
+      nameEn: addOnInput.nameEn.trim(),
+      descriptionAr: addOnInput.descriptionAr.trim(),
+      descriptionEn: addOnInput.descriptionEn.trim() || addOnInput.descriptionAr.trim(),
+      price: addOnInput.price,
+    };
+
+    if (editingAddOnIndex !== null) {
+      setForm((cur) => ({
+        ...cur,
+        addOns: cur.addOns.map((a, i) => (i === editingAddOnIndex ? newAddOn : a)),
+      }));
+      setEditingAddOnIndex(null);
+    } else {
+      setForm((cur) => ({
+        ...cur,
+        addOns: [...cur.addOns, newAddOn],
+      }));
+    }
     setAddOnInput({ ...emptyAddOnInput });
+  };
+
+  const startEditAddOn = (index: number) => {
+    const addOn = form.addOns[index];
+    setAddOnInput({ ...addOn });
+    setEditingAddOnIndex(index);
+  };
+
+  const cancelEditAddOn = () => {
+    setAddOnInput({ ...emptyAddOnInput });
+    setEditingAddOnIndex(null);
   };
 
   const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -1176,25 +1219,39 @@ export default function AdminTrips() {
                   <div className="grid grid-cols-1 gap-2">
                     <input type="number" value={optionInput.price || ""} onChange={(e) => setOptionInput({ ...optionInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
-                  <button type="button" onClick={addOption} className="w-full md:w-auto px-4 py-2.5 bg-[#F3F4F6] rounded-xl text-sm font-medium hover:bg-[#E5E7EB] transition-colors">+ إضافة خيار</button>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={addOption} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
+                      {editingOptionIndex !== null ? "حفظ التعديل" : "+ إضافة خيار"}
+                    </button>
+                    {editingOptionIndex !== null && (
+                      <button type="button" onClick={cancelEditOption} className="px-4 py-2.5 border border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] hover:bg-[#F3F4F6] transition-colors">
+                        إلغاء
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {form.options.length > 0 && (
                   <div className="space-y-2">
                     {form.options.map((option, index) => (
-                      <div key={index} className="flex flex-col gap-2 bg-[#F9FAFB] rounded-xl px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <p className="font-medium text-[#111]">{option.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {option.nameEn || "—"}</span></p>
+                      <div key={index} className={`flex flex-col gap-2 rounded-xl px-4 py-3 text-sm transition-colors ${editingOptionIndex === index ? "bg-[#EFF6FF] border border-[#BFDBFE]" : "bg-[#F9FAFB]"}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-[#111]">{option.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {option.nameEn || "—"}</span></p>
+                          </div>
+                          <div className="flex items-center gap-2 mr-3">
+                            <span className="font-semibold text-[#111] text-xs">${option.price}</span>
+                            <button type="button" onClick={() => startEditOption(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+                            </button>
+                            <button type="button" onClick={() => { if (editingOptionIndex === index) cancelEditOption(); setForm((cur) => ({ ...cur, options: cur.options.filter((_, i) => i !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                          </div>
                         </div>
                         {option.descriptionAr && (
-                          <p className="text-xs text-[#6B7280] mt-1">{option.descriptionAr}</p>
+                          <p className="text-xs text-[#6B7280]">{option.descriptionAr}</p>
                         )}
                         {option.descriptionEn && (
                           <p className="text-xs text-[#9CA3AF]" dir="ltr">{option.descriptionEn}</p>
                         )}
-                        <div className="flex items-center gap-3 text-xs text-[#6B7280]">
-                          <span className="font-semibold text-[#111]">${option.price}</span>
-                          <button type="button" onClick={() => setForm((cur) => ({ ...cur, options: cur.options.filter((_, i) => i !== index) }))} className="text-[#9CA3AF] hover:text-[#EF4444]">×</button>
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -1213,23 +1270,42 @@ export default function AdminTrips() {
                     <input value={addOnInput.descriptionAr} onChange={(e) => setAddOnInput({ ...addOnInput, descriptionAr: e.target.value })} placeholder="الوصف بالعربي" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                     <input value={addOnInput.descriptionEn} onChange={(e) => setAddOnInput({ ...addOnInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <input type="number" value={addOnInput.price || ""} onChange={(e) => setAddOnInput({ ...addOnInput, price: Number(e.target.value) })} placeholder="السعر $" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
-                    <button type="button" onClick={addAddOn} className="bg-[#F3F4F6] rounded-xl text-sm font-medium hover:bg-[#E5E7EB] transition-colors">+ إضافة</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={addAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
+                      {editingAddOnIndex !== null ? "حفظ التعديل" : "+ إضافة"}
+                    </button>
+                    {editingAddOnIndex !== null && (
+                      <button type="button" onClick={cancelEditAddOn} className="px-4 py-2.5 border border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] hover:bg-[#F3F4F6] transition-colors">
+                        إلغاء
+                      </button>
+                    )}
                   </div>
                 </div>
                 {form.addOns.length > 0 && (
                   <div className="space-y-2">
                     {form.addOns.map((addOn, index) => (
-                      <div key={index} className="flex items-center justify-between bg-[#F9FAFB] rounded-xl px-4 py-3 text-sm">
-                        <div>
-                          <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
+                      <div key={index} className={`rounded-xl px-4 py-3 text-sm transition-colors ${editingAddOnIndex === index ? "bg-[#EFF6FF] border border-[#BFDBFE]" : "bg-[#F9FAFB]"}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
+                          </div>
+                          <div className="flex items-center gap-2 mr-3">
+                            <span className="font-semibold text-[#111] text-xs">${addOn.price}</span>
+                            <button type="button" onClick={() => startEditAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+                            </button>
+                            <button type="button" onClick={() => { if (editingAddOnIndex === index) cancelEditAddOn(); setForm((cur) => ({ ...cur, addOns: cur.addOns.filter((_, i) => i !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                          </div>
+                        </div>
+                        {addOn.descriptionAr && (
                           <p className="text-xs text-[#6B7280] mt-1">{addOn.descriptionAr}</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-[#111]">${addOn.price}</span>
-                          <button type="button" onClick={() => setForm((cur) => ({ ...cur, addOns: cur.addOns.filter((_, i) => i !== index) }))} className="text-[#9CA3AF] hover:text-[#EF4444]">×</button>
-                        </div>
+                        )}
+                        {addOn.descriptionEn && (
+                          <p className="text-xs text-[#9CA3AF] mt-0.5" dir="ltr">{addOn.descriptionEn}</p>
+                        )}
                       </div>
                     ))}
                   </div>
