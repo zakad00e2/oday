@@ -6,6 +6,12 @@ import { useI18n } from "@/lib/i18n/dictionary-context";
 
 const socials = [
   {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/17MN4Fidh1/?mibextid=wwXIfr",
+    path: "M22.675 0h-21.35C.595 0 0 .595 0 1.326v21.348C0 23.405.595 24 1.326 24H12.82v-9.294H9.692V11.08h3.128V8.41c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.464.099 2.796.143v3.24h-1.92c-1.506 0-1.797.716-1.797 1.765v2.313h3.587l-.467 3.626h-3.12V24h6.117C23.405 24 24 23.405 24 22.674V1.326C24 .595 23.405 0 22.675 0z",
+    size: 18,
+  },
+  {
     label: "YouTube",
     href: "https://youtube.com/@odaytourism?si=8rmXGqaGsUl_2cjf",
     path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
@@ -23,15 +29,56 @@ const socials = [
     path: "M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.89 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z",
     size: 18,
   },
-  // {
-  //   label: "X (Twitter)",
-  //   path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z",
-  //   size: 16,
-  // },
 ];
+
+type PaymentMethodId = "visa" | "mastercard" | "vodafone-cash" | "banque-misr";
+
+function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
+  switch (method) {
+    case "visa":
+      return (
+        <img
+          src="https://logos-world.net/wp-content/uploads/2020/05/Visa-Logo.png"
+          alt="Visa"
+          loading="lazy"
+          className="h-6 w-auto max-w-[88px] object-contain"
+        />
+      );
+    case "mastercard":
+      return (
+        <img
+          src="https://logos-world.net/wp-content/uploads/2020/09/Mastercard-Logo.png"
+          alt="Mastercard"
+          loading="lazy"
+          className="h-7 w-auto max-w-[96px] object-contain"
+        />
+      );
+    case "vodafone-cash":
+      return (
+        <img
+          src="https://drashrafsoliman.com/wp-content/uploads/2022/06/vc.png"
+          alt="Vodafone Cash"
+          loading="lazy"
+          className="h-14 w-auto max-w-[170px] rounded-md object-contain"
+        />
+      );
+    case "banque-misr":
+      return (
+        <img
+          src="https://images.seeklogo.com/logo-png/54/2/banque-misr-logo-png_seeklogo-545884.png"
+          alt="Banque Misr"
+          loading="lazy"
+          className="h-14 w-auto max-w-[156px] object-contain"
+        />
+      );
+    default:
+      return null;
+  }
+}
 
 export default function Footer() {
   const { dict, lang } = useI18n();
+  const isArabic = lang === "ar";
   const phoneNumber = "+201032549630";
 
   const quickLinks = [
@@ -43,26 +90,29 @@ export default function Footer() {
   ];
 
   const policyLinks = [
-    { label: lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', href: `/${lang}/terms` },
-    { label: lang === 'ar' ? 'سياسة الاسترداد' : 'Refund Policy', href: `/${lang}/refund-policy` },
+    { label: isArabic ? "الشروط والأحكام" : "Terms & Conditions", href: `/${lang}/terms` },
+    { label: isArabic ? "سياسة الاسترداد" : "Refund Policy", href: `/${lang}/refund-policy` },
   ];
 
   const contactInfo = [
-    "hello@odaytourism.com",
+    "OdayTourism@outlook.com",
     phoneNumber,
     dict.footer.location,
   ];
 
+  const paymentMethods: Array<{ id: PaymentMethodId; label: string }> = [
+    { id: "visa", label: "Visa" },
+    { id: "mastercard", label: isArabic ? "ماستر كارد" : "Mastercard" },
+    { id: "vodafone-cash", label: isArabic ? "فودافون كاش" : "Vodafone Cash" },
+    { id: "banque-misr", label: isArabic ? "بنك مصر" : "Banque Misr" },
+  ];
+
   return (
     <footer className="relative isolate z-10 bg-white">
-      <div className="max-w-[1200px] mx-auto px-6 pt-20 pb-10">
-
-        {/* 5-column grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10 items-start">
-
-          {/* Col 1 — Brand */}
-          <div className="lg:col-span-4">
-            <Link href={`/${lang}`} className="flex items-center gap-1 mb-6">
+      <div className="mx-auto max-w-[1200px] px-6 pt-20 pb-10">
+        <div className="grid grid-cols-1 items-start gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-x-12">
+          <div className="flex flex-col gap-6 lg:col-span-4">
+            <Link href={`/${lang}`} className="mb-6 flex items-center gap-1">
               <Image
                 src="/optimized/logo.webp"
                 alt="Oday Tourism Logo"
@@ -74,21 +124,43 @@ export default function Footer() {
               />
               <div className="flex flex-col pt-1">
                 <span className="text-xl font-bold leading-none text-[#111]">Oday Tourism</span>
-                <span className="text-[10px] font-medium uppercase tracking-[2.7px] text-[#6B7280]">Travel Services</span>
+                <span className="text-[10px] font-medium uppercase tracking-[2.7px] text-[#6B7280]">
+                  Travel Services
+                </span>
               </div>
             </Link>
-            <p className="text-[#6B7280] text-sm leading-relaxed max-w-[400px]">
+            <p className="max-w-[400px] text-sm leading-relaxed text-[#6B7280]">
               {dict.footer.description}
             </p>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-[#111]">
+                {isArabic ? "طرق الدفع" : "Payment Methods"}
+              </h4>
+              <div className="flex max-w-[420px] flex-wrap items-center gap-x-5 gap-y-3">
+                {paymentMethods.map((method) => (
+                  <div
+                    key={method.id}
+                    className="flex h-10 items-center justify-center"
+                    role="img"
+                    aria-label={method.label}
+                  >
+                    <PaymentMethodLogo method={method.id} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Col 2 — Quick Links */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.quickLinks}</h4>
+            <h4 className="mb-5 text-sm font-semibold text-[#111]">{dict.footer.quickLinks}</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors duration-200">
+                  <Link
+                    href={link.href}
+                    className="text-sm text-[#6B7280] transition-colors duration-200 hover:text-[#111]"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -96,13 +168,17 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 3 — Policies */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-semibold text-[#111] mb-5">{lang === 'ar' ? 'السياسات' : 'Policies'}</h4>
+            <h4 className="mb-5 text-sm font-semibold text-[#111]">
+              {isArabic ? "السياسات" : "Policies"}
+            </h4>
             <ul className="space-y-3">
               {policyLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#6B7280] hover:text-[#111] transition-colors duration-200">
+                  <Link
+                    href={link.href}
+                    className="text-sm text-[#6B7280] transition-colors duration-200 hover:text-[#111]"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -110,14 +186,13 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 4 — Contact Info */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-semibold text-[#111] mb-5">{dict.footer.contactInfo}</h4>
+            <h4 className="mb-5 text-sm font-semibold text-[#111]">{dict.footer.contactInfo}</h4>
             <ul className="space-y-3">
-              {contactInfo.map((line, i) => (
+              {contactInfo.map((line, index) => (
                 <li
-                  key={i}
-                  className={`text-sm text-[#6B7280] ${line === phoneNumber && lang === "ar" ? "text-right" : ""}`}
+                  key={index}
+                  className={`text-sm text-[#6B7280] ${line === phoneNumber && isArabic ? "text-right" : ""}`}
                   dir={line === phoneNumber ? "ltr" : undefined}
                   style={line === phoneNumber ? { unicodeBidi: "isolate" } : undefined}
                 >
@@ -127,38 +202,19 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 5 — Newsletter + Social */}
-          <div className="lg:col-span-2 flex flex-col gap-5">
-            {/* <div className="flex items-center rounded-full border border-[#E5E7EB] bg-white overflow-hidden pe-4 ps-1.5 py-1.5">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={dict.footer.emailPlaceholder}
-                aria-label={dict.footer.subscribeLabel}
-                className="flex-1 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] min-w-0"
-              />
-              <button
-                aria-label={dict.footer.subscribeBtnLabel}
-                className="bg-[#111] text-white text-sm font-medium px-5 py-2 rounded-full hover:bg-[#333] active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
-              >
-                {dict.footer.subscribe}
-              </button>
-            </div> */}
-
-            {/* Social icons */}
+          <div className="flex flex-col gap-5 lg:col-span-2">
             <div className="relative z-10 flex items-center gap-3">
-              {socials.map((s) => (
+              {socials.map((social) => (
                 <a
-                  key={s.label}
-                  href={s.href}
+                  key={social.label}
+                  href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="relative z-10 pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] text-[#6B7280] transition-colors duration-200 hover:border-[#111] hover:text-[#111]"
+                  aria-label={social.label}
+                  className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E7EB] text-[#6B7280] transition-colors duration-200 hover:border-[#111] hover:text-[#111]"
                 >
-                  <svg width={s.size} height={s.size} viewBox="0 0 24 24" fill="currentColor">
-                    <path d={s.path} />
+                  <svg width={social.size} height={social.size} viewBox="0 0 24 24" fill="currentColor">
+                    <path d={social.path} />
                   </svg>
                 </a>
               ))}
@@ -166,13 +222,11 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Divider + copyright */}
-        <div className="border-t border-[#E5E7EB] mt-14 pt-6 text-center">
+        <div className="mt-14 border-t border-[#E5E7EB] pt-6 text-center">
           <p className="text-sm text-[#9CA3AF]">
             &copy; {new Date().getFullYear()} {dict.footer.brand}. {dict.footer.copyright}
           </p>
         </div>
-
       </div>
     </footer>
   );
