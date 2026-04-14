@@ -31,7 +31,7 @@ const socials = [
   },
 ];
 
-type PaymentMethodId = "visa" | "mastercard" | "vodafone-cash" | "banque-misr";
+type PaymentMethodId = "visa" | "mastercard" | "additional-payment" | "banque-misr" | "cib";
 
 function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
   switch (method) {
@@ -53,13 +53,13 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           className="h-7 w-auto max-w-[96px] object-contain"
         />
       );
-    case "vodafone-cash":
+    case "additional-payment":
       return (
         <img
-          src="https://drashrafsoliman.com/wp-content/uploads/2022/06/vc.png"
-          alt="Vodafone Cash"
+          src="https://bopwebsitestorage.blob.core.windows.net/assets/images/news/logo.png"
+          alt="Additional Payment Method"
           loading="lazy"
-          className="h-14 w-auto max-w-[170px] rounded-md object-contain"
+          className="h-14 w-auto max-w-[170px] object-contain"
         />
       );
     case "banque-misr":
@@ -69,6 +69,15 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           alt="Banque Misr"
           loading="lazy"
           className="h-14 w-auto max-w-[156px] object-contain"
+        />
+      );
+    case "cib":
+      return (
+        <img
+          src="/images/cib.png"
+          alt="CIB"
+          loading="lazy"
+          className="h-12 w-auto max-w-[122px] object-contain"
         />
       );
     default:
@@ -103,8 +112,9 @@ export default function Footer() {
   const paymentMethods: Array<{ id: PaymentMethodId; label: string }> = [
     { id: "visa", label: "Visa" },
     { id: "mastercard", label: isArabic ? "ماستر كارد" : "Mastercard" },
-    { id: "vodafone-cash", label: isArabic ? "فودافون كاش" : "Vodafone Cash" },
+    { id: "additional-payment", label: isArabic ? "وسيلة دفع إضافية" : "Additional Payment Method" },
     { id: "banque-misr", label: isArabic ? "بنك مصر" : "Banque Misr" },
+    { id: "cib", label: "CIB" },
   ];
 
   return (

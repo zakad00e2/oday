@@ -33,7 +33,7 @@ export default function TripsHero() {
                         >
                             {t("اكتشف التجارب السياحية", "Unforgettable")}
                             <br />
-                            {t("في شرم الشيخ", "Sharm Experiences")}
+                            {t("مع Oday Tourism", "Sharm Experiences")}
                         </h1>
                     </ScrollReveal>
 

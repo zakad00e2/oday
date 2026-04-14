@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { listTrips, type TripRecord } from "@/lib/trip-service";
+import {
+  TRIP_DESTINATION_OPTIONS,
+  isSupportedTripDestination,
+} from "@/lib/trip-destinations";
 import TripCard from "./TripCard";
 import ScrollReveal from "../ScrollReveal";
 import Skeleton from "../ui/Skeleton";
@@ -73,11 +77,48 @@ function TripsGridSkeleton() {
   );
 }
 
+function TripsStatusCard({
+  title,
+  description,
+  actionLabel,
+  onAction,
+  tone = "neutral",
+}: {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  tone?: "neutral" | "error";
+}) {
+  const toneClasses =
+    tone === "error"
+      ? "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]"
+      : "border-[#CBD5E1] bg-[#F8FAFC] text-[#64748B]";
+
+  return (
+    <div className={`mt-8 rounded-2xl border border-dashed px-6 py-12 text-center ${toneClasses}`}>
+      <p className="text-base font-semibold">{title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed">{description}</p>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-5 inline-flex items-center justify-center rounded-full bg-[#111] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#0EA5E9]"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export default function TripsGrid() {
   const { lang } = useI18n();
-  const t = (ar: ReactNode, en: ReactNode) => (lang === "ar" ? ar : en);
+  const isAr = lang === "ar";
+  const t = (ar: ReactNode, en: ReactNode) => (isAr ? ar : en);
 
   const [trips, setTrips] = useState<TripRecord[]>([]);
+  const [selectedDestination, setSelectedDestination] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +132,7 @@ export default function TripsGrid() {
       if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
         return;
       }
+
       setError(err instanceof Error ? err.message : "Failed to load trips");
     } finally {
       if (!signal?.aborted) {
@@ -106,6 +148,40 @@ export default function TripsGrid() {
     return () => controller.abort();
   }, [loadTrips]);
 
+  const destinationOptions = useMemo(() => {
+    const availableDestinations = new Set(
+      trips
+        .map((trip) => trip.destination)
+        .filter((destination): destination is string => isSupportedTripDestination(destination)),
+    );
+
+    return TRIP_DESTINATION_OPTIONS.filter((option) =>
+      availableDestinations.has(option.value),
+    ).map((option) => ({
+      value: option.value,
+      label: isAr ? option.labelAr : option.labelEn,
+    }));
+  }, [isAr, trips]);
+
+  useEffect(() => {
+    if (
+      selectedDestination !== "all" &&
+      !destinationOptions.some((option) => option.value === selectedDestination)
+    ) {
+      setSelectedDestination("all");
+    }
+  }, [destinationOptions, selectedDestination]);
+
+  const filteredTrips = useMemo(() => {
+    if (selectedDestination === "all") return trips;
+
+    return trips.filter((trip) => trip.destination === selectedDestination);
+  }, [selectedDestination, trips]);
+
+  const resetFilters = () => {
+    setSelectedDestination("all");
+  };
+
   if (loading) {
     return <TripsGridSkeleton />;
   }
@@ -113,21 +189,16 @@ export default function TripsGrid() {
   if (error) {
     return (
       <section id="trips" className="bg-background py-16 md:py-24">
-        <div className="max-w-300 mx-auto px-6 text-center md:px-12">
-          <p className="text-base text-[#64748b]">
-            {t(
-              "\u062d\u062f\u062b \u062e\u0637\u0623 \u0641\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0631\u062d\u0644\u0627\u062a. \u062d\u0627\u0648\u0644 \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.",
-              "Failed to load trips. Please try again.",
-            )}
-          </p>
-          <button
-            onClick={() => {
+        <div className="max-w-300 mx-auto px-6 md:px-12">
+          <TripsStatusCard
+            title={t("تعذر تحميل الرحلات", "Unable to load trips") as string}
+            description={error}
+            actionLabel={t("إعادة المحاولة", "Retry") as string}
+            onAction={() => {
               void loadTrips();
             }}
-            className="mt-4 rounded-full bg-[#0EA5E9] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0284C7]"
-          >
-            {t("\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629", "Retry")}
-          </button>
+            tone="error"
+          />
         </div>
       </section>
     );
@@ -136,19 +207,22 @@ export default function TripsGrid() {
   if (trips.length === 0) {
     return (
       <section id="trips" className="bg-background py-16 md:py-24">
-        <div className="max-w-300 mx-auto px-6 text-center md:px-12">
-          <p className="text-base text-[#64748b]">
-            {t(
-              "\u0644\u0627 \u062a\u0648\u062c\u062f \u0631\u062d\u0644\u0627\u062a \u0645\u062a\u0627\u062d\u0629 \u062d\u0627\u0644\u064a\u0627\u064b.",
-              "No trips available at the moment.",
-            )}
-          </p>
+        <div className="max-w-300 mx-auto px-6 md:px-12">
+          <TripsStatusCard
+            title={t("لا توجد رحلات متاحة الآن", "No trips available right now") as string}
+            description={
+              t(
+                "ستظهر هنا الرحلات القادمة مباشرة من لوحة التحكم بمجرد توفرها في الـ API.",
+                "Trips created in the dashboard will appear here automatically once available in the API.",
+              ) as string
+            }
+          />
         </div>
       </section>
     );
   }
 
-  const [featured, ...rest] = trips;
+  const [featured, ...rest] = filteredTrips;
 
   return (
     <section id="trips" className="bg-background py-16 md:py-24">
@@ -156,15 +230,12 @@ export default function TripsGrid() {
         <ScrollReveal>
           <div className="mb-12 text-center">
             <span className="mb-4 inline-block rounded-full bg-[#0EA5E9]/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#0EA5E9]">
-              {t("\u0631\u062d\u0644\u0627\u062a\u0646\u0627 \u0627\u0644\u0645\u0645\u064a\u0632\u0629", "Featured trips")}
+              {t("رحلاتنا المميزة", "Featured trips")}
             </span>
             <h2 className="mb-4 text-3xl font-bold text-[#0f172a] md:text-4xl">
               {t(
                 <>
-                  {"\u0627\u062e\u062a\u0631 \u0631\u062d\u0644\u062a\u0643 "}
-                  <span className="text-[#0f172a]">
-                    {"\u0627\u0644\u0645\u0641\u0636\u0644\u0629"}
-                  </span>
+                  اختر رحلتك <span className="text-[#0f172a]">المفضلة</span>
                 </>,
                 <>
                   Pick your <span className="text-[#000000]">favorite</span> trip
@@ -173,28 +244,84 @@ export default function TripsGrid() {
             </h2>
             <p className="mx-auto max-w-lg text-base text-[#64748b]">
               {t(
-                "\u0631\u062d\u0644\u0627\u062a \u0648\u0623\u0646\u0634\u0637\u0629 \u0645\u062a\u0646\u0648\u0639\u0629 \u0641\u064a \u0627\u0646\u062a\u0638\u0627\u0631\u0643 - \u0643\u0644 \u0631\u062d\u0644\u0629 \u062a\u062c\u0631\u0628\u0629 \u0644\u0627 \u062a\u064f\u0646\u0633\u0649",
-                "A variety of trips and activities await you - every trip is unforgettable",
+                "رحلات وأنشطة متنوعة في انتظارك، وكل رحلة مصممة لتكون تجربة لا تُنسى.",
+                "A curated selection of trips and activities is waiting for you, and every trip is built to be unforgettable.",
               )}
             </p>
+
+            <div className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-4">
+              <div className="flex flex-wrap items-end justify-center gap-3 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-3 shadow-sm">
+                <div className="flex min-w-[150px] flex-1 flex-col gap-1">
+                  <label className="px-1 text-[11px] font-semibold tracking-wide text-[#94A3B8]">
+                    {t("الوجهة", "Destination")}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedDestination}
+                      onChange={(event) => setSelectedDestination(event.target.value)}
+                      className="w-full cursor-pointer appearance-none rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-2 pe-4 ps-9 text-[13px] font-medium text-[#0F172A] transition-all focus:border-[#0EA5E9] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30"
+                    >
+                      <option value="all">{t("كل الوجهات", "All destinations")}</option>
+                      {destinationOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedDestination !== "all" ? (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="flex h-[36px] min-w-[100px] flex-[0_1_auto] items-center justify-center whitespace-nowrap rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 text-[12px] font-semibold text-[#EF4444] transition-all hover:bg-[#FEE2E2]"
+                  >
+                    {t("مسح الفلاتر", "Clear filters")}
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </ScrollReveal>
 
-        {featured ? (
-          <ScrollReveal>
-            <div className="mb-4 md:mb-5">
-              <TripCard trip={featured} index={0} featured />
-            </div>
-          </ScrollReveal>
-        ) : null}
+        {filteredTrips.length === 0 ? (
+          <TripsStatusCard
+            title={t("لا توجد نتائج مطابقة", "No matching trips") as string}
+            description={
+              t(
+                "جرّب اختيار وجهة أخرى أو امسح الفلتر لعرض جميع الرحلات المتاحة.",
+                "Try choosing another destination or clear the filter to see all available trips.",
+              ) as string
+            }
+            actionLabel={t("مسح الفلاتر", "Clear filters") as string}
+            onAction={resetFilters}
+          />
+        ) : (
+          <>
+            {featured ? (
+              <ScrollReveal>
+                <div className="mb-4 md:mb-5">
+                  <TripCard trip={featured} index={0} featured />
+                </div>
+              </ScrollReveal>
+            ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-5">
-          {rest.map((trip, index) => (
-            <ScrollReveal key={trip.slug} delay={index * 70}>
-              <TripCard trip={trip} index={index + 1} />
-            </ScrollReveal>
-          ))}
-        </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-5">
+              {rest.map((trip, index) => (
+                <ScrollReveal key={trip.slug} delay={index * 70}>
+                  <TripCard trip={trip} index={index + 1} />
+                </ScrollReveal>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

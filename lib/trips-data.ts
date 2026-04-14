@@ -1,5 +1,9 @@
 import { tripDetailEn } from "./trip-detail-locales";
 import { TripDetail } from "./trips-types";
+import {
+    DEFAULT_TRIP_DESTINATION,
+    getTripDestinationLabels,
+} from "./trip-destinations";
 
 const rawTrips = [
     // ═══════════════════════════════════════════════════════════════
@@ -542,9 +546,13 @@ const rawTrips = [
 
 export const allTrips: TripDetail[] = rawTrips.map((trip) => {
     const locale = tripDetailEn[trip.slug];
+    const destination = getTripDestinationLabels(DEFAULT_TRIP_DESTINATION);
 
     return {
         ...trip,
+        destination: destination.value,
+        destinationLabelAr: destination.ar,
+        destinationLabelEn: destination.en,
         taglineEn: locale?.tagline ?? trip.taglineAr,
         descriptionEn: locale?.description ?? trip.descriptionAr,
         schedule: {

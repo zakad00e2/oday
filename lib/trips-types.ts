@@ -1,5 +1,7 @@
 // ─── Trips System Data Models ───────────────────────────────────────────────
 
+import type { TripDestination } from "./trip-destinations";
+
 export interface TripOption {
     id: string;
     nameAr: string;
@@ -31,6 +33,9 @@ export interface TripSchedule {
 }
 
 export interface TripDetail {
+    destination: TripDestination;
+    destinationLabelAr: string;
+    destinationLabelEn: string;
     slug: string;
     titleAr: string;
     titleEn: string;

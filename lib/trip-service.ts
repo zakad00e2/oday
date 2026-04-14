@@ -4,6 +4,10 @@ import {
 } from "./auth-service";
 
 import type { TripDetail, TripOption, TripAddOn } from "./trips-types";
+import {
+  getTripDestinationLabels,
+  type TripDestination,
+} from "./trip-destinations";
 
 export const TRIP_API_BASE =
   process.env.NEXT_PUBLIC_TRIP_API_BASE ??
@@ -72,6 +76,8 @@ export interface ApiTripAddon {
 export interface ApiTrip {
   id: string;
   slug: string;
+  city?: string | null;
+  destination?: string | null;
   price: string;
   start_time: string;
   end_time: string;
@@ -237,6 +243,7 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
   const ar = getTranslation(apiTrip.translations, "ar");
   const en = getTranslation(apiTrip.translations, "en");
   const assets = apiTrip.assets ?? [];
+  const destination = getTripDestinationLabels(apiTrip.city ?? apiTrip.destination);
   const imageAssetIdsByUrl: Record<string, string[]> = {};
 
   for (const asset of assets) {
@@ -326,6 +333,9 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
 
   return {
     id: apiTrip.id,
+    destination: destination.value,
+    destinationLabelAr: repairText(destination.ar),
+    destinationLabelEn: repairText(destination.en),
     slug: apiTrip.slug,
     titleAr: repairText(ar?.title || en?.title),
     titleEn: repairText(en?.title || ar?.title),
@@ -417,6 +427,7 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
 // ── Mutation types ──────────────────────────────────────────────────────────
 
 export interface TripMutationInput {
+  destination: TripDestination;
   slug: string;
   price: number;
   startTime: string;
@@ -462,6 +473,7 @@ function buildTripFormData(
 ): FormData {
   const formData = new FormData();
 
+  formData.set("city", input.destination);
   formData.set("slug", input.slug);
   formData.set("price", String(Math.max(0, input.price)));
   formData.set("start_time", input.startTime);

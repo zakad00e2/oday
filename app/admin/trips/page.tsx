@@ -4,6 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload from "@/components/admin/FileUpload";
 import { formatPrice } from "@/lib/currency";
+import {
+  DEFAULT_TRIP_DESTINATION,
+  TRIP_DESTINATION_OPTIONS,
+  getTripDestinationLabels,
+  isSupportedTripDestination,
+  resolveTripDestination,
+  type TripDestination,
+} from "@/lib/trip-destinations";
 import { toYouTubeEmbedUrl } from "@/lib/youtube";
 import {
   listTrips,
@@ -38,6 +46,7 @@ type GalleryUploadItem = {
 };
 
 interface TripForm {
+  destination: TripDestination;
   slug: string;
   titleAr: string;
   titleEn: string;
@@ -60,6 +69,7 @@ interface TripForm {
 }
 
 const emptyForm: TripForm = {
+  destination: DEFAULT_TRIP_DESTINATION,
   slug: "",
   titleAr: "",
   titleEn: "",
@@ -129,6 +139,7 @@ function createTripMutationInput(form: TripForm, slug: string): TripMutationInpu
   const durationLabels = calculateDurationLabels(normalizedStartTime, normalizedEndTime);
 
   return {
+    destination: form.destination,
     slug,
     price: Number.isFinite(form.startingPrice) ? Math.max(0, form.startingPrice) : 0,
     startTime: normalizedStartTime,
@@ -355,7 +366,14 @@ function calculateDurationLabels(startTime: string, endTime: string) {
 }
 
 function tripRecordToForm(trip: TripRecord): TripForm {
+  const resolvedDestination = resolveTripDestination(trip.destination);
+  const destination =
+    resolvedDestination && isSupportedTripDestination(resolvedDestination)
+      ? resolvedDestination
+      : DEFAULT_TRIP_DESTINATION;
+
   return {
+    destination,
     slug: trip.slug,
     titleAr: trip.titleAr,
     titleEn: trip.titleEn,
@@ -509,6 +527,7 @@ export default function AdminTrips() {
 
   const totalOptions = trips.reduce((sum, trip) => sum + trip.options.length, 0);
   const totalAddOns = trips.reduce((sum, trip) => sum + trip.addOns.length, 0);
+  const selectedDestinationLabels = getTripDestinationLabels(form.destination);
 
   const resetFormState = () => {
     setForm({ ...emptyForm });
@@ -968,7 +987,7 @@ export default function AdminTrips() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="admin-trips-table w-full text-sm min-w-[980px]">
+            <table className="admin-trips-table w-full text-sm min-w-[1080px]">
               <thead>
                 <tr className="border-b border-[#F3F4F6] bg-[#F9FAFB]">
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الإجراءات</th>
@@ -979,6 +998,7 @@ export default function AdminTrips() {
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">المحتوى</th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">التهيئة</th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">إجراءات</th>
+                  <th className="text-right px-5 py-3.5 text-xs font-semibold text-[#6B7280]">الوجهة</th>
                 </tr>
               </thead>
               <tbody>
@@ -1037,13 +1057,19 @@ export default function AdminTrips() {
                         </button>
                       </div>
                     </td>
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-[#111]">{trip.destinationLabelAr || "-"}</p>
+                      <p className="text-[11px] text-[#9CA3AF] mt-0.5" dir="ltr">
+                        {trip.destinationLabelEn || "-"}
+                      </p>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <style jsx>{`
-              .admin-trips-table th:last-child,
-              .admin-trips-table td:last-child {
+              .admin-trips-table th:nth-last-child(2),
+              .admin-trips-table td:nth-last-child(2) {
                 display: none;
               }
             `}</style>
@@ -1075,6 +1101,29 @@ export default function AdminTrips() {
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">العنوان بالإنجليزي</label>
                     <input value={form.titleEn} onChange={(e) => setForm({ ...form, titleEn: e.target.value })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">الوجهة</label>
+                    <select
+                      value={form.destination}
+                      onChange={(e) => setForm({ ...form, destination: e.target.value as TripDestination })}
+                      className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors bg-white"
+                    >
+                      {TRIP_DESTINATION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.labelAr}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">Destination in English</label>
+                    <input
+                      value={selectedDestinationLabels.en}
+                      readOnly
+                      dir="ltr"
+                      className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm bg-[#F9FAFB] text-[#6B7280] focus:outline-none"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">Slug (رابط)</label>

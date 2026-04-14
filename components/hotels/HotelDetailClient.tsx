@@ -150,7 +150,8 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): Loc
         youtubeUrl: toEmbedUrl(hotel.youtubeVideoUrl),
         youtubeIsShort: isYouTubeShortUrl(hotel.youtubeVideoUrl),
         amenities: (isAr ? hotel.facilitiesAr : hotel.facilitiesEn).map((label) => ({ label })),
-        rooms: hotel.rooms.map((room) => ({
+        rooms: hotel.rooms
+            .map((room) => ({
             id: room.id,
             capacity: room.capacity,
             name: isAr ? room.nameAr : room.nameEn,
@@ -161,17 +162,20 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): Loc
                 (isAr ? room.descriptionAr : room.descriptionEn) ||
                 (isAr ? room.descriptionEn : room.descriptionAr) ||
                 (isAr ? `السعة: ${room.capacity}` : `Capacity: ${room.capacity}`),
-        })),
-        addons: hotel.addons.map((addon) => ({
-            id: addon.id,
-            name: isAr ? addon.nameAr : addon.nameEn,
-            nameAr: addon.nameAr,
-            nameEn: addon.nameEn,
-            description: isAr ? addon.descriptionAr : addon.descriptionEn,
-            descriptionAr: addon.descriptionAr,
-            descriptionEn: addon.descriptionEn,
-            price: addon.price,
-        })),
+            }))
+            .sort((left, right) => left.price - right.price || left.name.localeCompare(right.name)),
+        addons: hotel.addons
+            .map((addon) => ({
+                id: addon.id,
+                name: isAr ? addon.nameAr : addon.nameEn,
+                nameAr: addon.nameAr,
+                nameEn: addon.nameEn,
+                description: isAr ? addon.descriptionAr : addon.descriptionEn,
+                descriptionAr: addon.descriptionAr,
+                descriptionEn: addon.descriptionEn,
+                price: addon.price,
+            }))
+            .sort((left, right) => left.price - right.price || left.name.localeCompare(right.name)),
     };
 }
 
@@ -326,12 +330,26 @@ function SectionTitle({
                 ? "bg-[#F59E0B]/10 text-[#F59E0B]"
                 : "bg-[#0EA5E9]/10 text-[#0EA5E9]";
 
+    const renderIcon = () => {
+        if (iconTone === "emerald") {
+            return (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+            );
+        }
+        
+        return (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+    };
+
     return (
         <div className="mb-6 flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClasses}`}>
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                {renderIcon()}
             </div>
             <h2 className="text-2xl font-bold text-[#0f172a] md:text-3xl">{title}</h2>
         </div>
@@ -574,7 +592,7 @@ export default function HotelDetailClient() {
         chooseRoomSub: isAr ? "حدد نوع الغرفة وعدد الغرف وتواريخ الإقامة" : "Select the room type, room count, and your stay dates.",
         roomType: isAr ? "نوع الغرفة" : "Room type",
         roomCount: isAr ? "عدد الغرف" : "Rooms",
-        addOns: isAr ? "الإضافات" : "Add-ons",
+        addOns: isAr ? "ترقيات الغرف" : "Room upgrades",
         optional: isAr ? "(اختياري)" : "(Optional)",
         stayDates: isAr ? "تواريخ الإقامة" : "Stay dates",
         checkIn: isAr ? "تاريخ الوصول" : "Check-in date",
@@ -589,7 +607,7 @@ export default function HotelDetailClient() {
         hotelVideo: isAr ? "فيديو الفندق" : "Hotel video",
         image: isAr ? "صورة" : "Image",
         noRooms: isAr ? "لا توجد غرف متاحة لهذا الفندق حاليًا." : "No rooms are available for this hotel right now.",
-        noAddOns: isAr ? "لا توجد إضافات متاحة حاليًا." : "No add-ons are available right now.",
+        noAddOns: isAr ? "لا توجد ترقيات غرف متاحة حاليًا." : "No room upgrades are available right now.",
     };
 
     const loadHotel = useCallback(async (signal?: AbortSignal) => {
@@ -759,12 +777,12 @@ export default function HotelDetailClient() {
                         <ScrollReveal>
                             <SectionTitle iconTone="emerald" title={labels.amenities} />
                         </ScrollReveal>
-                        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                        <div className="grid grid-cols-2 gap-y-1 gap-x-3 md:grid-cols-3">
                             {hotel.amenities.map((item, index) => (
                                 <ScrollReveal key={`${item.label}-${index}`} delay={index * 40}>
-                                    <div className="flex items-center gap-2.5 px-1 py-2">
-                                        <svg className="h-4 w-4 shrink-0 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    <div className="flex items-center gap-2.5 px-1 py-1.5">
+                                        <svg className="h-5 w-5 shrink-0 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <span className="text-sm font-medium leading-snug text-[#374151]">{item.label}</span>
                                     </div>

@@ -20,7 +20,7 @@ import { openExternalUrl } from "@/lib/external-links";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 export default function CheckoutPageClient() {
-  const { cart, totalPrice, totalItems, clearCart } = useCart();
+  const { cart, totalPrice, totalItems, clearCart, setGuests } = useCart();
   const { lang } = useI18n();
   const isAr = lang === "ar";
 
@@ -54,6 +54,12 @@ export default function CheckoutPageClient() {
   const getTripAddOnName = (
     addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number],
   ) => (isAr ? addOn.nameAr : addOn.nameEn ?? addOn.nameAr);
+  const updateGuestCount = (field: "adults" | "children", delta: number) => {
+    setGuests({
+      adults: field === "adults" ? cart.guests.adults + delta : cart.guests.adults,
+      children: field === "children" ? cart.guests.children + delta : cart.guests.children,
+    });
+  };
 
   const t = {
     errors: {
@@ -65,10 +71,12 @@ export default function CheckoutPageClient() {
       name: isAr ? "الاسم" : "Name",
       phone: isAr ? "الهاتف / واتساب" : "Phone / WhatsApp",
       email: isAr ? "البريد الإلكتروني" : "Email",
+      adults: isAr ? "البالغين" : "Adults",
+      children: isAr ? "الأطفال" : "Children",
       travelDate: isAr ? "تاريخ السفر" : "Travel date",
       hotel: isAr ? "الفندق" : "Hotel",
       room: isAr ? "الغرف" : "Rooms",
-      addOns: isAr ? "الإضافات" : "Add-ons",
+      addOns: isAr ? "ترقيات الغرف" : "Room upgrades",
       nights: isAr ? "عدد الليالي" : "Nights",
       cost: isAr ? "التكلفة" : "Cost",
       requestedHotel: isAr ? "الفندق المطلوب" : "Requested hotel",
@@ -101,6 +109,9 @@ export default function CheckoutPageClient() {
       fullNamePlaceholder: isAr ? "أدخل اسمك الكامل" : "Enter your full name",
       phone: isAr ? "الهاتف / واتساب *" : "Phone / WhatsApp *",
       email: isAr ? "البريد الإلكتروني" : "Email address",
+      guestsSection: isAr ? "عدد المسافرين" : "Travelers",
+      adults: isAr ? "البالغين" : "Adults",
+      children: isAr ? "الأطفال" : "Children",
       hotelName: isAr ? "اسم الفندق (إن وجد)" : "Hotel name (if any)",
       hotelNamePlaceholder: isAr
         ? "اسم الفندق الذي ترغب به"
@@ -128,6 +139,9 @@ export default function CheckoutPageClient() {
       nights: isAr ? "ليالٍ" : "nights",
       rooms: isAr ? "غرف" : "rooms",
       trip: isAr ? "رحلة" : "Trip",
+      travelers: isAr ? "المسافرون" : "Travelers",
+      adults: isAr ? "البالغين" : "adults",
+      children: isAr ? "الأطفال" : "children",
       travelDate: isAr ? "تاريخ السفر" : "Travel date",
       estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
       onRequest: isAr ? "عند الطلب" : "On request",
@@ -156,6 +170,8 @@ export default function CheckoutPageClient() {
     msg += `${t.whatsapp.name}: ${name}\n`;
     msg += `${t.whatsapp.phone}: ${phone}\n`;
     if (email.trim()) msg += `${t.whatsapp.email}: ${email}\n`;
+    msg += `${t.whatsapp.adults}: ${cart.guests.adults}\n`;
+    msg += `${t.whatsapp.children}: ${cart.guests.children}\n`;
     if (cart.travelDate) msg += `${t.whatsapp.travelDate}: ${cart.travelDate}\n`;
     msg += "\n";
 
@@ -347,6 +363,75 @@ export default function CheckoutPageClient() {
                   placeholder="email@example.com"
                   className={inputClass("email")}
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <p className="mb-2 px-1 text-sm font-bold text-[#0f172a]">{t.form.guestsSection}</p>
+                {/* <div className="rounded-2xl border  bg-[#ffffff] p-4"> */}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[#0f172a]">{t.form.adults}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateGuestCount("adults", -1)}
+                            disabled={cart.guests.adults <= 1}
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e2e8f0] text-lg font-semibold text-[#0f172a] transition hover:border-[#0EA5E9] hover:text-[#0EA5E9] disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label={isAr ? "تقليل عدد الأشخاص" : "Decrease adults"}
+                          >
+                            -
+                          </button>
+                          <span className="min-w-8 text-center text-base font-bold tabular-nums text-[#0f172a]">
+                            {cart.guests.adults}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateGuestCount("adults", 1)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e2e8f0] text-lg font-semibold text-[#0f172a] transition hover:border-[#0EA5E9] hover:text-[#0EA5E9]"
+                            aria-label={isAr ? "زيادة عدد الأشخاص" : "Increase adults"}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[#0f172a]">{t.form.children}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateGuestCount("children", -1)}
+                            disabled={cart.guests.children <= 0}
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e2e8f0] text-lg font-semibold text-[#0f172a] transition hover:border-[#0EA5E9] hover:text-[#0EA5E9] disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label={isAr ? "تقليل عدد الأطفال" : "Decrease children"}
+                          >
+                            -
+                          </button>
+                          <span className="min-w-8 text-center text-base font-bold tabular-nums text-[#0f172a]">
+                            {cart.guests.children}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateGuestCount("children", 1)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e2e8f0] text-lg font-semibold text-[#0f172a] transition hover:border-[#0EA5E9] hover:text-[#0EA5E9]"
+                            aria-label={isAr ? "زيادة عدد الأطفال" : "Increase children"}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
               </div>
 
               {!cart.hotel && (
@@ -593,6 +678,13 @@ export default function CheckoutPageClient() {
                   <span className="font-semibold text-[#0f172a]">{cart.travelDate}</span>
                 </div>
               )}
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#64748b]">{t.summary.travelers}</span>
+                <span className="font-semibold text-[#0f172a]">
+                  {cart.guests.adults} {t.summary.adults} / {cart.guests.children} {t.summary.children}
+                </span>
+              </div>
             </div>
 
             <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
