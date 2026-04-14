@@ -41,7 +41,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="/images/payment/visa.png"
           alt="Visa"
           loading="lazy"
-          className="h-14 w-auto max-w-[170px] object-contain"
+          className="h-16 w-auto max-w-[170px] object-contain"
         />
       );
     case "apple-pay":
@@ -59,7 +59,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="/images/payment/mastercard.webp"
           alt="Mastercard"
           loading="lazy"
-          className="h-16 w-auto max-w-[142px] object-contain"
+          className="h-18 w-auto max-w-[145px] object-contain"
         />
       );
     case "fawry":
@@ -77,7 +77,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="https://bopwebsitestorage.blob.core.windows.net/assets/images/news/logo.png"
           alt="Bank of Palestine"
           loading="lazy"
-          className="h-10 w-auto max-w-[152px] object-contain"
+          className="h-15 w-auto max-w-[182px] object-contain"
         />
       );
     case "banque-misr":
@@ -86,7 +86,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="https://images.seeklogo.com/logo-png/54/2/banque-misr-logo-png_seeklogo-545884.png"
           alt="Banque Misr"
           loading="lazy"
-          className="h-11 w-auto max-w-[148px] object-contain"
+          className="h-14 w-auto max-w-[148px] object-contain"
         />
       );
     case "cib":
@@ -95,7 +95,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="/images/cib.png"
           alt="CIB"
           loading="lazy"
-          className="h-10 w-auto max-w-[132px] object-contain"
+          className="h-15 w-auto max-w-[132px] object-contain"
         />
       );
     default:
