@@ -13,6 +13,11 @@ import {
     getCartHotelSelectedRooms,
     type CartHotelRoomSelection,
 } from "@/lib/cart-hotel";
+import {
+    isHotelClientCacheFresh,
+    readHotelDetailCache,
+    writeHotelDetailCache,
+} from "@/lib/hotel-client-cache";
 import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
@@ -573,8 +578,8 @@ export default function HotelDetailClient() {
     const { lang } = useI18n();
     const isAr = lang === "ar";
     const { cart, openCart, setHotel, setNights } = useCart();
-    const [hotelData, setHotelData] = useState<HotelRecord | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [hotelData, setHotelData] = useState<HotelRecord | null>(() => readHotelDetailCache(slug)?.hotel ?? null);
+    const [isLoading, setIsLoading] = useState(() => readHotelDetailCache(slug) === null);
     const [error, setError] = useState<string | null>(null);
 
     const labels = {
@@ -610,27 +615,50 @@ export default function HotelDetailClient() {
         noAddOns: isAr ? "لا توجد ترقيات غرف متاحة حاليًا." : "No room upgrades are available right now.",
     };
 
-    const loadHotel = useCallback(async (signal?: AbortSignal) => {
+    const loadHotel = useCallback(async ({
+        signal,
+        showLoading = true,
+    }: {
+        signal?: AbortSignal;
+        showLoading?: boolean;
+    } = {}) => {
         try {
-            setIsLoading(true);
+            if (showLoading) {
+                setIsLoading(true);
+            }
             setError(null);
             const hotel = await getHotelBySlug(slug, signal);
+            writeHotelDetailCache(hotel);
             setHotelData(hotel);
         } catch (loadError) {
             if (signal?.aborted) return;
-            setError(loadError instanceof Error ? loadError.message : labels.loading);
+            if (!hotelData) {
+                setError(loadError instanceof Error ? loadError.message : labels.loading);
+            }
         } finally {
             if (!signal?.aborted) {
                 setIsLoading(false);
             }
         }
-    }, [labels.loading, slug]);
+    }, [hotelData, labels.loading, slug]);
 
     useEffect(() => {
         const controller = new AbortController();
-        void loadHotel(controller.signal);
+        const cachedHotel = readHotelDetailCache(slug);
+
+        if (cachedHotel) {
+            setHotelData(cachedHotel.hotel);
+            setIsLoading(false);
+
+            if (!isHotelClientCacheFresh(cachedHotel.updatedAt)) {
+                void loadHotel({ signal: controller.signal, showLoading: false });
+            }
+        } else {
+            void loadHotel({ signal: controller.signal });
+        }
+
         return () => controller.abort();
-    }, [loadHotel]);
+    }, [loadHotel, slug]);
 
     const hotel = useMemo(
         () => (hotelData ? buildLocalizedHotelView(hotelData, lang) : null),
@@ -668,7 +696,7 @@ export default function HotelDetailClient() {
 
         setRoomCounts(getDefaultRoomCounts(hotel));
         setSelectedAddOnId(null);
-    }, [hotel?.id, isInCart, cart.hotel, cartAddonId]);
+    }, [hotel, isInCart, cart.hotel, cartAddonId]);
 
     useEffect(() => {
         if (checkOut <= checkIn) {

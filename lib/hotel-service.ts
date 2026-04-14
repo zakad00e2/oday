@@ -11,6 +11,38 @@ export type HotelLanguage = "ar" | "en";
 export type HotelStarsValue = "ONE" | "TWO" | "THREE" | "FOUR" | "FIVE";
 export type HotelRatingValue = string;
 export type HotelDestination = string;
+export type HotelMealPlan =
+  | "ALL_INCLUSIVE"
+  | "BREAKFAST_ONLY"
+  | "BREAKFAST_DINNER"
+  | "ROOM_ONLY";
+
+export const HOTEL_MEAL_PLAN_OPTIONS: Array<{
+  value: HotelMealPlan;
+  labelAr: string;
+  labelEn: string;
+}> = [
+  {
+    value: "ALL_INCLUSIVE",
+    labelAr: "شامل جميع الوجبات",
+    labelEn: "All inclusive",
+  },
+  {
+    value: "BREAKFAST_ONLY",
+    labelAr: "شامل الإفطار",
+    labelEn: "Breakfast included",
+  },
+  {
+    value: "BREAKFAST_DINNER",
+    labelAr: "شامل الإفطار والعشاء",
+    labelEn: "Breakfast and dinner",
+  },
+  {
+    value: "ROOM_ONLY",
+    labelAr: "بدون وجبات",
+    labelEn: "Room only",
+  },
+];
 
 export interface ApiHotelAsset {
   id?: string;
@@ -129,6 +161,7 @@ export interface HotelRecord {
   nameEn: string;
   descriptionAr: string;
   descriptionEn: string;
+  mealPlan: HotelMealPlan | null;
   facilitiesAr: string[];
   facilitiesEn: string[];
   mainImages: string[];
@@ -173,6 +206,7 @@ export interface HotelMutationInput {
   nameEn: string;
   descriptionAr: string;
   descriptionEn: string;
+  mealPlan: HotelMealPlan | null;
   facilitiesAr: string[];
   facilitiesEn: string[];
   mainImage: string;
@@ -223,6 +257,8 @@ const hotelStarsMap: Record<HotelStarsValue, number> = {
   FOUR: 4,
   FIVE: 5,
 };
+
+const HOTEL_MEAL_PLAN_MARKER = "__ODAY_MEAL_PLAN__:";
 
 const arabicCharacterPattern = /[\u0600-\u06FF]/;
 const mojibakeCharacterPattern = /[ÃØÙÂÐâï¿]/g;
@@ -291,6 +327,83 @@ function repairText(value: string | null | undefined) {
 
 function repairTextList(values: string[] | undefined) {
   return (values ?? []).map((value) => repairText(value)).filter(Boolean);
+}
+
+function normalizeMealPlanLabel(value: string) {
+  return repairText(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[()]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+const hotelMealPlanLabelMap = new Map<string, HotelMealPlan>([
+  ["شامل جميع الوجبات", "ALL_INCLUSIVE"],
+  ["all inclusive", "ALL_INCLUSIVE"],
+  ["شامل الافطار", "BREAKFAST_ONLY"],
+  ["شامل الإفطار", "BREAKFAST_ONLY"],
+  ["breakfast included", "BREAKFAST_ONLY"],
+  ["breakfast only", "BREAKFAST_ONLY"],
+  ["شامل الافطار والعشاء", "BREAKFAST_DINNER"],
+  ["شامل الإفطار والعشاء", "BREAKFAST_DINNER"],
+  ["breakfast and dinner", "BREAKFAST_DINNER"],
+  ["breakfast & dinner", "BREAKFAST_DINNER"],
+  ["بدون وجبات", "ROOM_ONLY"],
+  ["room only", "ROOM_ONLY"],
+  ["no meals", "ROOM_ONLY"],
+]);
+
+const hotelMealPlanSet = new Set<HotelMealPlan>(
+  HOTEL_MEAL_PLAN_OPTIONS.map((option) => option.value),
+);
+
+function parseHotelMealPlan(value: string | null | undefined): HotelMealPlan | null {
+  if (!value) return null;
+
+  const repairedValue = repairText(value).trim();
+  if (!repairedValue) return null;
+
+  if (repairedValue.startsWith(HOTEL_MEAL_PLAN_MARKER)) {
+    const mealPlan = repairedValue.slice(HOTEL_MEAL_PLAN_MARKER.length) as HotelMealPlan;
+    return hotelMealPlanSet.has(mealPlan) ? mealPlan : null;
+  }
+
+  return hotelMealPlanLabelMap.get(normalizeMealPlanLabel(repairedValue)) ?? null;
+}
+
+function withHotelMealPlan(values: string[], mealPlan: HotelMealPlan | null) {
+  const cleanedValues = values.filter((value) => !parseHotelMealPlan(value));
+
+  if (!mealPlan) {
+    return cleanedValues;
+  }
+
+  return [...cleanedValues, `${HOTEL_MEAL_PLAN_MARKER}${mealPlan}`];
+}
+
+function extractHotelMealPlan(
+  facilitiesAr: string[] | undefined,
+  facilitiesEn: string[] | undefined,
+) {
+  const repairedFacilitiesAr = repairTextList(facilitiesAr);
+  const repairedFacilitiesEn = repairTextList(facilitiesEn);
+  const mealPlan =
+    [...repairedFacilitiesAr, ...repairedFacilitiesEn]
+      .map((value) => parseHotelMealPlan(value))
+      .find((value): value is HotelMealPlan => value !== null) ?? null;
+
+  return {
+    mealPlan,
+    facilitiesAr: repairedFacilitiesAr.filter((value) => !parseHotelMealPlan(value)),
+    facilitiesEn: repairedFacilitiesEn.filter((value) => !parseHotelMealPlan(value)),
+  };
+}
+
+export function getHotelMealPlanLabel(mealPlan: HotelMealPlan, language: HotelLanguage) {
+  const option = HOTEL_MEAL_PLAN_OPTIONS.find((item) => item.value === mealPlan);
+  if (!option) return "";
+
+  return language === "ar" ? option.labelAr : option.labelEn;
 }
 
 function titleCase(value: string) {
@@ -386,6 +499,7 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
   const repairedNameEn = repairText(en?.name || ar?.name || "");
   const repairedDescriptionAr = repairText(ar?.description || en?.description || "");
   const repairedDescriptionEn = repairText(en?.description || ar?.description || "");
+  const extractedMealPlan = extractHotelMealPlan(ar?.Facilities, en?.Facilities);
 
   return {
     id: apiHotel.id,
@@ -399,8 +513,9 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     nameEn: repairedNameEn || repairedNameAr,
     descriptionAr: repairedDescriptionAr,
     descriptionEn: repairedDescriptionEn || repairedDescriptionAr,
-    facilitiesAr: repairTextList(ar?.Facilities),
-    facilitiesEn: repairTextList(en?.Facilities),
+    mealPlan: extractedMealPlan.mealPlan,
+    facilitiesAr: extractedMealPlan.facilitiesAr,
+    facilitiesEn: extractedMealPlan.facilitiesEn,
     mainImages: mainImages.length > 0 ? mainImages : mainImage ? [mainImage] : [],
     mainImage,
     gallery,
@@ -520,20 +635,22 @@ function buildCreateFormData(
   const baseSlug = slugifyHotel(input.slug || input.nameEn || input.nameAr);
   const enSlug = baseSlug;
   const arSlug = `${baseSlug}-ar`;
+  const facilitiesAr = withHotelMealPlan(input.facilitiesAr, input.mealPlan);
+  const facilitiesEn = withHotelMealPlan(input.facilitiesEn, input.mealPlan);
   const translations = [
     {
       language: "ar",
       name: input.nameAr.trim(),
       slug: arSlug,
       description: input.descriptionAr.trim(),
-      Facilities: input.facilitiesAr,
+      Facilities: facilitiesAr,
     },
     {
       language: "en",
       name: input.nameEn.trim(),
       slug: enSlug,
       description: input.descriptionEn.trim(),
-      Facilities: input.facilitiesEn,
+      Facilities: facilitiesEn,
     },
   ];
   const rooms = input.rooms.map((room) => ({
@@ -612,6 +729,7 @@ export function createEmptyHotelInput(): HotelMutationInput {
     nameEn: "",
     descriptionAr: "",
     descriptionEn: "",
+    mealPlan: null,
     facilitiesAr: [],
     facilitiesEn: [],
     mainImage: "",
@@ -636,6 +754,7 @@ export function toHotelMutationInput(hotel: HotelRecord): HotelMutationInput {
     nameEn: hotel.nameEn,
     descriptionAr: hotel.descriptionAr,
     descriptionEn: hotel.descriptionEn,
+    mealPlan: hotel.mealPlan,
     facilitiesAr: [...hotel.facilitiesAr],
     facilitiesEn: [...hotel.facilitiesEn],
     mainImage: hotel.mainImages[0] || hotel.mainImage,

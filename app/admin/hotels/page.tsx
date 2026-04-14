@@ -5,14 +5,17 @@ import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import { formatPrice } from "@/lib/currency";
 import {
+  HOTEL_MEAL_PLAN_OPTIONS,
   HotelServiceError,
   createHotel,
   deleteHotel,
+  getHotelMealPlanLabel,
   getHotelById,
   listHotels,
   slugifyHotel,
   updateHotel,
   type HotelDestination,
+  type HotelMealPlan,
   type HotelMutationInput,
   type HotelRecord,
 } from "@/lib/hotel-service";
@@ -47,6 +50,7 @@ interface Hotel {
   cityEn: string;
   descriptionAr: string;
   descriptionEn: string;
+  mealPlan: HotelMealPlan | null;
   mainImages: string[];
   gallery: string[];
   youtubeUrl: string;
@@ -76,6 +80,7 @@ const mockHotels: Hotel[] = [
       "Luxury beachfront resort with private beach access, multiple pools, and premium family-friendly amenities.",
     descriptionEn:
       "Luxury beachfront resort with private beach access, multiple pools, and premium family-friendly amenities.",
+    mealPlan: "ALL_INCLUSIVE",
     mainImages: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80",
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&q=80",
@@ -115,6 +120,7 @@ const mockHotels: Hotel[] = [
       "Upscale Red Sea stay with private beach access and a broad range of water activities.",
     descriptionEn:
       "Upscale Red Sea stay with private beach access and a broad range of water activities.",
+    mealPlan: "BREAKFAST_DINNER",
     mainImages: ["https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1920&q=80"],
     gallery: [],
     youtubeUrl: "",
@@ -143,6 +149,7 @@ const mockHotels: Hotel[] = [
       "Peaceful Red Sea escape suited for weekend breaks close to Cairo.",
     descriptionEn:
       "Peaceful Red Sea escape suited for weekend breaks close to Cairo.",
+    mealPlan: "BREAKFAST_ONLY",
     mainImages: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&q=80"],
     gallery: [],
     youtubeUrl: "",
@@ -173,6 +180,7 @@ const mockHotels: Hotel[] = [
       "High-end resort experience combining premium hospitality with natural coastal scenery.",
     descriptionEn:
       "High-end resort experience combining premium hospitality with natural coastal scenery.",
+    mealPlan: "ROOM_ONLY",
     mainImages: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=80"],
     gallery: [],
     youtubeUrl: "",
@@ -200,6 +208,7 @@ const emptyHotel: Omit<Hotel, "id"> = {
   cityEn: "Sharm El Sheikh",
   descriptionAr: "",
   descriptionEn: "",
+  mealPlan: null,
   mainImages: [],
   gallery: [],
   youtubeUrl: "",
@@ -335,6 +344,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
     cityEn: hotel.destinationLabelEn,
     descriptionAr: hotel.descriptionAr,
     descriptionEn: hotel.descriptionEn,
+    mealPlan: hotel.mealPlan,
     mainImages: [...hotel.mainImages],
     gallery: [...hotel.gallery],
     youtubeUrl: hotel.youtubeVideoUrl,
@@ -422,6 +432,7 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
     nameEn: hotel.nameEn.trim() || hotel.nameAr.trim(),
     descriptionAr: hotel.descriptionAr.trim(),
     descriptionEn: hotel.descriptionEn.trim() || hotel.descriptionAr.trim(),
+    mealPlan: hotel.mealPlan,
     facilitiesAr: hotel.amenities.map((amenity) => amenity.labelAr.trim()).filter(Boolean),
     facilitiesEn: hotel.amenities.map((amenity) => amenity.labelEn.trim()).filter(Boolean),
     mainImage,
@@ -723,6 +734,11 @@ export default function AdminHotels() {
       return;
     }
 
+    if (!form.mealPlan) {
+      setModalError("Meal plan is required.");
+      return;
+    }
+
     const payload: Omit<Hotel, "id"> = {
       ...form,
       slug: form.slug.trim() || makeSlug(form.nameEn || form.nameAr),
@@ -732,6 +748,7 @@ export default function AdminHotels() {
       cityEn: form.cityEn.trim(),
       descriptionAr: form.descriptionAr.trim(),
       descriptionEn: form.descriptionEn.trim(),
+      mealPlan: form.mealPlan,
       youtubeUrl: form.youtubeUrl.trim(),
       mainImages: form.mainImages.slice(0, MAX_MAIN_IMAGES),
       gallery: form.gallery.slice(0, MAX_GALLERY_IMAGES),
@@ -917,6 +934,11 @@ export default function AdminHotels() {
                   <span>{hotel.roomAddOns.length} إضافات غرف</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-4">
+                  {hotel.mealPlan && (
+                    <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-medium text-sky-700">
+                      {getHotelMealPlanLabel(hotel.mealPlan, "ar")}
+                    </span>
+                  )}
                   {hotel.filterTag && (() => {
                     const tagMap = {
                       most_booked: { label: "🔥 الأكثر حجزاً", cls: "bg-orange-100 text-orange-700" },
@@ -1006,6 +1028,29 @@ export default function AdminHotels() {
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي (ج.م/ليلة)</label>
                     <input type="number" value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">نظام الوجبات</label>
+                    <select
+                      value={form.mealPlan ?? ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          mealPlan: e.target.value ? (e.target.value as HotelMealPlan) : null,
+                        })
+                      }
+                      className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors bg-white"
+                    >
+                      <option value="">اختر نظام الوجبات</option>
+                      {HOTEL_MEAL_PLAN_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.labelAr}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px] text-[#9CA3AF]">
+                      سيظهر هذا الخيار داخل بطاقة الفندق في الواجهة.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">الوصف بالعربي</label>

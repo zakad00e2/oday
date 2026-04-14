@@ -31,35 +31,53 @@ const socials = [
   },
 ];
 
-type PaymentMethodId = "visa" | "mastercard" | "additional-payment" | "banque-misr" | "cib";
+type PaymentMethodId = "visa" | "apple-pay" | "mastercard" | "fawry" | "bank-of-palestine" | "banque-misr" | "cib";
 
 function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
   switch (method) {
     case "visa":
       return (
         <img
-          src="https://logos-world.net/wp-content/uploads/2020/05/Visa-Logo.png"
+          src="/images/payment/visa.png"
           alt="Visa"
           loading="lazy"
-          className="h-6 w-auto max-w-[88px] object-contain"
+          className="h-14 w-auto max-w-[170px] object-contain"
+        />
+      );
+    case "apple-pay":
+      return (
+        <img
+          src="/images/payment/apple-pay.png"
+          alt="Apple Pay"
+          loading="lazy"
+          className="h-7 w-auto max-w-[128px] object-contain"
         />
       );
     case "mastercard":
       return (
         <img
-          src="https://logos-world.net/wp-content/uploads/2020/09/Mastercard-Logo.png"
+          src="/images/payment/mastercard.webp"
           alt="Mastercard"
           loading="lazy"
-          className="h-7 w-auto max-w-[96px] object-contain"
+          className="h-16 w-auto max-w-[142px] object-contain"
         />
       );
-    case "additional-payment":
+    case "fawry":
+      return (
+        <img
+          src="/images/payment/fawry.png"
+          alt="Fawry"
+          loading="lazy"
+          className="h-10 w-auto max-w-[152px] object-contain"
+        />
+      );
+    case "bank-of-palestine":
       return (
         <img
           src="https://bopwebsitestorage.blob.core.windows.net/assets/images/news/logo.png"
-          alt="Additional Payment Method"
+          alt="Bank of Palestine"
           loading="lazy"
-          className="h-14 w-auto max-w-[170px] object-contain"
+          className="h-10 w-auto max-w-[152px] object-contain"
         />
       );
     case "banque-misr":
@@ -68,7 +86,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="https://images.seeklogo.com/logo-png/54/2/banque-misr-logo-png_seeklogo-545884.png"
           alt="Banque Misr"
           loading="lazy"
-          className="h-14 w-auto max-w-[156px] object-contain"
+          className="h-11 w-auto max-w-[148px] object-contain"
         />
       );
     case "cib":
@@ -77,7 +95,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           src="/images/cib.png"
           alt="CIB"
           loading="lazy"
-          className="h-12 w-auto max-w-[122px] object-contain"
+          className="h-10 w-auto max-w-[132px] object-contain"
         />
       );
     default:
@@ -111,8 +129,10 @@ export default function Footer() {
 
   const paymentMethods: Array<{ id: PaymentMethodId; label: string }> = [
     { id: "visa", label: "Visa" },
+    { id: "apple-pay", label: "Apple Pay" },
     { id: "mastercard", label: isArabic ? "ماستر كارد" : "Mastercard" },
-    { id: "additional-payment", label: isArabic ? "وسيلة دفع إضافية" : "Additional Payment Method" },
+    { id: "fawry", label: isArabic ? "فوري" : "Fawry" },
+    { id: "bank-of-palestine", label: isArabic ? "بنك فلسطين" : "Bank of Palestine" },
     { id: "banque-misr", label: isArabic ? "بنك مصر" : "Banque Misr" },
     { id: "cib", label: "CIB" },
   ];
@@ -147,11 +167,11 @@ export default function Footer() {
               <h4 className="text-sm font-semibold text-[#111]">
                 {isArabic ? "طرق الدفع" : "Payment Methods"}
               </h4>
-              <div className="flex max-w-[420px] flex-wrap items-center gap-x-5 gap-y-3">
+              <div className="flex max-w-[560px] flex-wrap items-center gap-x-6 gap-y-3">
                 {paymentMethods.map((method) => (
                   <div
                     key={method.id}
-                    className="flex h-10 items-center justify-center"
+                    className="flex min-h-14 items-center justify-center"
                     role="img"
                     aria-label={method.label}
                   >

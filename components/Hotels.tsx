@@ -6,6 +6,11 @@ import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
 import Skeleton from "./ui/Skeleton";
 import { formatPrice } from "@/lib/currency";
+import {
+  isHotelClientCacheFresh,
+  readHotelsListCache,
+  writeHotelsListCache,
+} from "@/lib/hotel-client-cache";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { type HotelRecord, listHotels } from "@/lib/hotel-service";
 
@@ -278,18 +283,27 @@ export default function Hotels() {
   const { dict, lang } = useI18n();
   const d = dict.hotelsPage;
   const isAr = lang === "ar";
-  const [hotels, setHotels] = useState<HotelRecord[]>([]);
+  const [hotels, setHotels] = useState<HotelRecord[]>(() => readHotelsListCache()?.hotels ?? []);
   const [selectedDestination, setSelectedDestination] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => readHotelsListCache() === null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadHotels = useCallback(async (signal?: AbortSignal) => {
+  const loadHotels = useCallback(async ({
+    signal,
+    showLoading = true,
+  }: {
+    signal?: AbortSignal;
+    showLoading?: boolean;
+  } = {}) => {
     try {
       setError(null);
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      }
       const response = await listHotels({ page: 1, limit: 100, signal });
+      writeHotelsListCache(response.hotels);
       setHotels(response.hotels);
     } catch (loadError) {
       if (signal?.aborted) return;
@@ -299,27 +313,33 @@ export default function Hotels() {
           : isAr
             ? "تعذر تحميل الفنادق حاليًا."
             : "Unable to load hotels right now.";
-      setError(message);
+      if (hotels.length === 0) {
+        setError(message);
+      }
     } finally {
       if (!signal?.aborted) {
         setIsLoading(false);
       }
     }
-  }, [isAr]);
+  }, [isAr, hotels.length]);
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadHotels(controller.signal);
+    const cachedHotels = readHotelsListCache();
 
-    const handleFocus = () => {
-      void loadHotels();
-    };
+    if (cachedHotels) {
+      setHotels(cachedHotels.hotels);
+      setIsLoading(false);
 
-    window.addEventListener("focus", handleFocus);
+      if (!isHotelClientCacheFresh(cachedHotels.updatedAt)) {
+        void loadHotels({ signal: controller.signal, showLoading: false });
+      }
+    } else {
+      void loadHotels({ signal: controller.signal });
+    }
 
     return () => {
       controller.abort();
-      window.removeEventListener("focus", handleFocus);
     };
   }, [loadHotels]);
 
