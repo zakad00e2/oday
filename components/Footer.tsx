@@ -152,8 +152,8 @@ export default function Footer() {
     <footer className="relative isolate z-10 bg-white">
       <div className="mx-auto max-w-[1200px] px-6 pt-20 pb-10">
         <div className="grid grid-cols-1 items-start gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-x-12">
-          <div className="flex flex-col gap-6 lg:col-span-4">
-            <Link href={`/${lang}`} className="mb-6 flex items-center gap-1">
+          <div className="flex flex-col gap-4 lg:col-span-4">
+            <Link href={`/${lang}`} className="flex items-center gap-1">
               <Image
                 src="/optimized/logo.webp"
                 alt="Oday Tourism Logo"
