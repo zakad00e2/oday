@@ -15,6 +15,33 @@ import { formatPrice } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { isYouTubeShortUrl, toYouTubeEmbedUrl } from "@/lib/youtube";
 
+type PricedTripSelection = {
+    price: number;
+    nameAr: string;
+    nameEn: string;
+};
+
+function compareTripSelectionsByPrice<T extends PricedTripSelection>(left: T, right: T) {
+    const leftHasPrice = left.price > 0;
+    const rightHasPrice = right.price > 0;
+
+    if (leftHasPrice && rightHasPrice) {
+        return left.price - right.price
+            || left.nameAr.localeCompare(right.nameAr, "ar")
+            || left.nameEn.localeCompare(right.nameEn, "en");
+    }
+
+    if (leftHasPrice) return -1;
+    if (rightHasPrice) return 1;
+
+    return left.nameAr.localeCompare(right.nameAr, "ar")
+        || left.nameEn.localeCompare(right.nameEn, "en");
+}
+
+function sortTripSelectionsByPrice<T extends PricedTripSelection>(items: T[]) {
+    return [...items].sort(compareTripSelectionsByPrice);
+}
+
 export default function TripDetailClient() {
     const params = useParams();
     const slugParam = params?.slug;
@@ -40,7 +67,15 @@ export default function TripDetailClient() {
             setTrip(null);
             const result = await getTripBySlug(slug, signal);
             if (signal?.aborted) return;
-            setTrip(result);
+            setTrip(
+                result
+                    ? {
+                        ...result,
+                        options: sortTripSelectionsByPrice(result.options),
+                        addOns: sortTripSelectionsByPrice(result.addOns),
+                    }
+                    : null,
+            );
         } catch (err) {
             if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) return;
             setFetchError(err instanceof Error ? err.message : "Failed to load trip");

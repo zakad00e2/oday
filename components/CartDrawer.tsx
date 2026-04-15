@@ -9,7 +9,11 @@ import {
   getCartHotelSelectedRooms,
 } from "@/lib/cart-hotel";
 import { useCart } from "@/lib/cart-context";
-import { calculateHotelLineCost, calculateTripQuantity } from "@/lib/cart-pricing";
+import {
+  calculateHotelLineCost,
+  calculateTripLineCost,
+  calculateTripQuantity,
+} from "@/lib/cart-pricing";
 import { formatPrice, formatPriceWithSign } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
@@ -59,6 +63,14 @@ export default function CartDrawer() {
   const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];
   const hotelRoomCount = cart.hotel ? getCartHotelRoomCount(cart.hotel) : 0;
   const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
+  const getTripAddOnQuantity = (
+    trip: typeof cart.trips[number],
+    addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number],
+  ) => addOn.persons ?? calculateTripQuantity(trip, guestsTotal);
+  const getTripAddOnTotal = (
+    trip: typeof cart.trips[number],
+    addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number],
+  ) => addOn.price * getTripAddOnQuantity(trip, addOn);
 
   const buildWhatsAppMsg = () => {
     const wa = d.whatsapp;
@@ -92,8 +104,11 @@ export default function CartDrawer() {
         msg += "\n";
         if (t.selectedAddOns && t.selectedAddOns.length > 0) {
           t.selectedAddOns.forEach((a) => {
+            const addOnQuantity = getTripAddOnQuantity(t, a);
+            const addOnTotal = getTripAddOnTotal(t, a);
             msg += `    + ${getTripAddOnName(a)}`;
-            if (a.price > 0) msg += ` (${formatPrice(a.price, lang)})`;
+            if (addOnQuantity > 1) msg += ` x${addOnQuantity}`;
+            if (a.price > 0) msg += ` (${formatPriceWithSign(addOnTotal, lang)})`;
             msg += "\n";
           });
         }
@@ -106,10 +121,7 @@ export default function CartDrawer() {
   };
 
   const getTripPrice = (trip: typeof cart.trips[0]) => {
-    if (trip.selectedOptions && trip.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0) > 0) {
-      return trip.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0) + (trip.selectedAddOns || []).reduce((s, a) => s + a.price, 0);
-    }
-    return trip.startingPrice > 0 ? trip.startingPrice * guestsTotal : 0;
+    return calculateTripLineCost(trip, guestsTotal);
   };
 
   return (
@@ -192,76 +204,138 @@ export default function CartDrawer() {
               {/* Hotel Card */}
               {cart.hotel && (
                 <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0]/60 overflow-hidden">
-                  <div className="relative">
+                  <div className="flex gap-3 p-3.5">
                     <FlexibleImage
                       src={cart.hotel.image}
                       alt={getHotelName(cart.hotel)}
-                      width={480}
-                      height={224}
-                      sizes="448px"
-                      className="w-full h-28 object-cover"
+                      width={60}
+                      height={60}
+                      sizes="60px"
+                      className="w-[60px] h-[60px] rounded-xl object-cover shrink-0"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-3 right-4 left-4">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        {Array.from({ length: cart.hotel.stars }).map((_, i) => (
-                          <svg key={i} className="w-3 h-3 text-[#FBBF24]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        ))}
-                      </div>
-                      <h4 className="font-bold text-white text-sm leading-tight truncate">{getHotelName(cart.hotel)}</h4>
-                      <p className="text-[11px] text-white/70">{getHotelCity(cart.hotel)}</p>
-                      {hotelSelectedRooms.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {hotelSelectedRooms.map((room) => (
-                            <span
-                              key={room.id}
-                              className="rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm"
-                            >
-                              {getCartHotelSelectedRoomName(room, lang)} &times; {room.count}
-                            </span>
-                          ))}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">
+                            {getHotelName(cart.hotel)}
+                          </h4>
+                          <p className="mt-1 text-[11px] text-[#64748B] truncate">
+                            {[getHotelCity(cart.hotel), `${cart.nights} ${d.nights}`]
+                              .filter(Boolean)
+                              .join(" • ")}
+                          </p>
                         </div>
-                      )}
+                        <span className="shrink-0 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">
+                          ×{hotelRoomCount || 1}
+                        </span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setHotel(null)}
-                      className="absolute top-2.5 left-2.5 w-7 h-7 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-red-500 hover:text-white transition-colors"
-                      aria-label={d.removeHotel}
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
                   </div>
-                  {/* Hotel controls */}
-                  <div className="px-4 py-3 flex items-center justify-between">
+
+                  {hotelSelectedRooms.length > 0 && (
+                    <div className="mx-3.5 mb-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/80 divide-y divide-[#E2E8F0]/60">
+                      {hotelSelectedRooms.map((room) => (
+                        <div
+                          key={room.id}
+                          className="flex items-center justify-between px-3 py-2"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
+                            <span className="text-xs font-semibold text-[#334155] truncate">
+                              {getCartHotelSelectedRoomName(room, lang)}
+                            </span>
+                            {room.count > 1 && (
+                              <span className="text-[10px] text-[#94A3B8] shrink-0">
+                                ×{room.count}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs font-bold text-[#0F172A] shrink-0 ms-2">
+                            {formatPrice(room.pricePerNight, lang)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0 && (
+                    <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
+                      {cart.hotel.selectedAddOns.map((addOn, index) => {
+                        const addOnTotal = addOn.price * cart.nights * hotelRoomCount;
+
+                        return (
+                          <div
+                            key={`${addOn.name}-${index}`}
+                            className="flex items-center justify-between px-3 py-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-[10px] shrink-0">✦</span>
+                              <span className="text-xs font-semibold text-[#92400E] truncate">
+                                {getHotelAddOnName(addOn)}
+                              </span>
+                              <span className="text-[10px] text-[#B45309] shrink-0">
+                                × {hotelRoomCount || 1}
+                              </span>
+                            </div>
+                            <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
+                              {addOn.price > 0
+                                ? formatPriceWithSign(addOnTotal, lang)
+                                : d.free}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="px-4 py-3 flex items-center justify-between border-t border-[#F1F5F9]">
                     <div className="flex items-center gap-1.5">
-                      <svg className="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                      <span className="text-xs text-[#64748B]">
-                        {cart.nights} {d.nights}
-                        {hotelRoomCount ? ` • ${hotelRoomCount} ${d.room}` : ''}
+                      <span className="text-xs text-[#64748B]">{d.total}</span>
+                      <span className="text-base font-extrabold text-[#0F172A]">
+                        {formatPrice(hotelCost, lang)}
                       </span>
-                      <span className="text-base font-extrabold text-[#0F172A] ms-1">{formatPrice(hotelCost, lang)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Edit button */}
                       <Link
                         href={`/${lang}/hotels/${cart.hotel.slug}#booking`}
                         onClick={closeCart}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFF6FF] text-[#2563EB] text-xs font-bold hover:bg-[#DBEAFE] transition-colors"
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#EFF6FF] px-3 py-2 text-xs font-bold text-[#2563EB] transition-colors hover:bg-[#DBEAFE]"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        <svg
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
+                        </svg>
                         {d.edit}
                       </Link>
-                      {/* Delete button */}
                       <button
                         onClick={() => setHotel(null)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FEF2F2] text-[#EF4444] text-xs font-bold hover:bg-[#FEE2E2] transition-colors"
                         aria-label={d.removeHotel}
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
                       </button>
                     </div>
-                    
                   </div>
                 </div>
               )}
@@ -339,17 +413,23 @@ export default function CartDrawer() {
                         {/* Selected add-ons breakdown */}
                         {trip.selectedAddOns && trip.selectedAddOns.length > 0 && (
                           <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
-                            {trip.selectedAddOns.map((a, i) => (
-                              <div key={i} className="flex items-center justify-between px-3 py-2">
+                            {trip.selectedAddOns.map((a, i) => {
+                              const addOnQuantity = getTripAddOnQuantity(trip, a);
+                              const addOnTotal = getTripAddOnTotal(trip, a);
+
+                              return (
+                                <div key={i} className="flex items-center justify-between px-3 py-2">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span className="text-[10px] shrink-0">✦</span>
                                   <span className="text-xs font-semibold text-[#92400E] truncate">{getTripAddOnName(a)}</span>
+                                  <span className="text-[10px] text-[#B45309] shrink-0">&times; {addOnQuantity}</span>
                                 </div>
                                 <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
-                                  {a.price > 0 ? formatPriceWithSign(a.price, lang) : d.free}
+                                  {a.price > 0 ? formatPriceWithSign(addOnTotal, lang) : d.free}
                                 </span>
-                              </div>
-                            ))}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
 

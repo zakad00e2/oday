@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
+import CartHotelSummaryCard from "@/components/cart/CartHotelSummaryCard";
 import {
   getCartHotelRoomCount,
   getCartHotelSelectedRoomName,
@@ -148,6 +149,13 @@ export default function CheckoutPageClient() {
       clear: isAr ? "مسح السلة" : "Clear cart",
       free: isAr ? "مجاني" : "Free",
     },
+  };
+  const hotelSummaryLabels = {
+    hotelStay: t.summary.hotelStay,
+    nights: t.summary.nights,
+    rooms: t.summary.rooms,
+    estimatedTotal: t.summary.estimatedTotal,
+    free: t.summary.free,
   };
 
   const validate = () => {
@@ -524,71 +532,18 @@ export default function CheckoutPageClient() {
 
             <div className="px-6 py-5 space-y-4">
               {cart.hotel && (
-                <div className="rounded-2xl border border-[#e2e8f0] bg-white overflow-hidden">
-                  <div className="flex gap-3 p-3.5">
-                    <FlexibleImage
-                      src={cart.hotel.image}
-                      alt={getHotelName(cart.hotel)}
-                      width={56}
-                      height={56}
-                      sizes="56px"
-                      className="w-14 h-14 rounded-xl object-cover shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.hotelStay}</p>
-                      <p className="text-sm font-semibold text-[#0f172a] truncate">{getHotelName(cart.hotel)}</p>
-                      <p className="text-xs text-[#64748b] mt-0.5">{getHotelCity(cart.hotel)}</p>
-                      <p className="text-xs text-[#64748b]">
-                        {cart.nights} {t.summary.nights}
-                        {hotelRoomCount ? ` • ${hotelRoomCount} ${t.summary.rooms}` : ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  {hotelSelectedRooms.length > 0 && (
-                    <div className="mx-3.5 mb-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/80 divide-y divide-[#E2E8F0]/60">
-                      {hotelSelectedRooms.map((room) => (
-                        <div key={room.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0">
-                            <span className="text-xs font-semibold text-[#334155] break-words">
-                              {getCartHotelSelectedRoomName(room, lang)}
-                            </span>
-                            <span className="ms-2 text-[10px] text-[#94a3b8]">x{room.count}</span>
-                          </div>
-                          <span className="shrink-0 text-xs font-bold text-[#0f172a]">
-                            {formatPrice(room.pricePerNight, lang)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {cart.hotel.selectedAddOns?.length ? (
-                    <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
-                      {cart.hotel.selectedAddOns.map((addOn, index) => {
-                        const addOnTotal = addOn.price * cart.nights * hotelRoomCount;
-                        return (
-                          <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-[10px] shrink-0">+</span>
-                              <span className="text-xs font-semibold text-[#92400E] truncate">
-                                {getHotelAddOnName(addOn)} x{hotelRoomCount}
-                              </span>
-                            </div>
-                            <span className="text-xs font-bold text-[#92400E] shrink-0">
-                              {addOn.price > 0 ? formatPriceWithSign(addOnTotal, lang) : t.summary.free}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  <div className="border-t border-[#F1F5F9] px-4 py-3 flex items-center justify-between">
-                    <span className="text-xs text-[#64748b]">{t.summary.estimatedTotal}</span>
-                    <span className="text-sm font-semibold text-[#0f172a]">{formatPrice(hotelCost, lang)}</span>
-                  </div>
-                </div>
+                <CartHotelSummaryCard
+                  hotel={cart.hotel}
+                  lang={lang}
+                  nights={cart.nights}
+                  hotelRoomCount={hotelRoomCount}
+                  hotelSelectedRooms={hotelSelectedRooms}
+                  hotelCost={hotelCost}
+                  labels={hotelSummaryLabels}
+                  getHotelName={getHotelName}
+                  getHotelCity={getHotelCity}
+                  getHotelAddOnName={getHotelAddOnName}
+                />
               )}
 
               {cart.trips.map((trip) => {

@@ -2,6 +2,7 @@ import {
   broadcastUnauthorizedSession,
   createAuthorizedHeaders,
 } from "./auth-service";
+import { clearHotelClientCache, writeHotelDetailCache } from "./hotel-client-cache";
 
 export const HOTEL_API_BASE =
   process.env.NEXT_PUBLIC_HOTEL_API_BASE ??
@@ -14,8 +15,8 @@ export type HotelDestination = string;
 export type HotelMealPlan =
   | "ALL_INCLUSIVE"
   | "BREAKFAST_ONLY"
-  | "BREAKFAST_DINNER"
-  | "ROOM_ONLY";
+  | "BREAKFAST_AND_DINNER"
+  | "NO_MEALS";
 
 export const HOTEL_MEAL_PLAN_OPTIONS: Array<{
   value: HotelMealPlan;
@@ -24,23 +25,23 @@ export const HOTEL_MEAL_PLAN_OPTIONS: Array<{
 }> = [
   {
     value: "ALL_INCLUSIVE",
-    labelAr: "شامل جميع الوجبات",
+    labelAr: "إقامة كاملة",
     labelEn: "All inclusive",
   },
   {
     value: "BREAKFAST_ONLY",
-    labelAr: "شامل الإفطار",
-    labelEn: "Breakfast included",
+    labelAr: "فطار فقط",
+    labelEn: "Breakfast only",
   },
   {
-    value: "BREAKFAST_DINNER",
-    labelAr: "شامل الإفطار والعشاء",
+    value: "BREAKFAST_AND_DINNER",
+    labelAr: "شامل فطار وعشاء",
     labelEn: "Breakfast and dinner",
   },
   {
-    value: "ROOM_ONLY",
+    value: "NO_MEALS",
     labelAr: "بدون وجبات",
-    labelEn: "Room only",
+    labelEn: "No meals",
   },
 ];
 
@@ -105,6 +106,7 @@ export interface ApiHotel {
   id: string;
   destination: HotelDestination;
   initial_price: string;
+  meal_plan?: string | null;
   stars: HotelStarsValue;
   rating: HotelRatingValue;
   is_discounted: boolean;
@@ -260,6 +262,22 @@ const hotelStarsMap: Record<HotelStarsValue, number> = {
 
 const HOTEL_MEAL_PLAN_MARKER = "__ODAY_MEAL_PLAN__:";
 
+const HOTEL_MEAL_PLAN_VALUE_ALIASES: Record<string, HotelMealPlan> = {
+  ALL_INCLUSIVE: "ALL_INCLUSIVE",
+  BREAKFAST_ONLY: "BREAKFAST_ONLY",
+  BREAKFAST_AND_DINNER: "BREAKFAST_AND_DINNER",
+  BREAKFAST_DINNER: "BREAKFAST_AND_DINNER",
+  NO_MEALS: "NO_MEALS",
+  ROOM_ONLY: "NO_MEALS",
+};
+
+const HOTEL_MEAL_PLAN_STORAGE_ALIASES: Record<HotelMealPlan, string> = {
+  ALL_INCLUSIVE: "ALL_INCLUSIVE",
+  BREAKFAST_ONLY: "BREAKFAST_ONLY",
+  BREAKFAST_AND_DINNER: "BREAKFAST_DINNER",
+  NO_MEALS: "ROOM_ONLY",
+};
+
 const arabicCharacterPattern = /[\u0600-\u06FF]/;
 const mojibakeCharacterPattern = /[ÃØÙÂÐâï¿]/g;
 
@@ -337,38 +355,61 @@ function normalizeMealPlanLabel(value: string) {
     .replace(/\s+/g, " ");
 }
 
-const hotelMealPlanLabelMap = new Map<string, HotelMealPlan>([
+const hotelMealPlanLabelMap = new Map<
+  string,
+  HotelMealPlan | "BREAKFAST_DINNER" | "ROOM_ONLY"
+>([
   ["شامل جميع الوجبات", "ALL_INCLUSIVE"],
   ["all inclusive", "ALL_INCLUSIVE"],
+  ["إقامة كاملة", "ALL_INCLUSIVE"],
+  ["اقامة كاملة", "ALL_INCLUSIVE"],
+  ["شامل جميع الوجبات", "ALL_INCLUSIVE"],
   ["شامل الافطار", "BREAKFAST_ONLY"],
   ["شامل الإفطار", "BREAKFAST_ONLY"],
   ["breakfast included", "BREAKFAST_ONLY"],
   ["breakfast only", "BREAKFAST_ONLY"],
+  ["فطار فقط", "BREAKFAST_ONLY"],
+  ["إفطار فقط", "BREAKFAST_ONLY"],
+  ["افطار فقط", "BREAKFAST_ONLY"],
   ["شامل الافطار والعشاء", "BREAKFAST_DINNER"],
   ["شامل الإفطار والعشاء", "BREAKFAST_DINNER"],
-  ["breakfast and dinner", "BREAKFAST_DINNER"],
-  ["breakfast & dinner", "BREAKFAST_DINNER"],
+  ["breakfast and dinner", "BREAKFAST_AND_DINNER"],
+  ["breakfast & dinner", "BREAKFAST_AND_DINNER"],
+  ["شامل فطار وعشاء", "BREAKFAST_AND_DINNER"],
+  ["شامل إفطار وعشاء", "BREAKFAST_AND_DINNER"],
   ["بدون وجبات", "ROOM_ONLY"],
-  ["room only", "ROOM_ONLY"],
-  ["no meals", "ROOM_ONLY"],
+  ["room only", "NO_MEALS"],
+  ["no meals", "NO_MEALS"],
+  ["بدون وجبات", "NO_MEALS"],
 ]);
-
-const hotelMealPlanSet = new Set<HotelMealPlan>(
-  HOTEL_MEAL_PLAN_OPTIONS.map((option) => option.value),
-);
 
 function parseHotelMealPlan(value: string | null | undefined): HotelMealPlan | null {
   if (!value) return null;
 
-  const repairedValue = repairText(value).trim();
+  const repairedValue = repairText(value)
+    .trim()
+    .replace(/^['"]+|['"]+$/g, "");
   if (!repairedValue) return null;
 
   if (repairedValue.startsWith(HOTEL_MEAL_PLAN_MARKER)) {
-    const mealPlan = repairedValue.slice(HOTEL_MEAL_PLAN_MARKER.length) as HotelMealPlan;
-    return hotelMealPlanSet.has(mealPlan) ? mealPlan : null;
+    const mealPlan = repairedValue
+      .slice(HOTEL_MEAL_PLAN_MARKER.length)
+      .trim()
+      .toUpperCase();
+    return HOTEL_MEAL_PLAN_VALUE_ALIASES[mealPlan] ?? null;
   }
 
-  return hotelMealPlanLabelMap.get(normalizeMealPlanLabel(repairedValue)) ?? null;
+  const directValue = HOTEL_MEAL_PLAN_VALUE_ALIASES[repairedValue.toUpperCase()];
+  if (directValue) {
+    return directValue;
+  }
+
+  const labelValue = hotelMealPlanLabelMap.get(normalizeMealPlanLabel(repairedValue));
+  if (!labelValue) {
+    return null;
+  }
+
+  return HOTEL_MEAL_PLAN_VALUE_ALIASES[labelValue] ?? null;
 }
 
 function withHotelMealPlan(values: string[], mealPlan: HotelMealPlan | null) {
@@ -378,7 +419,8 @@ function withHotelMealPlan(values: string[], mealPlan: HotelMealPlan | null) {
     return cleanedValues;
   }
 
-  return [...cleanedValues, `${HOTEL_MEAL_PLAN_MARKER}${mealPlan}`];
+  const storedMealPlan = HOTEL_MEAL_PLAN_STORAGE_ALIASES[mealPlan] ?? mealPlan;
+  return [...cleanedValues, `${HOTEL_MEAL_PLAN_MARKER}${storedMealPlan}`];
 }
 
 function extractHotelMealPlan(
@@ -400,10 +442,14 @@ function extractHotelMealPlan(
 }
 
 export function getHotelMealPlanLabel(mealPlan: HotelMealPlan, language: HotelLanguage) {
-  const option = HOTEL_MEAL_PLAN_OPTIONS.find((item) => item.value === mealPlan);
-  if (!option) return "";
+  const labels: Record<HotelMealPlan, { ar: string; en: string }> = {
+    ALL_INCLUSIVE: { ar: "إقامة كاملة", en: "All inclusive" },
+    BREAKFAST_ONLY: { ar: "فطار فقط", en: "Breakfast only" },
+    BREAKFAST_AND_DINNER: { ar: "شامل فطار وعشاء", en: "Breakfast and dinner" },
+    NO_MEALS: { ar: "بدون وجبات", en: "No meals" },
+  };
 
-  return language === "ar" ? option.labelAr : option.labelEn;
+  return labels[mealPlan]?.[language] ?? "";
 }
 
 function titleCase(value: string) {
@@ -500,6 +546,7 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
   const repairedDescriptionAr = repairText(ar?.description || en?.description || "");
   const repairedDescriptionEn = repairText(en?.description || ar?.description || "");
   const extractedMealPlan = extractHotelMealPlan(ar?.Facilities, en?.Facilities);
+  const mealPlan = parseHotelMealPlan(apiHotel.meal_plan) ?? extractedMealPlan.mealPlan;
 
   return {
     id: apiHotel.id,
@@ -513,7 +560,7 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     nameEn: repairedNameEn || repairedNameAr,
     descriptionAr: repairedDescriptionAr,
     descriptionEn: repairedDescriptionEn || repairedDescriptionAr,
-    mealPlan: extractedMealPlan.mealPlan,
+    mealPlan,
     facilitiesAr: extractedMealPlan.facilitiesAr,
     facilitiesEn: extractedMealPlan.facilitiesEn,
     mainImages: mainImages.length > 0 ? mainImages : mainImage ? [mainImage] : [],
@@ -843,7 +890,10 @@ export async function createHotel(
     body: buildCreateFormData(input, media),
   });
 
-  return createHotelRecord(payload);
+  const hotel = createHotelRecord(payload);
+  clearHotelClientCache();
+  writeHotelDetailCache(hotel);
+  return hotel;
 }
 
 export async function updateHotel(
@@ -856,11 +906,15 @@ export async function updateHotel(
     body: buildCreateFormData(input, media),
   });
 
-  return createHotelRecord(payload);
+  const hotel = createHotelRecord(payload);
+  clearHotelClientCache();
+  writeHotelDetailCache(hotel);
+  return hotel;
 }
 
 export async function deleteHotel(id: string) {
   await requestJson<unknown>(`/${id}`, {
     method: "DELETE",
   });
+  clearHotelClientCache();
 }

@@ -12,7 +12,11 @@ import {
   writeHotelsListCache,
 } from "@/lib/hotel-client-cache";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import { type HotelRecord, listHotels } from "@/lib/hotel-service";
+import {
+  getHotelMealPlanLabel,
+  type HotelRecord,
+  listHotels,
+} from "@/lib/hotel-service";
 
 type SortKey = "default" | "MOST_BOOKED" | "TOP_RATED" | "LOWEST_PRICE";
 
@@ -119,6 +123,9 @@ function HotelCard({
   const hotelCity = isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn;
   const hotelDescription = isAr ? hotel.descriptionAr : hotel.descriptionEn;
   const discountLabel = hotel.discountPercentage ? `${hotel.discountPercentage}%` : "";
+  const mealPlanLabel = hotel.mealPlan
+    ? getHotelMealPlanLabel(hotel.mealPlan, lang)
+    : "";
 
   const goPrev = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -236,6 +243,14 @@ function HotelCard({
         >
           {hotelDescription}
         </p>
+
+        {mealPlanLabel ? (
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-100">
+              {mealPlanLabel}
+            </span>
+          </div>
+        ) : null}
 
         <div className="mt-auto flex items-center justify-between border-t border-[#F3F4F6] pt-3">
           <div className="flex flex-col">

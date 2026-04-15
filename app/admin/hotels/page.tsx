@@ -120,7 +120,7 @@ const mockHotels: Hotel[] = [
       "Upscale Red Sea stay with private beach access and a broad range of water activities.",
     descriptionEn:
       "Upscale Red Sea stay with private beach access and a broad range of water activities.",
-    mealPlan: "BREAKFAST_DINNER",
+    mealPlan: "BREAKFAST_AND_DINNER",
     mainImages: ["https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1920&q=80"],
     gallery: [],
     youtubeUrl: "",
@@ -180,7 +180,7 @@ const mockHotels: Hotel[] = [
       "High-end resort experience combining premium hospitality with natural coastal scenery.",
     descriptionEn:
       "High-end resort experience combining premium hospitality with natural coastal scenery.",
-    mealPlan: "ROOM_ONLY",
+    mealPlan: "NO_MEALS",
     mainImages: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=80"],
     gallery: [],
     youtubeUrl: "",
@@ -1044,7 +1044,7 @@ export default function AdminHotels() {
                       <option value="">اختر نظام الوجبات</option>
                       {HOTEL_MEAL_PLAN_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
-                          {option.labelAr}
+                          {getHotelMealPlanLabel(option.value, "ar")}
                         </option>
                       ))}
                     </select>

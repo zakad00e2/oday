@@ -31,7 +31,7 @@ const socials = [
   },
 ];
 
-type PaymentMethodId = "visa" | "apple-pay" | "mastercard" | "fawry" | "bank-of-palestine" | "banque-misr" | "cib";
+type PaymentMethodId = "visa" | "apple-pay" | "instapay" | "mastercard" | "fawry" | "bank-of-palestine" | "banque-misr" | "cib";
 
 function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
   switch (method) {
@@ -51,6 +51,15 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
           alt="Apple Pay"
           loading="lazy"
           className="h-7 w-auto max-w-[128px] object-contain"
+        />
+      );
+    case "instapay":
+      return (
+        <img
+          src="/images/payment/instapay.png"
+          alt="InstaPay"
+          loading="lazy"
+          className="h-14 w-auto max-w-[180px] object-contain"
         />
       );
     case "mastercard":
@@ -130,6 +139,7 @@ export default function Footer() {
   const paymentMethods: Array<{ id: PaymentMethodId; label: string }> = [
     { id: "visa", label: "Visa" },
     { id: "apple-pay", label: "Apple Pay" },
+    { id: "instapay", label: "InstaPay" },
     { id: "mastercard", label: isArabic ? "ماستر كارد" : "Mastercard" },
     { id: "fawry", label: isArabic ? "فوري" : "Fawry" },
     { id: "bank-of-palestine", label: isArabic ? "بنك فلسطين" : "Bank of Palestine" },

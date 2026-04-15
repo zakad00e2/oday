@@ -87,3 +87,8 @@ export function writeHotelDetailCache(hotel: HotelRecord | null) {
 
   return hotelDetailCache.get(hotel.slug) ?? null;
 }
+
+export function clearHotelClientCache() {
+  hotelsListCache = null;
+  hotelDetailCache.clear();
+}
