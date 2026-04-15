@@ -201,19 +201,19 @@ const legalContent: Record<LegalLocale, LegalContent> = {
     checkout: {
       title: "Terms Approval Before Checkout",
       intro:
-        "Please review the Terms & Conditions and Refund Policy carefully. You must agree before sending your booking request.",
+        "Please review the Terms & Conditions, Refund Policy, and Privacy Policy carefully. You must agree before sending your booking request.",
       termsLabel: "Terms & Conditions",
       refundLabel: "Refund Policy",
       termsLink: "Open full Terms & Conditions page",
       refundLink: "Open full Refund Policy page",
       agreementLabel:
-        "I have read and agree to the Terms & Conditions and Refund Policy, and I understand that sending this request via WhatsApp will serve as my approval for confirmation and record.",
+        "I have read and agree to the Terms & Conditions, Refund Policy, and Privacy Policy, and I understand that sending this request via WhatsApp will serve as my approval for confirmation and record.",
       agreementError:
-        "You must agree to the Terms & Conditions and Refund Policy before completing the booking.",
+        "You must agree to the Terms & Conditions, Refund Policy, and Privacy Policy before completing the booking.",
       whatsappNote:
         "After agreement, your approval will be included in the WhatsApp confirmation message for record.",
       summaryTitle: "Customer Agreement Before Checkout",
-      acceptanceLine: "Accepted terms and refund policy",
+      acceptanceLine: "Accepted terms, refund policy, and privacy policy",
       acceptedAt: "Accepted at",
       consentChannel: "Approval sent via WhatsApp for confirmation and record",
     },
@@ -313,7 +313,7 @@ const legalContent: Record<LegalLocale, LegalContent> = {
         {
           title: "قبول الشروط",
           bullets: [
-            "إتمام الدفع، سواء إلكترونياً أو بأي وسيلة أخرى، يعد قبولاً نهائياً وكاملاً لجميع الشروط والأحكام وسياسة الاسترداد.",
+            "إتمام الدفع، سواء إلكترونياً أو بأي وسيلة أخرى، يعد قبولاً نهائياً وكاملاً لجميع الشروط والأحكام وسياسة الاسترداد وسياسة الخصوصية.",
           ],
         },
       ],
@@ -383,19 +383,19 @@ const legalContent: Record<LegalLocale, LegalContent> = {
     checkout: {
       title: "الموافقة على الشروط قبل إتمام الحجز",
       intro:
-        "يرجى مراجعة الشروط والأحكام وسياسة الاسترداد بعناية. يجب الموافقة عليهما قبل إرسال طلب الحجز.",
+        "يرجى مراجعة الشروط والأحكام وسياسة الاسترداد وسياسة الخصوصية بعناية. يجب الموافقة عليها قبل إرسال طلب الحجز.",
       termsLabel: "الشروط والأحكام",
       refundLabel: "سياسة الاسترداد",
       termsLink: "فتح صفحة الشروط والأحكام كاملة",
       refundLink: "فتح صفحة سياسة الاسترداد كاملة",
       agreementLabel:
-        "أقر بأنني قرأت ووافقت على الشروط والأحكام وسياسة الاسترداد، وأفهم أن إرسال هذا الطلب عبر واتساب يعد موافقة مني لأغراض التأكيد والحفظ في السجلات.",
+        "أقر بأنني قرأت ووافقت على الشروط والأحكام وسياسة الاسترداد وسياسة الخصوصية، وأفهم أن إرسال هذا الطلب عبر واتساب يعد موافقة مني لأغراض التأكيد والحفظ في السجلات.",
       agreementError:
-        "يجب الموافقة على الشروط والأحكام وسياسة الاسترداد قبل إتمام الحجز.",
+        "يجب الموافقة على الشروط والأحكام وسياسة الاسترداد وسياسة الخصوصية قبل إتمام الحجز.",
       whatsappNote:
         "بعد الموافقة، سيتم تضمين هذا الإقرار داخل رسالة واتساب للتأكيد والحفظ في السجلات.",
       summaryTitle: "إقرار العميل قبل إتمام الحجز",
-      acceptanceLine: "تمت الموافقة على الشروط وسياسة الاسترداد",
+      acceptanceLine: "تمت الموافقة على الشروط وسياسة الاسترداد وسياسة الخصوصية",
       acceptedAt: "وقت الموافقة",
       consentChannel: "تم إرسال الموافقة عبر واتساب للتأكيد والحفظ في السجلات",
     },

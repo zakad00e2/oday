@@ -85,8 +85,8 @@ export default function CheckoutPageClient() {
       estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
       notes: isAr ? "ملاحظات" : "Notes",
       agreementConfirmed: isAr
-        ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد"
-        : "Agreed to Terms & Conditions and Refund Policy",
+        ? "تمت الموافقة على الشروط والأحكام وسياسة الاسترداد وسياسة الخصوصية"
+        : "Agreed to Terms & Conditions, Refund Policy, and Privacy Policy",
     },
     submitted: {
       title: isAr ? "تم إرسال طلبك بنجاح" : "Your request was sent successfully",
@@ -127,6 +127,7 @@ export default function CheckoutPageClient() {
       agreementLabel: isAr ? "أوافق على" : "I agree to",
       termsLabel: isAr ? "الشروط والأحكام" : "Terms & Conditions",
       refundLabel: isAr ? "سياسة الاسترداد" : "Refund Policy",
+      privacyLabel: isAr ? "سياسة الخصوصية" : "Privacy Policy",
       agreementError: isAr
         ? "يجب الموافقة على الشروط للمتابعة"
         : "You must agree to the terms to continue",
@@ -492,6 +493,15 @@ export default function CheckoutPageClient() {
                     rel="noopener noreferrer"
                   >
                     {t.legal.refundLabel}
+                  </Link>{" "}
+                  {isAr ? "و" : "and"}{" "}
+                  <Link
+                    href={`/${lang}/privacy-policy`}
+                    className="text-[#0EA5E9] hover:text-[#0284c7] font-bold"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t.legal.privacyLabel}
                   </Link>
                 </label>
               </div>

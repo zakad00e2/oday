@@ -13,6 +13,7 @@ const staticRoutes = [
   { path: "/about", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" as const },
   { path: "/refund-policy", priority: 0.3, changeFrequency: "yearly" as const },
+  { path: "/privacy-policy", priority: 0.3, changeFrequency: "yearly" as const },
   { path: "/airport-coordination/terms", priority: 0.3, changeFrequency: "yearly" as const },
   { path: "/airport-coordination/refund-policy", priority: 0.3, changeFrequency: "yearly" as const },
 ];

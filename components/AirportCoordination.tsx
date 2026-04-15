@@ -869,6 +869,8 @@ export default function AirportCoordination() {
                                                 <Link href={`/${lang}/airport-coordination/terms`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("الشروط والأحكام", "Terms & Conditions")}</Link>
                                                 &nbsp;{isAr ? "و" : "and"}&nbsp;
                                                 <Link href={`/${lang}/airport-coordination/refund-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("سياسة الاسترداد", "Refund Policy")}</Link>
+                                                &nbsp;{isAr ? "و" : "and"}&nbsp;
+                                                <Link href={`/${lang}/privacy-policy`} className="text-[#0EA5E9] hover:text-[#0284C7] font-bold" target="_blank" rel="noopener noreferrer">{t("سياسة الخصوصية", "Privacy Policy")}</Link>
                                             </label>
                                         </div>
                                         {errors.agreement && <p className="text-xs text-red-500 mt-1.5 font-bold">{errors.agreement}</p>}

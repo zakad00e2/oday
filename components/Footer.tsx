@@ -128,6 +128,7 @@ export default function Footer() {
   const policyLinks = [
     { label: isArabic ? "الشروط والأحكام" : "Terms & Conditions", href: `/${lang}/terms` },
     { label: isArabic ? "سياسة الاسترداد" : "Refund Policy", href: `/${lang}/refund-policy` },
+    { label: isArabic ? "سياسة الخصوصية" : "Privacy Policy", href: `/${lang}/privacy-policy` },
   ];
 
   const contactInfo = [
