@@ -6,7 +6,6 @@ import { defaultHomeGalleryContent } from "@/lib/home-gallery-content";
 import { listOffers, type OfferItem } from "@/lib/offer-service";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import { ChevronRight, ChevronLeft } from "lucide-react";
 
 type LoadState = "loading" | "loaded" | "error";
 
@@ -121,20 +120,6 @@ export default function PackagesGallery() {
 
   const isLoading = loadState === "loading";
 
-  const scrollNext = () => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = isAr ? -400 : 400;
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  const scrollPrev = () => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = isAr ? 400 : -400;
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
   return (
     <section className="pt-24 pb-10 bg-white" id="packages-gallery">
       <ScrollReveal>
@@ -229,25 +214,8 @@ export default function PackagesGallery() {
             )}
           </div>
 
-          {/* Navigation Arrows */}
-          {!isLoading && galleryPackages.length > 0 && (
-            <div className="flex justify-center gap-4 mt-8" dir={isAr ? "rtl" : "ltr"}>
-              <button
-                onClick={scrollPrev}
-                className="p-3 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center"
-                aria-label="Previous image"
-              >
-                {isAr ? <ChevronRight className="w-6 h-6 text-gray-700" /> : <ChevronLeft className="w-6 h-6 text-gray-700" />}
-              </button>
-              <button
-                onClick={scrollNext}
-                className="p-3 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center"
-                aria-label="Next image"
-              >
-                {isAr ? <ChevronLeft className="w-6 h-6 text-gray-700" /> : <ChevronRight className="w-6 h-6 text-gray-700" />}
-              </button>
-            </div>
-          )}
+          {/* Navigation Arrows - Disabled by User */}
+
         </div>
       </ScrollReveal>
     </section>
