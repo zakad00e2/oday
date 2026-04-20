@@ -11,7 +11,7 @@ export default function CTAHeroBanner({
     <ScrollReveal as="section" className="px-4 md:px-8 py-10 md:py-16 bg-white">
       <div className="relative w-full rounded-[28px] md:rounded-[32px] overflow-hidden flex items-center justify-center py-16 md:py-44">
         <Image
-          src="/optimized/cover-cta.avif"
+          src="/cover2.jpeg"
           alt={cta.title}
           fill
           sizes="100vw"
