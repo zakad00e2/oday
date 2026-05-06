@@ -46,7 +46,7 @@
         "subtitle": "Premium beachfront stay with lively evenings, polished service, and a seamless escape from arrival to checkout.",
         "kicker": "Summer Escape",
         "price": "2,499",
-        "currency": "EGP",
+        "currency": "$",
         "duration": "3 Nights / 4 Days",
         "services": [
           "5-Star Hotel",
@@ -61,7 +61,7 @@
         "subtitle": "A polished resort experience with snorkeling programs, curated dining, and full seaside relaxation.",
         "kicker": "Sea Side Deal",
         "price": "1,999",
-        "currency": "EGP",
+        "currency": "$",
         "duration": "3 Nights / 4 Days",
         "services": [
           "4-Star Resort",
@@ -76,7 +76,7 @@
         "subtitle": "A freer coastal vibe that blends desert adventure, diving culture, and laid-back boutique comfort.",
         "kicker": "Boutique Adventure",
         "price": "1,599",
-        "currency": "EGP",
+        "currency": "$",
         "duration": "3 Nights / 4 Days",
         "services": [
           "Boutique Stay",
