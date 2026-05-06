@@ -1026,7 +1026,7 @@ export default function AdminHotels() {
                     <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="hotel-name-slug" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي (ج.م/ليلة)</label>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي ($/ليلة)</label>
                     <input type="number" value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
@@ -1120,7 +1120,7 @@ export default function AdminHotels() {
                           <input value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} placeholder="20%" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-[#9CA3AF] mb-1">السعر الأصلي (قبل الخصم ج.م)</label>
+                          <label className="block text-[10px] text-[#9CA3AF] mb-1">السعر الأصلي (قبل الخصم $)</label>
                           <input type="number" value={form.originalPrice || ""} onChange={(e) => setForm({ ...form, originalPrice: e.target.value ? Number(e.target.value) : undefined })} placeholder="150" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                         </div>
                       </div>
@@ -1243,7 +1243,7 @@ export default function AdminHotels() {
                     <input value={roomInput.descriptionEn} onChange={(e) => setRoomInput({ ...roomInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoom} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1294,7 +1294,7 @@ export default function AdminHotels() {
                     <input value={roomAddOnInput.descriptionEn} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, descriptionEn: e.target.value })} placeholder="Add-on description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر (ج.م)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoomAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">

@@ -9,8 +9,9 @@ function formatAmount(value: number): string {
 }
 
 export function formatPrice(value: number, lang: CurrencyLang): string {
+  void lang;
   const amount = formatAmount(value);
-  return lang === "ar" ? `${amount} ج.م` : `EGP ${amount}`;
+  return `$${amount}`;
 }
 
 export function formatPriceWithSign(value: number, lang: CurrencyLang): string {
@@ -19,5 +20,5 @@ export function formatPriceWithSign(value: number, lang: CurrencyLang): string {
 }
 
 export function formatPriceCode(value: number): string {
-  return `EGP ${formatAmount(value)}`;
+  return `$${formatAmount(value)}`;
 }
