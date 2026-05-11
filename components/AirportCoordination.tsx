@@ -303,7 +303,7 @@ export default function AirportCoordination() {
                 : 0;
 
     const selectedOtherAirlineRecord = useMemo(() => {
-        if (!otherAirlineId || otherAirlineId === "other") return null;
+        if (!otherAirlineId) return null;
         return airPricingMap.get(otherAirlineId) ?? null;
     }, [otherAirlineId, airPricingMap]);
 
@@ -315,12 +315,12 @@ export default function AirportCoordination() {
     const airlineFeeDisplay = useMemo(() => {
         if (!airlineChoice) return "—";
         if (airlineChoice === "egyptair") return t("مجاناً", "Free");
-        if (!otherAirlineId || otherAirlineId === "other") return "—";
+        if (!otherAirlineId) return "—";
         return extraFee > 0 ? formatPriceWithSign(extraFee, lang) : t("مجاناً", "Free");
     }, [airlineChoice, otherAirlineId, extraFee, lang, t]);
 
     const otherAirlineFeeHint = useMemo(() => {
-        if (!otherAirlineId || otherAirlineId === "other") {
+        if (!otherAirlineId) {
             return t(
                 "يتم احتساب الرسوم حسب شركة الطيران التي تختارها",
                 "The fee is based on the airline you select"
