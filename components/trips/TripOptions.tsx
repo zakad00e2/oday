@@ -1,6 +1,7 @@
 "use client";
 
 import { TripOption } from "@/lib/trips-types";
+import { formatPrice } from "@/lib/currency";
 import ScrollReveal from "../ScrollReveal";
 
 interface TripOptionsProps {
@@ -65,7 +66,7 @@ export default function TripOptions({
                                     <div className="text-left shrink-0">
                                         {option.price > 0 ? (
                                             <div className="text-xl font-black text-[#0f172a]">
-                                                ${option.price}
+                                                {formatPrice(option.price, "ar")}
                                             </div>
                                         ) : (
                                             <span className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-full px-3 py-1">
@@ -97,7 +98,7 @@ export default function TripOptions({
                                             </button>
                                         </div>
                                         {option.price > 0 && qty > 1 && (
-                                            <span className="text-sm font-bold text-[#0EA5E9]">= ${option.price * qty}</span>
+                                            <span className="text-sm font-bold text-[#0EA5E9]">= {formatPrice(option.price * qty, "ar")}</span>
                                         )}
                                     </div>
                                 )}

@@ -100,6 +100,10 @@ function filterByRating(hotels: HotelRecord[], sortBy: SortKey): HotelRecord[] {
   return hotels.filter((hotel) => hotel.ratingValue === sortBy);
 }
 
+function hasHotelDiscount(hotel: Pick<HotelRecord, "isDiscounted" | "discountPercentage">) {
+  return hotel.isDiscounted && (hotel.discountPercentage ?? 0) > 0;
+}
+
 function HotelCard({
   hotel,
   lang,
@@ -122,7 +126,9 @@ function HotelCard({
   const hotelName = isAr ? hotel.nameAr : hotel.nameEn;
   const hotelCity = isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn;
   const hotelDescription = isAr ? hotel.descriptionAr : hotel.descriptionEn;
-  const discountLabel = hotel.discountPercentage ? `${hotel.discountPercentage}%` : "";
+  const hasDiscount = hasHotelDiscount(hotel);
+  const discountPercentage = hotel.discountPercentage ?? 0;
+  const discountLabel = hasDiscount ? `${discountPercentage}%` : "";
   const mealPlanLabel = hotel.mealPlan
     ? getHotelMealPlanLabel(hotel.mealPlan, lang)
     : "";
@@ -140,7 +146,7 @@ function HotelCard({
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-[#F3F4F6] bg-white shadow-sm transition-all duration-500 hover:shadow-xl">
       <div className="relative aspect-[16/10] overflow-hidden">
-        {hotel.isDiscounted && discountLabel ? (
+        {hasDiscount ? (
           <div className="absolute top-4 end-4 z-20 flex items-center gap-1.5 rounded-full border border-white/20 bg-red-500/90 px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] backdrop-blur-md">
             <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -256,7 +262,7 @@ function HotelCard({
           <div className="flex flex-col">
             <span className="mb-1 text-[11px] font-medium text-[#64748B]">{labels.startsFrom}</span>
             <div className="flex items-baseline gap-2">
-              {hotel.originalPrice && hotel.originalPrice > hotel.initialPrice ? (
+              {hasDiscount && hotel.originalPrice && hotel.originalPrice > hotel.initialPrice ? (
                 <span className="relative inline-flex items-center text-sm font-medium leading-none text-[#9CA3AF]">
                   <span>{formatPrice(hotel.originalPrice, lang)}</span>
                   <span aria-hidden="true" className="absolute start-0 end-0 top-1/2 h-px -translate-y-1/2 bg-[#9CA3AF]" />
@@ -380,7 +386,7 @@ export default function Hotels() {
         return false;
       }
 
-      if (showDiscountsOnly && !hotel.isDiscounted) {
+      if (showDiscountsOnly && !hasHotelDiscount(hotel)) {
         return false;
       }
 

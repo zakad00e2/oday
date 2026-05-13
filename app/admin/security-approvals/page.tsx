@@ -472,7 +472,7 @@ export default function SecurityApprovalsPage() {
                     {/* 24h price */}
                     <div>
                       <label className="text-xs text-[#6B7280] block mb-1.5">
-                        سعر 24 ساعة ($)
+                        سعر 24 ساعة (EGP)
                       </label>
                       <input
                         type="number"
@@ -489,7 +489,7 @@ export default function SecurityApprovalsPage() {
                     {/* 72h price */}
                     <div>
                       <label className="text-xs text-[#6B7280] block mb-1.5">
-                        سعر 72 ساعة ($)
+                        سعر 72 ساعة (EGP)
                       </label>
                       <input
                         type="number"
@@ -564,7 +564,7 @@ export default function SecurityApprovalsPage() {
                       <div className="flex items-start gap-2 w-full sm:w-auto">
                         <div className="flex-1 sm:w-32">
                           <label className="text-xs text-[#6B7280] block mb-1.5">
-                            الرسوم الإضافية ($)
+                            الرسوم الإضافية (EGP)
                           </label>
                           <input
                             type="number"

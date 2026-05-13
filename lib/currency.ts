@@ -4,6 +4,8 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const CURRENCY_CODE = "EGP";
+
 function formatAmount(value: number): string {
   return numberFormatter.format(value);
 }
@@ -11,7 +13,7 @@ function formatAmount(value: number): string {
 export function formatPrice(value: number, lang: CurrencyLang): string {
   void lang;
   const amount = formatAmount(value);
-  return `$${amount}`;
+  return `${CURRENCY_CODE} ${amount}`;
 }
 
 export function formatPriceWithSign(value: number, lang: CurrencyLang): string {
@@ -20,5 +22,5 @@ export function formatPriceWithSign(value: number, lang: CurrencyLang): string {
 }
 
 export function formatPriceCode(value: number): string {
-  return `$${formatAmount(value)}`;
+  return `${CURRENCY_CODE} ${formatAmount(value)}`;
 }

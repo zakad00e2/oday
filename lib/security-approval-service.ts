@@ -5,8 +5,8 @@ export const SECURITY_APPROVAL_API_BASE =
   "https://oday-tourisim-production.up.railway.app/security-approval";
 
 // ── ID mapping helpers ───────────────────────────────────────────────────────
-// Frontend uses lowercase kebab-case (e.g. "libyan", "palestinian-sharm-only")
-// API uses UPPER_SNAKE_CASE (e.g. "LIBYAN", "PALESTINIAN_SHARM_ONLY")
+// Frontend uses lowercase kebab-case (e.g. "libyan", "saint-kitts-dominica-group")
+// API uses UPPER_SNAKE_CASE (e.g. "LIBYAN", "SAINT_KITTS_AND_NEVIS")
 
 const FRONTEND_TO_API_KEY_ALIASES: Record<string, string> = {
   "iraqi-document": "IRAQ_DOCUMENT",

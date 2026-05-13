@@ -7,13 +7,6 @@ export const ADMIN_WHATSAPP = "201032549630";
 /** Nationality pricing catalog for security approvals */
 export const NATIONALITY_OPTIONS = [
       { id: "palestinian", labelAr: "الفلسطيني", labelEn: "Palestinian", price24: 60, price72: 35 },
-    {
-        id: "palestinian-sharm-only",
-        labelAr: "الفلسطيني (دخول شرم الشيخ فقط)",
-        labelEn: "Palestinian (Sharm El Sheikh entry only)",
-        price24: 50,
-        price72: 30,
-    },
      {
         id: "palestinian-syrian",
         labelAr: "فلسطيني سوري",
@@ -56,9 +49,17 @@ export const AIRLINES = [
     { id: "egyptair", labelAr: "مصر للطيران", labelEn: "EgyptAir", isEgyptAir: true },
     { id: "qatar", labelAr: "القطرية", labelEn: "Qatar Airways", isEgyptAir: false },
     { id: "emirates", labelAr: "الإماراتية", labelEn: "Emirates", isEgyptAir: false },
-    { id: "aegean", labelAr: "اليونانية", labelEn: "Aegean Airlines", isEgyptAir: false },
+    { id: "aegean", labelAr: "إيجه", labelEn: "Aegean Airlines", isEgyptAir: false },
     { id: "turkish", labelAr: "التركية", labelEn: "Turkish Airlines", isEgyptAir: false },
-    { id: "oman", labelAr: "العمانية", labelEn: "Oman Air", isEgyptAir: false },
+    { id: "oman", labelAr: "العُمانية", labelEn: "Oman Air", isEgyptAir: false },
+    { id: "saudia", labelAr: "السعودية", labelEn: "Saudia", isEgyptAir: false },
+    { id: "etihad", labelAr: "الاتحاد", labelEn: "Etihad Airways", isEgyptAir: false },
+    { id: "air-arabia", labelAr: "العربية للطيران", labelEn: "Air Arabia", isEgyptAir: false },
+    { id: "royal-jordanian", labelAr: "الأردنية", labelEn: "Royal Jordanian", isEgyptAir: false },
+    { id: "royal-air-maroc", labelAr: "المغربية", labelEn: "Royal Air Maroc", isEgyptAir: false },
+    { id: "air-algerie", labelAr: "الجزائرية", labelEn: "Air Algerie", isEgyptAir: false },
+    { id: "nile-air", labelAr: "النيل للطيران", labelEn: "Nile Air", isEgyptAir: false },
+    { id: "air-cairo", labelAr: "إير كايرو", labelEn: "Air Cairo", isEgyptAir: false },
     { id: "other", labelAr: "أخرى", labelEn: "Other", isEgyptAir: false },
 ] as const;
 

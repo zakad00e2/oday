@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
 import { getTripBySlug } from "@/lib/trip-service";
 import { buildPageMetadata, SITE_URL, SITE_NAME } from "@/lib/seo";
@@ -89,7 +88,7 @@ export default async function TripDetailPage({ params }: Props) {
           offers: {
             "@type": "Offer",
             price: trip.startingPrice,
-            priceCurrency: "USD",
+            priceCurrency: "EGP",
             availability: "https://schema.org/InStock",
             url: `${SITE_URL}/${locale}/trips/${slug}`,
           },
