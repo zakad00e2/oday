@@ -88,7 +88,7 @@ export default async function TripDetailPage({ params }: Props) {
           offers: {
             "@type": "Offer",
             price: trip.startingPrice,
-            priceCurrency: "EGP",
+            priceCurrency: "USD",
             availability: "https://schema.org/InStock",
             url: `${SITE_URL}/${locale}/trips/${slug}`,
           },
