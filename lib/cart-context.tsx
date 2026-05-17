@@ -46,6 +46,7 @@ export interface CartTrip {
   titleEn?: string;
   heroImage: string;
   startingPrice: number; // per person, 0 = TBD
+  travelDate?: string;
   persons?: number;      // number of persons selected
   selectedOptions?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];
   selectedAddOns?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];

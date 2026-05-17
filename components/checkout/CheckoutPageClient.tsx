@@ -74,7 +74,7 @@ export default function CheckoutPageClient() {
       email: isAr ? "البريد الإلكتروني" : "Email",
       adults: isAr ? "البالغين" : "Adults",
       children: isAr ? "الأطفال" : "Children",
-      travelDate: isAr ? "تاريخ السفر" : "Travel date",
+      travelDate: isAr ? "تاريخ الرحلة" : "Trip date",
       hotel: isAr ? "الفندق" : "Hotel",
       room: isAr ? "الغرف" : "Rooms",
       addOns: isAr ? "ترقيات الغرف" : "Room upgrades",
@@ -144,7 +144,7 @@ export default function CheckoutPageClient() {
       travelers: isAr ? "المسافرون" : "Travelers",
       adults: isAr ? "البالغين" : "adults",
       children: isAr ? "الأطفال" : "children",
-      travelDate: isAr ? "تاريخ السفر" : "Travel date",
+      travelDate: isAr ? "تاريخ الرحلة" : "Trip date",
       estimatedTotal: isAr ? "الإجمالي التقديري" : "Estimated total",
       onRequest: isAr ? "عند الطلب" : "On request",
       clear: isAr ? "مسح السلة" : "Clear cart",
@@ -221,6 +221,9 @@ export default function CheckoutPageClient() {
       cart.trips.forEach((trip) => {
         const tripQuantity = calculateTripQuantity(trip, guestsTotal);
         msg += `- ${getTripTitle(trip)} x${tripQuantity}\n`;
+        if (trip.travelDate) {
+          msg += `  ${t.whatsapp.travelDate}: ${trip.travelDate}\n`;
+        }
 
         if (trip.selectedOptions?.length) {
           trip.selectedOptions.forEach((option) => {
@@ -574,6 +577,11 @@ export default function CheckoutPageClient() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-[#0EA5E9] font-semibold">{t.summary.trip}</p>
                         <p className="text-sm font-semibold text-[#0f172a] line-clamp-1">{getTripTitle(trip)}</p>
+                        {trip.travelDate && (
+                          <p className="mt-1 text-xs font-semibold text-[#64748b]">
+                            {t.summary.travelDate}: {trip.travelDate}
+                          </p>
+                        )}
                       </div>
                     </div>
 

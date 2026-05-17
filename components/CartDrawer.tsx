@@ -101,6 +101,9 @@ export default function CartDrawer() {
         } else if (t.startingPrice > 0) {
           msg += ` — ${formatPrice(t.startingPrice * guestsTotal, lang)}`;
         }
+        if (t.travelDate) {
+          msg += `\n    ${wa.travelDate} ${t.travelDate}`;
+        }
         msg += "\n";
         if (t.selectedAddOns && t.selectedAddOns.length > 0) {
           t.selectedAddOns.forEach((a) => {
@@ -382,7 +385,14 @@ export default function CartDrawer() {
                           />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">{getTripTitle(trip)}</h4>
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-[#0F172A] text-[13px] leading-snug line-clamp-2">{getTripTitle(trip)}</h4>
+                                {trip.travelDate && (
+                                  <p className="mt-1 text-[11px] font-semibold text-[#64748B]">
+                                    {isAr ? "تاريخ الرحلة" : "Trip date"}: {trip.travelDate}
+                                  </p>
+                                )}
+                              </div>
                               <span className="shrink-0 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">
                                 ×{tripQuantity}
                               </span>

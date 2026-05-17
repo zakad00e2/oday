@@ -10,6 +10,7 @@ import TripOverview from "@/components/trips/TripOverview";
 import TripSchedule from "@/components/trips/TripSchedule";
 import TripIncludes from "@/components/trips/TripIncludes";
 import TripGallery from "@/components/trips/TripGallery";
+import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/currency";
 import { useI18n } from "@/lib/i18n/dictionary-context";
@@ -40,6 +41,13 @@ function compareTripSelectionsByPrice<T extends PricedTripSelection>(left: T, ri
 
 function sortTripSelectionsByPrice<T extends PricedTripSelection>(items: T[]) {
     return [...items].sort(compareTripSelectionsByPrice);
+}
+
+function formatIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 export default function TripDetailClient() {
@@ -97,9 +105,12 @@ export default function TripDetailClient() {
     const [personCounts, setPersonCounts] = useState<Record<string, number>>({});
     const [selectedAddOnIds, setSelectedAddOnIds] = useState<Set<string>>(new Set());
     const [addOnPersonCounts, setAddOnPersonCounts] = useState<Record<string, number>>({});
+    const [selectedDate, setSelectedDate] = useState("");
+    const [dateError, setDateError] = useState("");
     const optionsRef = useRef<HTMLDivElement>(null);
     const { addTrip, cart, openCart } = useCart();
     const [justAdded, setJustAdded] = useState(false);
+    const todayIso = formatIsoDate(new Date());
 
     useEffect(() => {
         if (!trip) return;
@@ -116,6 +127,8 @@ export default function TripDetailClient() {
         trip.addOns.forEach((a) => { ap[a.id] = 1; });
         setAddOnPersonCounts(ap);
         setSelectedAddOnIds(new Set());
+        setSelectedDate("");
+        setDateError("");
     }, [trip?.id]);
 
     useEffect(() => {
@@ -152,6 +165,9 @@ export default function TripDetailClient() {
             setSelectedAddOnIds(addOnIds);
             setAddOnPersonCounts(newAddOnPersonCounts);
         }
+
+        setSelectedDate(cartTrip.travelDate ?? "");
+        setDateError("");
     }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);
 
     useEffect(() => {
@@ -242,6 +258,10 @@ export default function TripDetailClient() {
                 }
             }
         }
+
+        if (!hasChanges && (cartTrip.travelDate ?? "") !== selectedDate) {
+            hasChanges = true;
+        }
     }
 
     const toggleAddOn = (id: string) => {
@@ -271,6 +291,12 @@ export default function TripDetailClient() {
     };
 
     const handleAddToCart = () => {
+        if (!selectedDate) {
+            setDateError(isAr ? "يرجى اختيار تاريخ الرحلة" : "Please select the trip date");
+            scrollToOptions();
+            return;
+        }
+
         const wasInCartBefore = isInCart;
         addTrip({
             slug: trip.slug,
@@ -278,6 +304,7 @@ export default function TripDetailClient() {
             titleEn: trip.titleEn,
             heroImage: trip.heroImage,
             startingPrice: trip.startingPrice,
+            travelDate: selectedDate,
             selectedOptions: selectedOptions.length > 0
                 ? selectedOptions.map((o) => ({ nameAr: o.nameAr, nameEn: o.nameEn, price: o.price, persons: personCounts[o.id] || 1 }))
                 : undefined,
@@ -334,9 +361,9 @@ export default function TripDetailClient() {
 
                 {(trip.options.length > 0 || trip.addOns.length > 0) && (
                     <div id="booking" ref={optionsRef} className="py-10 md:py-14" dir={isAr ? "rtl" : "ltr"}>
-                        <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+                        <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-visible">
 
-                            <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc]">
+                            <div className="px-6 md:px-8 py-5 border-b border-[#e2e8f0] flex items-center gap-3 bg-[#f8fafc] rounded-t-3xl">
                                 <div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
                                     <svg className="w-5 h-5 text-[#0EA5E9]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -491,7 +518,28 @@ export default function TripDetailClient() {
                                 )}
                             </div>
 
-                            <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4">
+                            <div className="px-6 md:px-8 py-6 border-b border-[#e2e8f0]">
+                                <div className="max-w-md">
+                                    <label className="block text-sm font-bold text-[#0f172a] mb-2">
+                                        {isAr ? "تاريخ الرحلة *" : "Trip date *"}
+                                    </label>
+                                    <LocalizedDatePicker
+                                        value={selectedDate}
+                                        onChange={(value) => {
+                                            setSelectedDate(value);
+                                            if (value) setDateError("");
+                                        }}
+                                        locale={lang}
+                                        label={isAr ? "تاريخ الرحلة" : "Trip date"}
+                                        placeholder={isAr ? "اختر تاريخ الرحلة" : "Select trip date"}
+                                        clearLabel={isAr ? "مسح التاريخ" : "Clear date"}
+                                        minDate={todayIso}
+                                    />
+                                    {dateError && <p className="mt-2 text-xs font-semibold text-red-500">{dateError}</p>}
+                                </div>
+                            </div>
+
+                            <div className="px-6 md:px-8 py-5 bg-[#f8fafc] flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 rounded-b-3xl">
                                 <div className="w-full flex flex-col items-center sm:items-start text-center sm:text-start">
                                     {(selectedOptions.length > 0 || selectedAddOns.length > 0) && (
                                         <p className="text-xs text-[#64748b] mb-1 sm:mb-1 leading-relaxed">
