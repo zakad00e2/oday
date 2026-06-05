@@ -75,6 +75,8 @@ export default function CheckoutPageClient() {
       adults: isAr ? "البالغين" : "Adults",
       children: isAr ? "الأطفال" : "Children",
       travelDate: isAr ? "تاريخ الرحلة" : "Trip date",
+      checkIn: isAr ? "تاريخ الوصول" : "Check-in date",
+      checkOut: isAr ? "تاريخ المغادرة" : "Check-out date",
       hotel: isAr ? "الفندق" : "Hotel",
       room: isAr ? "الغرف" : "Rooms",
       addOns: isAr ? "ترقيات الغرف" : "Room upgrades",
@@ -186,6 +188,8 @@ export default function CheckoutPageClient() {
 
     if (cart.hotel) {
       msg += `*${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} - ${getHotelCity(cart.hotel)}\n`;
+      if (cart.hotel.checkIn) msg += `${t.whatsapp.checkIn}: ${cart.hotel.checkIn}\n`;
+      if (cart.hotel.checkOut) msg += `${t.whatsapp.checkOut}: ${cart.hotel.checkOut}\n`;
 
       if (hotelSelectedRooms.length > 0) {
         msg += `${t.whatsapp.room}:\n`;

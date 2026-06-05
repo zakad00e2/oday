@@ -74,9 +74,13 @@ export default function CartDrawer() {
 
   const buildWhatsAppMsg = () => {
     const wa = d.whatsapp;
+    const hotelCheckInLabel = isAr ? "تاريخ الوصول:" : "Check-in date:";
+    const hotelCheckOutLabel = isAr ? "تاريخ المغادرة:" : "Check-out date:";
     let msg = `*${wa.header}*\n\n`;
     if (cart.hotel) {
       msg += `*${wa.hotel}* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
+      if (cart.hotel.checkIn) msg += `${hotelCheckInLabel} ${cart.hotel.checkIn}\n`;
+      if (cart.hotel.checkOut) msg += `${hotelCheckOutLabel} ${cart.hotel.checkOut}\n`;
       if (hotelSelectedRooms.length > 0) {
         msg += `*${wa.roomLabel}*\n`;
         hotelSelectedRooms.forEach((room) => {

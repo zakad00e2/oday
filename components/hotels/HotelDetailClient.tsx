@@ -691,6 +691,12 @@ export default function HotelDetailClient() {
                     : getDefaultRoomCounts(hotel),
             );
             setSelectedAddOnId(cartAddonId);
+            if (cart.hotel.checkIn) {
+                setCheckIn(cart.hotel.checkIn);
+            }
+            if (cart.hotel.checkOut) {
+                setCheckOut(cart.hotel.checkOut);
+            }
             return;
         }
 
@@ -743,6 +749,8 @@ export default function HotelDetailClient() {
         isInCart && hotel && (
             !areRoomSelectionsEqual(selectedRooms, cartSelectedRooms) ||
             nights !== cart.nights ||
+            checkIn !== (cart.hotel?.checkIn ?? "") ||
+            checkOut !== (cart.hotel?.checkOut ?? "") ||
             selectedAddOnId !== cartAddonId
         ),
     );
@@ -1113,6 +1121,8 @@ export default function HotelDetailClient() {
                                         roomNameAr: primaryRoom.nameAr,
                                         roomNameEn: primaryRoom.nameEn,
                                         roomsCount: selectedRoomCount,
+                                        checkIn,
+                                        checkOut,
                                         selectedRooms,
                                         selectedAddOns,
                                     });

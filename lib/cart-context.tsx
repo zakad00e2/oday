@@ -36,6 +36,8 @@ export interface CartHotel {
   roomName?: string;
   roomNameAr?: string;
   roomNameEn?: string;
+  checkIn?: string;
+  checkOut?: string;
   selectedRooms?: CartHotelRoomSelection[];
   selectedAddOns?: CartHotelAddOn[];
 }
