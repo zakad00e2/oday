@@ -115,7 +115,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
-      <body className={`${cairo.variable} ${manrope.variable} antialiased`}>
+      <body
+        suppressHydrationWarning
+        className={`${cairo.variable} ${manrope.variable} antialiased`}
+      >
         {children}
       </body>
     </html>

@@ -84,7 +84,7 @@ export default function Navbar() {
         className={`hidden lg:flex items-center gap-0.5 rounded-full px-1.5 py-1.5 border transition-all duration-300 ${
           useDark
             ? "border-transparent bg-transparent shadow-none"
-            : "border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
+            : "border-white/20 bg-white/10 backdrop-blur-sm backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.12)] lg:shadow-none"
         }`}
       >
         {navLinks.map((link) => {
