@@ -132,7 +132,7 @@ export default function Footer() {
   ];
 
   const contactInfo = [
-    "OdayTourism@outlook.com",
+    "reservations@odaytourism.com",
     phoneNumber,
     dict.footer.location,
   ];
