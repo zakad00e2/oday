@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import {
@@ -46,6 +46,7 @@ export default function CartDrawer() {
   const { dict, lang, dir } = useI18n();
   const d = dict.cart;
   const isAr = lang === "ar";
+  const wasOpenRef = useRef(false);
 
   const getHotelName = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.nameAr ?? hotel.name) : (hotel.nameEn ?? hotel.name);
   const getHotelCity = (hotel: NonNullable<typeof cart.hotel>) => isAr ? (hotel.cityAr ?? hotel.city) : (hotel.cityEn ?? hotel.city);
@@ -58,6 +59,24 @@ export default function CartDrawer() {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    if (wasOpenRef.current) {
+      return;
+    }
+
+    wasOpenRef.current = true;
+    window.tatheer?.("begin_checkout", {
+      value: totalPrice,
+      currency: "USD",
+      items_count: totalItems,
+    });
+  }, [isOpen, totalItems, totalPrice]);
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
   const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import HotelDetailSkeleton from "@/components/detail-skeletons/HotelDetailSkeleton";
 import FlexibleImage from "@/components/FlexibleImage";
 import LocalizedDatePicker from "@/components/LocalizedDatePicker";
@@ -664,6 +664,19 @@ export default function HotelDetailClient() {
         () => (hotelData ? buildLocalizedHotelView(hotelData, lang) : null),
         [hotelData, lang],
     );
+    const viewedHotelIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!hotel || viewedHotelIdRef.current === hotel.id) {
+            return;
+        }
+
+        viewedHotelIdRef.current = hotel.id;
+        window.tatheer?.("view_content", {
+            content_type: "hotel",
+            content_id: hotel.id,
+        });
+    }, [hotel]);
 
     const isInCart = cart.hotel?.id === hotel?.id;
     const cartAddonId = resolveAddOnIdFromCart(hotel, cart.hotel);
@@ -1104,6 +1117,13 @@ export default function HotelDetailClient() {
                                     if (selectedRooms.length === 0) return;
 
                                     const primaryRoom = selectedRooms[0];
+
+                                    window.tatheer?.("add_to_cart", {
+                                        value: totalPrice,
+                                        currency: "USD",
+                                        content_type: "hotel",
+                                        content_id: hotel.id,
+                                    });
 
                                     setHotel({
                                         id: hotel.id,

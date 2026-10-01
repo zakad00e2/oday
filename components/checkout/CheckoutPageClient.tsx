@@ -31,6 +31,7 @@ export default function CheckoutPageClient() {
   const [hotelName, setHotelName] = useState("");
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [agreedToPolicies, setAgreedToPolicies] = useState(false);
@@ -171,6 +172,8 @@ export default function CheckoutPageClient() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setSubmitError("");
 
     const nextErrors = validate();
@@ -266,6 +269,19 @@ export default function CheckoutPageClient() {
     msg += `\n${t.whatsapp.agreementConfirmed}\n`;
 
     const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
+    setIsSubmitting(true);
+    window.tatheer?.("purchase", {
+      value: totalPrice,
+      currency: "USD",
+      ...(cart.hotel
+        ? {
+            content_type: "hotel",
+            content_id: cart.hotel.id,
+          }
+        : {}),
+      items_count: totalItems,
+    });
+
     if (!openExternalUrl(whatsappUrl)) {
       setSubmitError(
         isAr
@@ -522,9 +538,9 @@ export default function CheckoutPageClient() {
 
             <button
               type="submit"
-              disabled={!agreedToPolicies}
+              disabled={!agreedToPolicies || isSubmitting}
               className={`mt-6 w-full ${
-                agreedToPolicies
+                agreedToPolicies && !isSubmitting
                   ? "bg-[#25D366] hover:bg-[#20BE5C] cursor-pointer"
                   : "bg-gray-400 cursor-not-allowed"
               } text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-base transition-all active:scale-[0.98]`}

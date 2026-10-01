@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cairo, Manrope } from "next/font/google";
 import "./globals.css";
 import {
@@ -119,6 +120,25 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${cairo.variable} ${manrope.variable} antialiased`}
       >
+        <Script id="tatheer-pixel" strategy="afterInteractive">
+          {`(function (w, d, key, name, params) {
+  if (w.tatheer) return;
+  w.tatheer = function () { (w.tatheer.q = w.tatheer.q || []).push(arguments); };
+  var s = d.createElement('script');
+  s.async = true;
+  s.src = "https://tatheer-tracker-dev.mrmhdcom.workers.dev/p/v2.js";
+  s.integrity = "sha384-Fk1GkLp8ntZZCDSs6IttctkbjjBH+WhnWOmI+xONNh1tj9G7OweyGVYSrrosADoj";
+  s.crossOrigin = 'anonymous';
+  s.setAttribute('data-pixel-key', key);
+  s.setAttribute('data-endpoint', "https://tatheer-tracker-dev.mrmhdcom.workers.dev/events_collector");
+  s.setAttribute('data-event', name);
+  s.setAttribute('data-params', JSON.stringify(params));
+  s.onload = function () { w.tatheer.loaded = true; };
+  s.onerror = function () { w.tatheer.failed = true; };
+  var first = d.getElementsByTagName('script')[0];
+  first.parentNode.insertBefore(s, first);
+})(window, document, "pk_live_ePa4bLfxts_Ms7atNSKrrhLQ0qbDGDhF", 'page_view', {});`}
+        </Script>
         {children}
       </body>
     </html>
