@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "method": "Bundled Playwright fallback; Expect MCP unavailable",
+  "lang": "en",
+  "kind": "trips",
+  "scenario": "deleted-only",
+  "runtimeErrors": [],
+  "reactWarnings": [],
+  "emptyExplanationVisible": true,
+  "consoleErrors": [
+    {
+      "message": "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin",
+      "url": "https://images.seeklogo.com/logo-png/54/2/banque-misr-logo-png_seeklogo-545884.png"
+    }
+  ]
+}

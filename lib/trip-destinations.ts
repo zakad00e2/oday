@@ -14,19 +14,31 @@ export const TRIP_DESTINATION_OPTIONS: TripDestinationOption[] = [
     value: "SHARM_EL_SHEIKH",
     labelAr: "شرم الشيخ",
     labelEn: "Sharm El Sheikh",
-    aliases: ["sharm", "sharm el sheikh", "sharm elsheikh"],
-  },
-  {
-    value: "EL_GHARDQA",
-    labelAr: "الغردقة",
-    labelEn: "Hurghada",
-    aliases: ["hurghada", "el ghardqa", "ghardqa"],
+    aliases: ["شرم الشيخ", "sharm", "sharm el sheikh", "sharm elsheikh"],
   },
   {
     value: "EL_AIN_SOKHNA",
     labelAr: "العين السخنة",
     labelEn: "Ain Sokhna",
-    aliases: ["ain sokhna", "ain el sokhna", "ain elsokhna", "el ain sokhna"],
+    aliases: [
+      "العين السخنة",
+      "ain sokhna",
+      "ain el sokhna",
+      "ain elsokhna",
+      "el ain sokhna",
+    ],
+  },
+  {
+    value: "EL_GHARDQA",
+    labelAr: "الغردقة",
+    labelEn: "Hurghada",
+    aliases: ["الغردقة", "hurghada", "el ghardqa", "ghardqa"],
+  },
+  {
+    value: "EL_GOUNA",
+    labelAr: "الجونة",
+    labelEn: "El Gouna",
+    aliases: ["الجونة", "el gouna", "elgouna", "gouna"],
   },
 ];
 

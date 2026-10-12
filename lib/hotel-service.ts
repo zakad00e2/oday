@@ -240,17 +240,93 @@ export class HotelServiceError extends Error {
   }
 }
 
-const destinationLabels: Record<string, { ar: string; en: string }> = {
-  SHARM_EL_SHEIKH: { ar: "شرم الشيخ", en: "Sharm El Sheikh" },
-  EL_GHARDQA: { ar: "الغردقة", en: "Hurghada" },
-  DAHAB: { ar: "دهب", en: "Dahab" },
-  EL_AIN_SOKHNA: { ar: "العين السخنة", en: "Ain Sokhna" },
-  CAIRO: { ar: "القاهرة", en: "Cairo" },
-  ALEXANDRIA: { ar: "الإسكندرية", en: "Alexandria" },
-  LUXOR: { ar: "الأقصر", en: "Luxor" },
-  ASWAN: { ar: "أسوان", en: "Aswan" },
-  MARSA_ALAM: { ar: "مرسى علم", en: "Marsa Alam" },
-};
+export const HOTEL_DESTINATION_OPTIONS = [
+  {
+    value: "EL_GHARDQA",
+    labelAr: "الغردقة",
+    labelEn: "Hurghada",
+    aliases: ["الغردقة", "hurghada", "el ghardqa", "ghardqa"],
+  },
+  {
+    value: "EL_GOUNA",
+    labelAr: "الجونة",
+    labelEn: "El Gouna",
+    aliases: ["الجونة", "el gouna", "elgouna", "gouna"],
+  },
+  {
+    value: "NORTH_COAST",
+    labelAr: "الساحل الشمالي",
+    labelEn: "North Coast",
+    aliases: ["الساحل الشمالي", "north coast", "northcoast", "sahel"],
+  },
+  {
+    value: "CAIRO",
+    labelAr: "القاهرة",
+    labelEn: "Cairo",
+    aliases: ["القاهرة", "cairo"],
+  },
+  {
+    value: "ALEXANDRIA",
+    labelAr: "الإسكندرية",
+    labelEn: "Alexandria",
+    aliases: ["الإسكندرية", "الاسكندرية", "alexandria", "alex"],
+  },
+  {
+    value: "SHARM_EL_SHEIKH",
+    labelAr: "شرم الشيخ",
+    labelEn: "Sharm El Sheikh",
+    aliases: ["شرم الشيخ", "sharm", "sharm el sheikh", "sharm elsheikh"],
+  },
+  {
+    value: "EL_AIN_SOKHNA",
+    labelAr: "العين السخنة",
+    labelEn: "Ain Sokhna",
+    aliases: [
+      "العين السخنة",
+      "ain sokhna",
+      "ain el sokhna",
+      "ain elsokhna",
+      "el ain sokhna",
+    ],
+  },
+  {
+    value: "SAHL_HASHEESH",
+    labelAr: "سهل حشيش",
+    labelEn: "Sahl Hasheesh",
+    aliases: ["سهل حشيش", "sahl hasheesh", "sahl hesheesh", "sahl hashish"],
+  },
+  {
+    value: "MARSA_MATROUH",
+    labelAr: "مرسى مطروح",
+    labelEn: "Marsa Matrouh",
+    aliases: ["مرسى مطروح", "marsa matrouh", "mersa matruh", "matrouh"],
+  },
+  {
+    value: "MARSA_ALAM",
+    labelAr: "مرسى علم",
+    labelEn: "Marsa Alam",
+    aliases: ["مرسى علم", "marsa alam", "mersa alam"],
+  },
+  {
+    value: "FAYOUM",
+    labelAr: "الفيوم",
+    labelEn: "Fayoum",
+    aliases: ["الفيوم", "fayoum", "faiyum", "el fayoum"],
+  },
+  {
+    value: "DAHAB",
+    labelAr: "دهب",
+    labelEn: "Dahab",
+    aliases: ["دهب", "dahab"],
+  },
+] as const;
+
+const destinationLabels: Record<string, { ar: string; en: string }> = Object.fromEntries(
+  HOTEL_DESTINATION_OPTIONS.map((destination) => [
+    destination.value,
+    { ar: destination.labelAr, en: destination.labelEn },
+  ]),
+);
 
 const hotelStarsMap: Record<HotelStarsValue, number> = {
   ONE: 1,

@@ -1,0 +1,140 @@
+{
+  "passed": true,
+  "method": "Bundled Playwright fallback; Expect MCP unavailable",
+  "results": [
+    {
+      "lang": "ar",
+      "kind": "hotels",
+      "scenario": "mixed",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "ar",
+      "kind": "hotels",
+      "scenario": "empty",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "ar",
+      "kind": "hotels",
+      "scenario": "deleted-only",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "ar",
+      "kind": "trips",
+      "scenario": "mixed",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "ar",
+      "kind": "trips",
+      "scenario": "empty",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "ar",
+      "kind": "trips",
+      "scenario": "deleted-only",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "hotels",
+      "scenario": "mixed",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "hotels",
+      "scenario": "empty",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "hotels",
+      "scenario": "deleted-only",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "trips",
+      "scenario": "mixed",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "trips",
+      "scenario": "empty",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    },
+    {
+      "lang": "en",
+      "kind": "trips",
+      "scenario": "deleted-only",
+      "passed": true,
+      "requestCount": 1,
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin",
+        "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead.",
+        "Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin"
+      ]
+    }
+  ]
+}

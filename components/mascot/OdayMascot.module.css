@@ -1,0 +1,84 @@
+.mascot {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 40;
+  width: 104px;
+  height: 132px;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 28px;
+}
+
+.button:focus-visible {
+  outline: 2px solid #1688cf;
+  outline-offset: 3px;
+}
+
+.canvas,
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.canvas {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.mascot[data-renderer="webgl"] .canvas {
+  opacity: 1;
+}
+
+.mascot[data-renderer="webgl"] .poster {
+  visibility: hidden;
+}
+
+.shadow {
+  position: absolute;
+  bottom: 12%;
+  left: 24%;
+  width: 54%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(5 32 57 / 24%), transparent 70%);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .mascot {
+    left: max(4px, env(safe-area-inset-left));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: 68px;
+    height: 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas {
+    transition: none;
+  }
+}
+
+@media print {
+  .mascot {
+    display: none;
+  }
+}

@@ -29,9 +29,7 @@ export default function HotelsPage() {
   return (
     <main>
       <HotelsHero />
-      <div id="hotels">
-        <Hotels />
-      </div>
+      <Hotels />
     </main>
   );
 }

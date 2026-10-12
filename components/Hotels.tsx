@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
@@ -14,13 +14,46 @@ import {
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import {
   getHotelMealPlanLabel,
+  HOTEL_DESTINATION_OPTIONS,
   type HotelRecord,
   listHotels,
 } from "@/lib/hotel-service";
 
 type SortKey = "default" | "MOST_BOOKED" | "TOP_RATED" | "LOWEST_PRICE";
+const DESTINATION_TRANSITION_MS = 520;
 
-function HotelsLoadingGrid() {
+const destinationImages: Record<string, string> = {
+  SHARM_EL_SHEIKH: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&q=85",
+  EL_GHARDQA: "/images/hurghada.jpg",
+  DAHAB: "/images/dahab-palm.jpg",
+  EL_AIN_SOKHNA: "/images/ain-sokhna.jpg",
+  EL_GOUNA: "/images/destinations/el-gouna.jpg",
+  NORTH_COAST: "/images/destinations/north-coast.jpg",
+  CAIRO: "/images/destinations/cairo.jpg",
+  ALEXANDRIA: "/images/destinations/alexandria.jpg",
+  SAHL_HASHEESH: "/images/destinations/sahl-hasheesh.jpg",
+  MARSA_MATROUH: "/images/destinations/marsa-matrouh.jpg",
+  MARSA_ALAM: "/images/destinations/marsa-alam.jpg",
+  FAYOUM: "/images/destinations/fayoum.jpg",
+};
+
+const destinationImagePositions: Record<string, string> = {
+  DAHAB: "center 57%",
+  EL_AIN_SOKHNA: "center 65%",
+  EL_GHARDQA: "center 58%",
+};
+
+function HotelsLoadingGrid({ destinations = false }: { destinations?: boolean }) {
+  if (destinations) {
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="aspect-[4/3] rounded-[24px]" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {Array.from({ length: 4 }).map((_, index) => (
@@ -305,7 +338,12 @@ export default function Hotels() {
   const d = dict.hotelsPage;
   const isAr = lang === "ar";
   const [hotels, setHotels] = useState<HotelRecord[]>(() => readHotelsListCache()?.hotels ?? []);
-  const [selectedDestination, setSelectedDestination] = useState<string>("all");
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [hoveredDestination, setHoveredDestination] = useState<string | null>(null);
+  const [isDestinationTransitioning, setIsDestinationTransitioning] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const destinationTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDestinationTransitioningRef = useRef(false);
   const [sortBy, setSortBy] = useState<SortKey>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(() => readHotelsListCache() === null);
@@ -364,25 +402,60 @@ export default function Hotels() {
     };
   }, [loadHotels]);
 
+  useEffect(() => () => {
+    if (destinationTransitionTimerRef.current) {
+      clearTimeout(destinationTransitionTimerRef.current);
+    }
+  }, []);
+
   const destinationOptions = useMemo(() => {
-    const seen = new Set<string>();
-    return hotels
-      .filter((hotel) => {
-        if (seen.has(hotel.destination)) return false;
-        seen.add(hotel.destination);
-        return true;
-      })
-      .map((hotel) => ({
-        value: hotel.destination,
-        label: isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn,
-      }));
+    const hotelDestinations = new Map<string, {
+      value: string;
+      label: string;
+      image: string;
+      count: number;
+    }>();
+
+    for (const hotel of hotels) {
+      const image = hotel.mainImage || hotel.mainImages[0] || hotel.gallery[0] || "";
+      const existing = hotelDestinations.get(hotel.destination);
+      if (existing) {
+        existing.count += 1;
+        if (!existing.image) existing.image = image;
+      } else {
+        hotelDestinations.set(hotel.destination, {
+          value: hotel.destination,
+          label: isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn,
+          image,
+          count: 1,
+        });
+      }
+    }
+
+    const configuredDestinations = HOTEL_DESTINATION_OPTIONS.map((destination) => {
+      const hotelsAtDestination = hotelDestinations.get(destination.value);
+
+      return {
+        value: destination.value,
+        label: isAr ? destination.labelAr : destination.labelEn,
+        image: destinationImages[destination.value] || hotelsAtDestination?.image || "",
+        count: hotelsAtDestination?.count ?? 0,
+      };
+    });
+
+    return configuredDestinations.filter((destination) => destination.count > 0);
   }, [hotels, isAr]);
 
+  const activeDestination = destinationOptions.find(
+    (destination) => destination.value === selectedDestination,
+  );
+
   const filteredHotels = useMemo(() => {
+    if (selectedDestination === null) return [];
     const byRating = filterByRating(hotels, sortBy);
 
     return byRating.filter((hotel) => {
-      if (selectedDestination !== "all" && hotel.destination !== selectedDestination) {
+      if (hotel.destination !== selectedDestination) {
         return false;
       }
 
@@ -395,52 +468,62 @@ export default function Hotels() {
   }, [hotels, selectedDestination, showDiscountsOnly, sortBy]);
 
   const resetFilters = () => {
-    setSelectedDestination("all");
     setSortBy("default");
     setShowDiscountsOnly(false);
+  };
+
+  const changeDestination = (destination: string | null) => {
+    setSelectedDestination(destination);
+    resetFilters();
+    requestAnimationFrame(() => {
+      headingRef.current?.focus({ preventScroll: true });
+      headingRef.current?.scrollIntoView({ block: "start" });
+    });
+  };
+
+  const selectDestination = (destination: string) => {
+    if (isDestinationTransitioningRef.current) return;
+
+    isDestinationTransitioningRef.current = true;
+    setHoveredDestination(null);
+    setIsDestinationTransitioning(true);
+    destinationTransitionTimerRef.current = setTimeout(() => {
+      isDestinationTransitioningRef.current = false;
+      destinationTransitionTimerRef.current = null;
+      changeDestination(destination);
+      setIsDestinationTransitioning(false);
+    }, DESTINATION_TRANSITION_MS);
   };
 
   return (
     <section id="hotels" className="bg-[#FAFAFA] py-20">
       <ScrollReveal>
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 text-center">
-            <h2 className="mb-4 text-3xl font-semibold leading-tight text-[#111] md:text-5xl">
-              {d.title} <span>{d.titleBold}</span>
+          <div className={`mb-10 text-center ${selectedDestination !== null ? "animate-destination-content-enter" : ""}`}>
+            {selectedDestination !== null ? (
+              <button
+                type="button"
+                onClick={() => changeDestination(null)}
+                className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-5 py-2 text-sm font-semibold text-[#0F172A] transition hover:border-[#0EA5E9] hover:text-[#0284C7] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0EA5E9]"
+              >
+                <svg aria-hidden="true" className={`h-4 w-4 ${isAr ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                {d.backToDestinations}
+              </button>
+            ) : null}
+            <h2 ref={headingRef} tabIndex={-1} className={`mb-4 text-3xl font-semibold leading-tight text-[#111] outline-none md:text-5xl ${selectedDestination === null ? "scroll-mt-28" : "scroll-mt-48"}`}>
+              {selectedDestination === null
+                ? d.chooseDestination
+                : d.hotelsInDestination.replace("{destination}", activeDestination?.label ?? selectedDestination)}
             </h2>
             <p className="mx-auto mb-8 max-w-xl text-sm leading-relaxed text-[#6B7280] md:text-base">
-              {d.subtitle}
+              {selectedDestination === null ? d.chooseDestinationDescription : d.subtitle}
             </p>
 
-            <div className="mx-auto mb-10 flex w-full max-w-2xl flex-col gap-4">
-              <div className="flex flex-wrap items-end justify-center gap-3 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-3 shadow-sm">
-                <div className="flex min-w-[150px] flex-1 flex-col gap-1">
-                  <label className="px-1 text-[11px] font-semibold tracking-wide text-[#94A3B8]">
-                    {d.destinationLabel}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedDestination}
-                      onChange={(event) => setSelectedDestination(event.target.value)}
-                      className="w-full cursor-pointer appearance-none rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-2 pe-4 ps-9 text-[13px] font-medium text-[#0F172A] transition-all focus:border-[#0EA5E9] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/30"
-                    >
-                      <option value="all">{d.allDestinations}</option>
-                      {destinationOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {(selectedDestination !== "all" || sortBy !== "default" || showDiscountsOnly) && !isLoading ? (
+            {selectedDestination !== null ? (
+              <div className="mx-auto mb-10 flex w-full max-w-2xl flex-col gap-4">
+                {(sortBy !== "default" || showDiscountsOnly) && !isLoading ? (
                   <button
                     type="button"
                     onClick={resetFilters}
@@ -449,66 +532,66 @@ export default function Hotels() {
                     {d.clearFilters}
                   </button>
                 ) : null}
-              </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSortBy("default");
-                    setShowDiscountsOnly(false);
-                  }}
-                  className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300 ${
-                    sortBy === "default" && !showDiscountsOnly
-                      ? "border border-[#111] bg-[#111] text-white shadow-md"
-                      : "border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm hover:border-[#CBD5E1] hover:text-[#0F172A]"
-                  }`}
-                >
-                  {d.defaultSort}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextState = !showDiscountsOnly;
-                    setShowDiscountsOnly(nextState);
-                    if (nextState) setSortBy("default");
-                  }}
-                  className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300 ${
-                    showDiscountsOnly
-                      ? "border border-[#111] bg-[#111] text-white shadow-md"
-                      : "border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm hover:border-[#CBD5E1] hover:text-[#0F172A]"
-                  }`}
-                >
-                  {d.discounts}
-                </button>
-
-                {([
-                  { id: "MOST_BOOKED", label: d.mostBooked },
-                  { id: "TOP_RATED", label: d.highestRated },
-                  { id: "LOWEST_PRICE", label: d.lowestPrice },
-                ] as const).map((option) => (
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
-                    key={option.id}
                     type="button"
                     onClick={() => {
-                      setSortBy(option.id);
+                      setSortBy("default");
                       setShowDiscountsOnly(false);
                     }}
                     className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300 ${
-                      sortBy === option.id && !showDiscountsOnly
+                      sortBy === "default" && !showDiscountsOnly
                         ? "border border-[#111] bg-[#111] text-white shadow-md"
                         : "border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm hover:border-[#CBD5E1] hover:text-[#0F172A]"
                     }`}
                   >
-                    {option.label}
+                    {d.defaultSort}
                   </button>
-                ))}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextState = !showDiscountsOnly;
+                      setShowDiscountsOnly(nextState);
+                      if (nextState) setSortBy("default");
+                    }}
+                    className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300 ${
+                      showDiscountsOnly
+                        ? "border border-[#111] bg-[#111] text-white shadow-md"
+                        : "border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm hover:border-[#CBD5E1] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    {d.discounts}
+                  </button>
+
+                  {([
+                    { id: "MOST_BOOKED", label: d.mostBooked },
+                    { id: "TOP_RATED", label: d.highestRated },
+                    { id: "LOWEST_PRICE", label: d.lowestPrice },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setSortBy(option.id);
+                        setShowDiscountsOnly(false);
+                      }}
+                      className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300 ${
+                        sortBy === option.id && !showDiscountsOnly
+                          ? "border border-[#111] bg-[#111] text-white shadow-md"
+                          : "border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm hover:border-[#CBD5E1] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
 
-          {isLoading ? <HotelsLoadingGrid /> : null}
+          {isLoading ? <HotelsLoadingGrid destinations={selectedDestination === null} /> : null}
 
           {!isLoading && error ? (
             <HotelsStatusCard
@@ -522,28 +605,105 @@ export default function Hotels() {
             />
           ) : null}
 
-          {!isLoading && !error && filteredHotels.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2">
+          {!isLoading && !error && selectedDestination === null && destinationOptions.length === 0 ? (
+            <HotelsStatusCard
+              title={d.noHotelsYet}
+              description={isAr ? "ستظهر الوجهات هنا عند إضافة فنادق إليها." : "Destinations will appear here when hotels are added to them."}
+            />
+          ) : null}
+
+          {!isLoading && !error && selectedDestination === null && destinationOptions.length > 0 ? (
+            <div
+              aria-busy={isDestinationTransitioning}
+              className={`grid gap-7 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:grid-cols-2 ${
+                isDestinationTransitioning
+                  ? "pointer-events-none scale-[0.97] opacity-0 blur-[2px]"
+                  : "scale-100 opacity-100 blur-0"
+              }`}
+            >
+              {destinationOptions.map((destination) => (
+                <button
+                  key={destination.value}
+                  type="button"
+                  onClick={() => selectDestination(destination.value)}
+                  onMouseEnter={() => setHoveredDestination(destination.value)}
+                  onMouseLeave={() => setHoveredDestination(null)}
+                  className="group relative flex min-h-[320px] cursor-pointer items-end overflow-hidden rounded-[28px] bg-[#0F172A] text-start shadow-md transition-all hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0EA5E9] sm:min-h-[380px] lg:min-h-[430px]"
+                >
+                  {destination.image ? (
+                    <Image
+                      src={destination.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
+                      style={{ objectPosition: destinationImagePositions[destination.value] ?? "center" }}
+                    />
+                  ) : null}
+                  <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${
+                    ["EL_AIN_SOKHNA", "EL_GHARDQA"].includes(destination.value)
+                      ? "from-black/75"
+                      : "from-black/90"
+                  }`} />
+                  <span className="relative flex w-full flex-col gap-3 p-7 text-white sm:p-9">
+                    <span className="text-3xl font-bold sm:text-4xl">{destination.label}</span>
+                    <span className="text-sm text-white/90">
+                      {destination.count > 0
+                        ? `${destination.count.toLocaleString(lang)} ${d.hotelsAvailable}`
+                        : d.noHotelsYet}
+                    </span>
+                    <span className="mt-2 inline-flex items-center gap-2 text-sm font-semibold">
+                      {d.viewDestinationHotels}
+                      <svg
+                        aria-hidden="true"
+                        className={`h-4 w-4 transition-transform duration-300 ${isAr ? "" : "rotate-180"}`}
+                        style={{
+                          transform: hoveredDestination === destination.value
+                            ? `translateX(${isAr ? "-4px" : "4px"})`
+                            : undefined,
+                        }}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {!isLoading && !error && selectedDestination !== null && filteredHotels.length > 0 ? (
+            <div className="animate-destination-content-enter grid gap-6 md:grid-cols-2">
               {filteredHotels.map((hotel) => (
                 <HotelCard key={hotel.id} hotel={hotel} lang={lang} labels={d} />
               ))}
             </div>
           ) : null}
 
-          {!isLoading && !error && filteredHotels.length === 0 ? (
+          {!isLoading && !error && selectedDestination !== null && filteredHotels.length === 0 ? (
             <HotelsStatusCard
-              title={hotels.length === 0 ? (isAr ? "لا توجد فنادق متاحة الآن" : "No hotels available right now") : d.noResults}
+              title={d.noHotelsInDestination}
               description={
-                hotels.length === 0
+                hotels.some((hotel) => hotel.destination === selectedDestination)
                   ? isAr
-                    ? "ستظهر هنا الفنادق القادمة مباشرة من لوحة التحكم بمجرد توفرها في الـ API."
-                    : "Hotels created in the dashboard will appear here automatically once available in the API."
-                  : isAr
-                    ? "جرّب تغيير الوجهة أو إزالة الفلاتر لعرض نتائج أكثر."
-                    : "Try changing the destination or clearing the filters to see more results."
+                    ? "جرّب تغيير الفلاتر لعرض نتائج أكثر."
+                    : "Try changing the filters to see more results."
+                  : d.noHotelsInDestinationDescription
               }
-              actionLabel={hotels.length === 0 ? undefined : d.clearFilters}
-              onAction={hotels.length === 0 ? undefined : resetFilters}
+              actionLabel={
+                hotels.some((hotel) => hotel.destination === selectedDestination)
+                  ? d.clearFilters
+                  : d.backToDestinations
+              }
+              onAction={
+                hotels.some((hotel) => hotel.destination === selectedDestination)
+                  ? resetFilters
+                  : () => changeDestination(null)
+              }
             />
           ) : null}
         </div>

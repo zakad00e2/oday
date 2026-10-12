@@ -5,6 +5,7 @@ import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import { formatPrice } from "@/lib/currency";
 import {
+  HOTEL_DESTINATION_OPTIONS,
   HOTEL_MEAL_PLAN_OPTIONS,
   HotelServiceError,
   createHotel,
@@ -279,12 +280,10 @@ function getCoverImage(hotel: Pick<Hotel, "mainImages" | "gallery">) {
 const DESTINATION_OPTIONS: Array<{
   value: HotelDestination;
   aliases: string[];
-}> = [
-  { value: "SHARM_EL_SHEIKH", aliases: ["شرم الشيخ", "sharm", "sharm el sheikh", "sharm elsheikh"] },
-  { value: "EL_GHARDQA", aliases: ["الغردقة", "hurghada", "el ghardqa"] },
-  { value: "DAHAB", aliases: ["دهب", "dahab"] },
-  { value: "EL_AIN_SOKHNA", aliases: ["العين السخنة", "ain sokhna", "ain el sokhna", "ain elsokhna", "el ain sokhna"] },
-];
+}> = HOTEL_DESTINATION_OPTIONS.map((option) => ({
+  value: option.value,
+  aliases: [...option.aliases, option.labelAr, option.labelEn],
+}));
 
 function normalizeValue(value: string) {
   return value.toLowerCase().trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
@@ -303,12 +302,11 @@ const DESTINATION_SELECT_OPTIONS: Array<{
   value: HotelDestination;
   labelAr: string;
   labelEn: string;
-}> = [
-  { value: "SHARM_EL_SHEIKH", labelAr: "شرم الشيخ", labelEn: "Sharm El Sheikh" },
-  { value: "DAHAB", labelAr: "دهب", labelEn: "Dahab" },
-  { value: "EL_AIN_SOKHNA", labelAr: "العين السخنة", labelEn: "Ain Sokhna" },
-  { value: "EL_GHARDQA", labelAr: "الغردقة", labelEn: "Hurghada" },
-];
+}> = HOTEL_DESTINATION_OPTIONS.map((option) => ({
+  value: option.value,
+  labelAr: option.labelAr,
+  labelEn: option.labelEn,
+}));
 
 function getDestinationOption(cityAr: string, cityEn: string) {
   const destination = resolveDestination(cityAr, cityEn);

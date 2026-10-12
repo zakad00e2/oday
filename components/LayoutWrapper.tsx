@@ -3,6 +3,8 @@ import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/lib/cart-context";
 import type { Locale } from "@/lib/i18n/config";
+import OdayMascot from "@/components/mascot/OdayMascot";
+import SmoothScroll from "@/components/SmoothScroll";
 
 export default function LayoutWrapper({
   children,
@@ -16,12 +18,15 @@ export default function LayoutWrapper({
 
   return (
     <div lang={lang} dir={dir} className={fontClass}>
-      <CartProvider>
-        <Navbar />
-        <CartDrawer />
-        {children}
-        <Footer />
-      </CartProvider>
+      <SmoothScroll>
+        <CartProvider>
+          <Navbar />
+          <CartDrawer />
+          {children}
+          <Footer />
+          <OdayMascot lang={lang} />
+        </CartProvider>
+      </SmoothScroll>
     </div>
   );
 }
