@@ -3,7 +3,7 @@ import {
   createAuthorizedHeaders,
 } from "./auth-service";
 
-import type { TripDetail, TripOption, TripAddOn } from "./trips-types";
+import type { TripDetail } from "./trips-types";
 import {
   getTripDestinationLabels,
   type TripDestination,
@@ -389,7 +389,7 @@ async function parseResponse(response: Response) {
 }
 
 async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
-  const headers = createAuthorizedHeaders(init?.headers);
+  const headers = init?.method === "GET" ? new Headers(init.headers) : createAuthorizedHeaders(init?.headers);
   if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -576,12 +576,14 @@ export function slugifyTrip(value: string) {
 export async function listTrips(options?: {
   page?: number;
   limit?: number;
+  city?: string;
   signal?: AbortSignal;
 }) {
   const search = new URLSearchParams();
 
   if (options?.page) search.set("page", String(options.page));
   if (options?.limit) search.set("limit", String(options.limit));
+  if (options?.city) search.set("city", options.city);
 
   const query = search.toString();
   const payload = await requestJson<ApiTripListResponse>(

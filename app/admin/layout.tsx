@@ -32,6 +32,11 @@ const sidebarLinks = [
     icon: "hotels" as const,
   },
   {
+    label: "صور الوجهات",
+    href: "/admin/destinations",
+    icon: "trips" as const,
+  },
+  {
     label: "الرحلات",
     href: "/admin/trips",
     icon: "trips" as const,

@@ -1,46 +1,16 @@
+import { DESTINATION_OPTIONS } from "./destinations";
 export type TripDestination = string;
 
 export interface TripDestinationOption {
   value: TripDestination;
   labelAr: string;
   labelEn: string;
-  aliases: string[];
+  aliases: readonly string[];
 }
 
 export const DEFAULT_TRIP_DESTINATION = "SHARM_EL_SHEIKH";
 
-export const TRIP_DESTINATION_OPTIONS: TripDestinationOption[] = [
-  {
-    value: "SHARM_EL_SHEIKH",
-    labelAr: "شرم الشيخ",
-    labelEn: "Sharm El Sheikh",
-    aliases: ["شرم الشيخ", "sharm", "sharm el sheikh", "sharm elsheikh"],
-  },
-  {
-    value: "EL_AIN_SOKHNA",
-    labelAr: "العين السخنة",
-    labelEn: "Ain Sokhna",
-    aliases: [
-      "العين السخنة",
-      "ain sokhna",
-      "ain el sokhna",
-      "ain elsokhna",
-      "el ain sokhna",
-    ],
-  },
-  {
-    value: "EL_GHARDQA",
-    labelAr: "الغردقة",
-    labelEn: "Hurghada",
-    aliases: ["الغردقة", "hurghada", "el ghardqa", "ghardqa"],
-  },
-  {
-    value: "EL_GOUNA",
-    labelAr: "الجونة",
-    labelEn: "El Gouna",
-    aliases: ["الجونة", "el gouna", "elgouna", "gouna"],
-  },
-];
+export const TRIP_DESTINATION_OPTIONS: readonly TripDestinationOption[] = DESTINATION_OPTIONS;
 
 export function normalizeTripDestinationValue(value: string) {
   return value

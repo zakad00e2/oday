@@ -1,21 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getDestinationImage } from "@/lib/destination-service";
+import { getDestinationLabels } from "@/lib/destinations";
+import { useDestinationCatalog } from "@/lib/use-destination-catalog";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import Image from "next/image";
-import { listTrips, type TripRecord } from "@/lib/trip-service";
-import { TRIP_DESTINATION_OPTIONS } from "@/lib/trip-destinations";
+import DestinationImage from "../DestinationImage";
+import { listTrips } from "@/lib/trip-service";
 import TripCard from "./TripCard";
 import ScrollReveal from "../ScrollReveal";
 import Skeleton from "../ui/Skeleton";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-
-const destinationImages: Record<string, string> = {
-  SHARM_EL_SHEIKH: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&q=85",
-  EL_GHARDQA: "/images/hurghada.jpg",
-  EL_AIN_SOKHNA: "/images/ain-sokhna.jpg",
-  EL_GOUNA: "/images/destinations/el-gouna.jpg",
-};
 
 const destinationImagePositions: Record<string, string> = {
   EL_GHARDQA: "center 58%",
@@ -74,8 +70,8 @@ function TripsGridSkeleton({ destinations }: { destinations: boolean }) {
 
         {destinations ? (
           <div className="grid gap-7 md:grid-cols-2">
-            {TRIP_DESTINATION_OPTIONS.map((destination) => (
-              <Skeleton key={destination.value} className="min-h-[320px] rounded-[28px] sm:min-h-[380px] lg:min-h-[430px]" />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="min-h-[320px] rounded-[28px] sm:min-h-[380px] lg:min-h-[430px]" />
             ))}
           </div>
         ) : (
@@ -131,44 +127,23 @@ function TripsStatusCard({
   );
 }
 
+async function fetchDestinationTrips(city: string, page: number, signal: AbortSignal) {
+  const response = await listTrips({ city, page, limit: 100, signal });
+  return { items: response.trips, totalPages: response.meta.totalPages };
+}
+
 export default function TripsGrid() {
   const { lang } = useI18n();
   const isAr = lang === "ar";
   const t = (ar: ReactNode, en: ReactNode) => (isAr ? ar : en);
 
-  const [trips, setTrips] = useState<TripRecord[]>([]);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [isDestinationTransitioning, setIsDestinationTransitioning] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const destinationTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadTrips = useCallback(async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await listTrips({ page: 1, limit: 100, signal });
-      setTrips(result.trips);
-    } catch (err) {
-      if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
-        return;
-      }
-
-      setError(err instanceof Error ? err.message : "Failed to load trips");
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void loadTrips(controller.signal);
-
-    return () => controller.abort();
-  }, [loadTrips]);
+  const { destinations, items: trips, isLoading: loading, error, retry } = useDestinationCatalog(
+    "trips", selectedDestination, fetchDestinationTrips,
+  );
 
   useEffect(() => () => {
     if (destinationTransitionTimerRef.current !== null) {
@@ -176,14 +151,16 @@ export default function TripsGrid() {
     }
   }, []);
 
-  const destinationOptions = useMemo(() => {
-    return TRIP_DESTINATION_OPTIONS.map((option) => ({
-      value: option.value,
-      label: isAr ? option.labelAr : option.labelEn,
-      image: destinationImages[option.value],
-      count: trips.filter((trip) => trip.destination === option.value).length,
-    })).filter((destination) => destination.count > 0);
-  }, [isAr, trips]);
+  const destinationOptions = destinations.map((destination) => {
+    const labels = getDestinationLabels(destination.destination);
+    return {
+      value: destination.destination,
+      label: isAr ? labels.ar : labels.en,
+      image: getDestinationImage(destination),
+      customImage: Boolean(destination.image),
+      count: destination.trips_count,
+    };
+  });
 
   const activeDestination = destinationOptions.find(
     (destination) => destination.value === selectedDestination,
@@ -223,12 +200,21 @@ export default function TripsGrid() {
     return (
       <section id="trips" className="scroll-mt-24 bg-background py-16 md:py-24">
         <div className="max-w-300 mx-auto px-6 md:px-12">
+          {selectedDestination !== null ? (
+            <button
+              type="button"
+              onClick={() => changeDestination(null)}
+              className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] bg-white px-5 py-2 text-sm font-semibold text-[#0F172A] hover:border-[#0EA5E9] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0EA5E9]"
+            >
+              {t("العودة إلى الوجهات", "Back to destinations")}
+            </button>
+          ) : null}
           <TripsStatusCard
             title={t("تعذر تحميل الرحلات", "Unable to load trips") as string}
             description={error}
             actionLabel={t("إعادة المحاولة", "Retry") as string}
             onAction={() => {
-              void loadTrips();
+              retry();
             }}
             tone="error"
           />
@@ -295,13 +281,13 @@ export default function TripsGrid() {
                 className="group relative flex min-h-[320px] cursor-pointer items-end overflow-hidden rounded-[28px] bg-[#0F172A] text-start shadow-md transition-all hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0EA5E9] sm:min-h-[380px] lg:min-h-[430px]"
               >
                 {destination.image ? (
-                  <Image
-                    src={destination.image}
+                  <DestinationImage
+                    destination={destination.value} src={destination.image}
                     alt=""
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
-                    style={{ objectPosition: destinationImagePositions[destination.value] ?? "center" }}
+                    style={{ objectPosition: destination.customImage ? "center" : destinationImagePositions[destination.value] ?? "center" }}
                   />
                 ) : null}
                 <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${destination.value === "SHARM_EL_SHEIKH" ? "from-black/90" : "from-black/75"}`} />

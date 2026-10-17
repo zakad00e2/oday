@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.codex/destination-verification/
 
 # next.js
 /.next/

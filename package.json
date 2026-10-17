@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:destinations": "node --test scripts/destinations.test.cjs",
     "test:mascot": "node --experimental-strip-types --test scripts/mascot-model.test.mjs"
   },
   "dependencies": {

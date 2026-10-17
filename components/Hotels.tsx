@@ -1,41 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import DestinationImage from "./DestinationImage";
+import { getDestinationImage } from "@/lib/destination-service";
+import { getDestinationLabels } from "@/lib/destinations";
+import { useDestinationCatalog } from "@/lib/use-destination-catalog";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
 import Skeleton from "./ui/Skeleton";
 import { formatPrice } from "@/lib/currency";
-import {
-  isHotelClientCacheFresh,
-  readHotelsListCache,
-  writeHotelsListCache,
-} from "@/lib/hotel-client-cache";
+import { writeHotelDetailCache } from "@/lib/hotel-client-cache";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import {
   getHotelMealPlanLabel,
-  HOTEL_DESTINATION_OPTIONS,
   type HotelRecord,
   listHotels,
 } from "@/lib/hotel-service";
 
 type SortKey = "default" | "MOST_BOOKED" | "TOP_RATED" | "LOWEST_PRICE";
 const DESTINATION_TRANSITION_MS = 520;
-
-const destinationImages: Record<string, string> = {
-  SHARM_EL_SHEIKH: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&q=85",
-  EL_GHARDQA: "/images/hurghada.jpg",
-  DAHAB: "/images/dahab-palm.jpg",
-  EL_AIN_SOKHNA: "/images/ain-sokhna.jpg",
-  EL_GOUNA: "/images/destinations/el-gouna.jpg",
-  NORTH_COAST: "/images/destinations/north-coast.jpg",
-  CAIRO: "/images/destinations/cairo.jpg",
-  ALEXANDRIA: "/images/destinations/alexandria.jpg",
-  SAHL_HASHEESH: "/images/destinations/sahl-hasheesh.jpg",
-  MARSA_MATROUH: "/images/destinations/marsa-matrouh.jpg",
-  MARSA_ALAM: "/images/destinations/marsa-alam.jpg",
-  FAYOUM: "/images/destinations/fayoum.jpg",
-};
 
 const destinationImagePositions: Record<string, string> = {
   DAHAB: "center 57%",
@@ -333,11 +318,16 @@ function HotelCard({
   );
 }
 
+async function fetchDestinationHotels(destination: string, page: number, signal: AbortSignal) {
+  const response = await listHotels({ destination, page, limit: 100, signal });
+  response.hotels.forEach(writeHotelDetailCache);
+  return { items: response.hotels, totalPages: response.meta.totalPages };
+}
+
 export default function Hotels() {
   const { dict, lang } = useI18n();
   const d = dict.hotelsPage;
   const isAr = lang === "ar";
-  const [hotels, setHotels] = useState<HotelRecord[]>(() => readHotelsListCache()?.hotels ?? []);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [hoveredDestination, setHoveredDestination] = useState<string | null>(null);
   const [isDestinationTransitioning, setIsDestinationTransitioning] = useState(false);
@@ -346,61 +336,9 @@ export default function Hotels() {
   const isDestinationTransitioningRef = useRef(false);
   const [sortBy, setSortBy] = useState<SortKey>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState(false);
-  const [isLoading, setIsLoading] = useState(() => readHotelsListCache() === null);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadHotels = useCallback(async ({
-    signal,
-    showLoading = true,
-  }: {
-    signal?: AbortSignal;
-    showLoading?: boolean;
-  } = {}) => {
-    try {
-      setError(null);
-      if (showLoading) {
-        setIsLoading(true);
-      }
-      const response = await listHotels({ page: 1, limit: 100, signal });
-      writeHotelsListCache(response.hotels);
-      setHotels(response.hotels);
-    } catch (loadError) {
-      if (signal?.aborted) return;
-      const message =
-        loadError instanceof Error
-          ? loadError.message
-          : isAr
-            ? "تعذر تحميل الفنادق حاليًا."
-            : "Unable to load hotels right now.";
-      if (hotels.length === 0) {
-        setError(message);
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, [isAr, hotels.length]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const cachedHotels = readHotelsListCache();
-
-    if (cachedHotels) {
-      setHotels(cachedHotels.hotels);
-      setIsLoading(false);
-
-      if (!isHotelClientCacheFresh(cachedHotels.updatedAt)) {
-        void loadHotels({ signal: controller.signal, showLoading: false });
-      }
-    } else {
-      void loadHotels({ signal: controller.signal });
-    }
-
-    return () => {
-      controller.abort();
-    };
-  }, [loadHotels]);
+  const { destinations, items: hotels, isLoading, error, retry } = useDestinationCatalog(
+    "hotels", selectedDestination, fetchDestinationHotels,
+  );
 
   useEffect(() => () => {
     if (destinationTransitionTimerRef.current) {
@@ -408,43 +346,16 @@ export default function Hotels() {
     }
   }, []);
 
-  const destinationOptions = useMemo(() => {
-    const hotelDestinations = new Map<string, {
-      value: string;
-      label: string;
-      image: string;
-      count: number;
-    }>();
-
-    for (const hotel of hotels) {
-      const image = hotel.mainImage || hotel.mainImages[0] || hotel.gallery[0] || "";
-      const existing = hotelDestinations.get(hotel.destination);
-      if (existing) {
-        existing.count += 1;
-        if (!existing.image) existing.image = image;
-      } else {
-        hotelDestinations.set(hotel.destination, {
-          value: hotel.destination,
-          label: isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn,
-          image,
-          count: 1,
-        });
-      }
-    }
-
-    const configuredDestinations = HOTEL_DESTINATION_OPTIONS.map((destination) => {
-      const hotelsAtDestination = hotelDestinations.get(destination.value);
-
-      return {
-        value: destination.value,
-        label: isAr ? destination.labelAr : destination.labelEn,
-        image: destinationImages[destination.value] || hotelsAtDestination?.image || "",
-        count: hotelsAtDestination?.count ?? 0,
-      };
-    });
-
-    return configuredDestinations.filter((destination) => destination.count > 0);
-  }, [hotels, isAr]);
+  const destinationOptions = destinations.map((destination) => {
+    const labels = getDestinationLabels(destination.destination);
+    return {
+      value: destination.destination,
+      label: isAr ? labels.ar : labels.en,
+      image: getDestinationImage(destination),
+      customImage: Boolean(destination.image),
+      count: destination.hotels_count,
+    };
+  });
 
   const activeDestination = destinationOptions.find(
     (destination) => destination.value === selectedDestination,
@@ -599,7 +510,7 @@ export default function Hotels() {
               description={error}
               actionLabel={isAr ? "إعادة المحاولة" : "Retry"}
               onAction={() => {
-                void loadHotels();
+                retry();
               }}
               tone="error"
             />
@@ -631,13 +542,14 @@ export default function Hotels() {
                   className="group relative flex min-h-[320px] cursor-pointer items-end overflow-hidden rounded-[28px] bg-[#0F172A] text-start shadow-md transition-all hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0EA5E9] sm:min-h-[380px] lg:min-h-[430px]"
                 >
                   {destination.image ? (
-                    <Image
+                    <DestinationImage
+                      destination={destination.value}
                       src={destination.image}
                       alt=""
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
-                      style={{ objectPosition: destinationImagePositions[destination.value] ?? "center" }}
+                      style={{ objectPosition: destination.customImage ? "center" : destinationImagePositions[destination.value] ?? "center" }}
                     />
                   ) : null}
                   <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${
