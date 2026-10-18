@@ -13,7 +13,8 @@ require.extensions[".ts"] = (module, filename) => {
 
 const destinations = require("../lib/destination-service.ts");
 const { HOTEL_DESTINATION_OPTIONS, listHotels } = require("../lib/hotel-service.ts");
-const { TRIP_DESTINATION_OPTIONS } = require("../lib/trip-destinations.ts");
+const { TRIP_DESTINATION_OPTIONS, getTripDestinationLabels, resolveTripDestination, isSupportedTripDestination } = require("../lib/trip-destinations.ts");
+const { getDestinationLabels } = require("../lib/destinations.ts");
 const { listTrips } = require("../lib/trip-service.ts");
 const record = { destination: "SHARM_EL_SHEIKH", image: null, hotels_count: 5, trips_count: 3 };
 
@@ -53,20 +54,32 @@ test("hotel and trip lists send destination and city respectively without author
     requests.push({ url: String(url), init });
     return Response.json({ data: [], meta: { total: 0, page: 1, limit: 100, totalPages: 1 } });
   });
-  await listHotels({ destination: "FAYOUM", page: 1, limit: 100 });
-  await listTrips({ city: "DAHAB", page: 1, limit: 100 });
-  assert.equal(new URL(requests[0].url).searchParams.get("destination"), "FAYOUM");
+  await listHotels({ destination: "ASWAN", page: 1, limit: 100 });
+  await listTrips({ city: "LUXOR", page: 1, limit: 100 });
+  assert.equal(new URL(requests[0].url).searchParams.get("destination"), "ASWAN");
   assert.equal(new URL(requests[0].url).searchParams.has("city"), false);
-  assert.equal(new URL(requests[1].url).searchParams.get("city"), "DAHAB");
+  assert.equal(new URL(requests[1].url).searchParams.get("city"), "LUXOR");
   assert.equal(new URL(requests[1].url).searchParams.has("destination"), false);
   for (const { init } of requests) assert.equal(new Headers(init.headers).has("Authorization"), false);
 });
 
-test("all 12 destination values and labels are available to hotels and trips", () => {
-  assert.equal(HOTEL_DESTINATION_OPTIONS.length, 12);
+test("all 14 destination values and labels are available to hotels and trips", () => {
+  assert.equal(HOTEL_DESTINATION_OPTIONS.length, 14);
   assert.deepEqual(TRIP_DESTINATION_OPTIONS.map((d) => d.value).sort(), HOTEL_DESTINATION_OPTIONS.map((d) => d.value).sort());
   assert.match(destinations.getDestinationImage(record), /^https:\/\/images\.unsplash\.com\//);
   assert.equal(destinations.getDestinationImage({ ...record, image: { url: "https://ik.imagekit.io/example.jpg" } }), "https://ik.imagekit.io/example.jpg");
+});
+
+test("Aswan and Luxor support Arabic labels, aliases and default images", () => {
+  for (const [value, ar, en, alias] of [["ASWAN", "أسوان", "Aswan", "اسوان"], ["LUXOR", "الأقصر", "Luxor", "الاقصر"]]) {
+    assert.deepEqual(getDestinationLabels(value), { ar, en });
+    assert.deepEqual(getTripDestinationLabels(value), { value, ar, en });
+    assert.equal(resolveTripDestination(alias), value);
+    assert.equal(isSupportedTripDestination(value), true);
+    assert.equal(HOTEL_DESTINATION_OPTIONS.some((option) => option.value === value), true);
+    const fallback = destinations.getDestinationImage({ destination: value, image: null });
+    assert.ok(fs.existsSync(require("node:path").join(__dirname, "../public", fallback)));
+  }
 });
 
 test("image replacement uses one multipart image and bearer auth; deletion uses DELETE", async (t) => {

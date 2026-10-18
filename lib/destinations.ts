@@ -11,6 +11,8 @@ export const DESTINATION_OPTIONS = [
   { value: "MARSA_MATROUH", labelAr: "مرسى مطروح", labelEn: "Marsa Matrouh", aliases: ["مرسى مطروح", "marsa matrouh", "mersa matruh", "matrouh"] },
   { value: "MARSA_ALAM", labelAr: "مرسى علم", labelEn: "Marsa Alam", aliases: ["مرسى علم", "marsa alam", "mersa alam"] },
   { value: "FAYOUM", labelAr: "الفيوم", labelEn: "Fayoum", aliases: ["الفيوم", "fayoum", "faiyum", "el fayoum"] },
+  { value: "ASWAN", labelAr: "أسوان", labelEn: "Aswan", aliases: ["أسوان", "اسوان", "aswan", "assuan"] },
+  { value: "LUXOR", labelAr: "الأقصر", labelEn: "Luxor", aliases: ["الأقصر", "الاقصر", "luxor", "el oqsor"] },
 ] as const;
 
 export type Destination = (typeof DESTINATION_OPTIONS)[number]["value"];
@@ -33,6 +35,8 @@ const fallbackImages: Record<Destination, string> = {
   MARSA_MATROUH: "/images/destinations/marsa-matrouh.jpg",
   MARSA_ALAM: "/images/destinations/marsa-alam.jpg",
   FAYOUM: "/images/destinations/fayoum.jpg",
+  ASWAN: "/images/destinations/default.svg",
+  LUXOR: "/images/destinations/default.svg",
 };
 
 export function getDestinationFallbackImage(destination: string) {

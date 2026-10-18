@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4E8E4"/>
+      <stop offset="1" stop-color="#F2DFC0"/>
+    </linearGradient>
+    <linearGradient id="river" x1="600" y1="400" x2="600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6FA9AA"/>
+      <stop offset="1" stop-color="#245F66"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1200v900H0z"/>
+  <circle cx="850" cy="240" r="88" fill="#F5D599"/>
+  <path d="M0 480 190 330 410 480 660 360 940 470 1200 350v550H0Z" fill="#BFA987"/>
+  <path d="M0 580 300 450 550 560 800 460 1200 570v330H0Z" fill="#D6BC93"/>
+  <path d="M620 470c-210 100 260 140 10 245-100 40-170 95-140 185h460c-260-150-90-175-150-250-60-80-220-105-180-180Z" fill="url(#river)"/>
+</svg>

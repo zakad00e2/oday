@@ -7,7 +7,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const baseURL = process.env.DESTINATION_BASE_URL || 'http://localhost:3000';
 const apiHost = 'oday-tourisim-production.up.railway.app';
-const values = ['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB', 'EL_GOUNA', 'NORTH_COAST', 'CAIRO', 'ALEXANDRIA', 'SAHL_HASHEESH', 'MARSA_MATROUH', 'MARSA_ALAM', 'FAYOUM'];
+const values = ['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB', 'EL_GOUNA', 'NORTH_COAST', 'CAIRO', 'ALEXANDRIA', 'SAHL_HASHEESH', 'MARSA_MATROUH', 'MARSA_ALAM', 'FAYOUM', 'ASWAN', 'LUXOR'];
 const image = (id) => ({ id, url: `https://ik.imagekit.io/verification/${id}.jpg`, kind: 'DESTINATION_IMAGE' });
 const records = () => values.map((destination, index) => ({ destination, image: index === 0 ? image('initial') : null, hotels_count: 37 + index, trips_count: 23 + index }));
 const hotel = (id, destination = values[0]) => ({ id, destination, initial_price: 100, stars: 'FIVE', rating: 'TOP_RATED', translations: ['ar', 'en'].map(language => ({ language, name: `Hotel ${id}`, slug: `hotel-${id}`, description: 'Verification hotel' })) });
@@ -155,12 +155,14 @@ async function main() {
       const catalogRequests = requests.filter(item => item.path === '/destination' && item.method === 'GET');
       assert.ok(catalogRequests.length > 0 && catalogRequests.every(item => item.authorization === null));
     });
-    await check('Admin: all 12 destinations and public list endpoint', async () => {
+    await check('Admin: all 14 destinations and public list endpoint', async () => {
       catalogMode = 'normal'; current = records(); requests.length = 0;
       await page.evaluate(() => localStorage.setItem('oday-admin-token', 'destination-verification-token'));
       await page.goto(`${baseURL}/admin/destinations`, { waitUntil: 'domcontentloaded' });
-      await page.locator('article').nth(11).waitFor();
-      assert.equal(await page.locator('article').count(), 12);
+      await page.locator('article').nth(values.length - 1).waitFor();
+      assert.equal(await page.locator('article').count(), values.length);
+      await page.getByRole('heading', { name: 'أسوان', exact: true }).waitFor();
+      await page.getByRole('heading', { name: 'الأقصر', exact: true }).waitFor();
       assert.ok(requests.some(item => item.path === '/destination' && Object.keys(item.query).length === 0));
       await overflow('admin desktop'); await page.screenshot({ path: path.join(output, 'admin-desktop.png') });
       await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(400); await overflow('admin mobile');
