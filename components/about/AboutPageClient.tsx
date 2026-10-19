@@ -203,10 +203,10 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
                     <div className={`order-2 lg:order-1 relative transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
                         <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)] rotate-1">
                             <Image
-                                src="/optimized/sharm-activities.webp"
-                                alt="Sharm El-Sheikh activities – snorkeling, boat trips and safari experiences"
-                                width={1200}
-                                height={900}
+                                src="/images/about/pool-resort-606ae14e.jpeg"
+                                alt="A guest enjoying a resort swimming pool in Egypt"
+                                width={1600}
+                                height={1066}
                                 sizes="(max-width: 1024px) 100vw, 50vw"
                                 quality={62}
                                 className="w-full h-[450px] object-cover"
@@ -378,11 +378,11 @@ function AboutPageEn({ loaded, lang }: { loaded: boolean; lang: "ar" | "en" }) {
 
                 <div className="absolute inset-0 flex items-center justify-center px-6">
                     <ScrollReveal className="text-center max-w-2xl">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            Discover the magic of Sharm El-Sheikh
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 text-balance">
+                            Discover the magic of Egypt with <bdi className="whitespace-nowrap">Oday Tourism</bdi>
                         </h2>
-                        <p className="text-white/85 text-base md:text-lg leading-relaxed">
-                            From colorful coral reefs to golden desert landscapes, Sharm El-Sheikh offers endless adventures. Let Oday Tourism turn it into a trip you will always remember.
+                        <p className="text-white/85 text-sm sm:text-base md:text-lg leading-relaxed">
+                            From the enchanting shores of the Red Sea to historic Cairo and the charm of Luxor and Aswan, discover Egypt&apos;s most beautiful destinations with exceptional experiences, memorable stays, and trips tailored just for you.
                         </p>
                     </ScrollReveal>
                 </div>
@@ -553,8 +553,8 @@ const advantages = [
         icon: "chat-bubble" as const,
     },
     {
-        title: "تجارب فريدة في شرم الشيخ",
-        desc: "نعرف أسرار المدينة ونقدم لك تجارب حصرية لا تجدها في أي مكان آخر.",
+        title: "تجارب سياحية استثنائية",
+        desc: "اكتشف أجمل الوجهات في مصر، من سحر البحر الأحمر إلى عراقة المدن التاريخية، مع تجارب سياحية مميزة",
         icon: "sparkles" as const,
     },
 ];
@@ -659,10 +659,10 @@ export default function AboutPageClient() {
                     <div className={`order-2 lg:order-1 relative transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
                         <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)] rotate-1">
                             <Image
-                                src="/optimized/sharm-activities.webp"
-                                alt="أنشطة شرم الشيخ - رحلات بحرية وسفاري وألعاب مائية"
-                                width={1200}
-                                height={900}
+                                src="/images/about/pool-resort-606ae14e.jpeg"
+                                alt="زائرة تستمتع بجانب مسبح أحد المنتجعات في مصر"
+                                width={1600}
+                                height={1066}
                                 sizes="(max-width: 1024px) 100vw, 50vw"
                                 quality={62}
                                 className="w-full h-[450px] object-cover"
@@ -782,12 +782,12 @@ export default function AboutPageClient() {
 
                     <ScrollReveal className="order-2 lg:order-2 relative">
                         <Image
-                            src="/optimized/about-activities.avif"
-                            alt="الأنشطة السياحية في شرم الشيخ - رحلات بحرية وسفاري"
-                            width={1200}
-                            height={1600}
+                            src="/images/about/why-choose-resort.jpeg"
+                            alt="منتجع سياحي بإطلالة على البحر ومسبح وتراس أبيض"
+                            width={933}
+                            height={933}
                             sizes="(max-width: 1024px) 100vw, 50vw"
-                            quality={55}
+                            quality={75}
                             className="w-full h-[400px] lg:h-[600px] object-cover rounded-[2rem] shadow-2xl"
                         />
                         <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-[2rem] bg-[#0EA5E9]/10 -z-10" />
@@ -849,12 +849,11 @@ export default function AboutPageClient() {
 
                 <div className="absolute inset-0 flex items-center justify-center px-6">
                     <ScrollReveal className="text-center max-w-2xl">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            اكتشف سحر شرم الشيخ
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 text-balance">
+                            اكتشف سحر مصر مع <bdi dir="ltr" className="whitespace-nowrap">Oday Tourism</bdi>
                         </h2>
-                        <p className="text-white/85 text-base md:text-lg leading-relaxed">
-                            من الشعاب المرجانية الساحرة إلى الصحراء الذهبية، شرم الشيخ تقدم مغامرات لا حدود لها.
-                            دعنا نأخذك في رحلة لا تُنسى مع Oday Tourism.
+                        <p className="text-white/85 text-sm sm:text-base md:text-lg leading-relaxed">
+                            من شواطئ البحر الأحمر الساحرة إلى عراقة القاهرة وسحر الأقصر وأسوان، اكتشف أجمل الوجهات السياحية في مصر مع تجارب استثنائية، وإقامة مميزة، ورحلات مصممة خصيصًا لك.
                         </p>
                     </ScrollReveal>
                 </div>

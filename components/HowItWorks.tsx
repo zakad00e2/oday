@@ -38,7 +38,7 @@ export default function HowItWorks({
           <div className="grid lg:grid-cols-2 gap-8 md:gap-0 items-center mt-12">
             <div className="relative rounded-[28px] overflow-hidden aspect-[4/4.5] w-full shadow-sm max-w-md mx-auto lg:max-w-none">
               <Image
-                src="/optimized/sharm-activities.webp"
+                src="/images/how-it-works.jpeg"
                 alt={howItWorks.tripImageAlt}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"

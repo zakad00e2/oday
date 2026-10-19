@@ -13,7 +13,7 @@ export default function HotelsHero() {
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
 
                 <Image
-                    src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&q=80"
+                    src="/images/hotels-hero-sea-room.png"
                     alt={d.heroImageAlt}
                     fill
                     priority

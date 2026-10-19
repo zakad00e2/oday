@@ -23,7 +23,7 @@ export default function Hero({
     >
       <div className="absolute inset-0">
         <Image
-          src="/IMG_3734 (1).PNG"
+          src="/images/home-hero.png"
           alt={hero.heroImageAlt}
           fill
           priority
@@ -32,7 +32,7 @@ export default function Hero({
           sizes="100vw"
           className="object-cover object-right sm:object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/45 to-black/65" />
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto -mt-11 animate-fade-in-up">
@@ -102,7 +102,6 @@ export default function Hero({
         </p>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA] to-transparent" />
     </section>
   );
 }

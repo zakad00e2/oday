@@ -5,8 +5,8 @@ import type { Locale } from "@/lib/i18n/config";
 
 const packageHrefs = ["/hotels", "/trips", "/airport-coordination", "/contact"];
 const packageImages = [
-  "/IMG_3739.PNG",
-  "/IMG_3745.PNG",
+  "/images/hotel-booking.jpeg",
+  "/images/trips-safari-a55370d1.jpeg",
   "/optimized/airport-card.webp",
   "/IMG_3751.PNG",
 ];
@@ -72,6 +72,7 @@ export default function Packages({
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         quality={60}
+                        style={i === 1 ? { objectPosition: "center 60%" } : undefined}
                         className="object-cover group-hover:scale-105 transition-transform duration-500 rounded-b-[16px]"
                       />
                     </div>
