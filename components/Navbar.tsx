@@ -111,15 +111,15 @@ export default function Navbar() {
             </Link>
           );
         })}
-        <button type="button" onClick={openResidenceDialog} aria-label={residenceLabel} title={residenceLabel}
-          className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${switcherClass}`}>
-          <MapPin className="h-5 w-5" aria-hidden="true" />
-        </button>
       </div>
 
       {/* ── Cart + Language Switcher (desktop) ──────── */}
       <div className="hidden lg:flex items-center gap-2">
         <LanguageSwitcher className={switcherClass} />
+        <button type="button" onClick={openResidenceDialog} aria-label={residenceLabel} title={residenceLabel}
+          className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${switcherClass}`}>
+          <MapPin className="h-5 w-5" aria-hidden="true" />
+        </button>
         <button
           onClick={openCart}
           aria-label={dict.nav.cartLabel}
