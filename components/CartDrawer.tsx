@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import {
+  getCartHotelAddOnCount,
   getCartHotelRoomCount,
   getCartHotelSelectedRoomName,
   getCartHotelSelectedRooms,
@@ -107,7 +108,7 @@ export default function CartDrawer() {
         });
       }
       if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
-        msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => getHotelAddOnName(a)).join(isAr ? "، " : ", ")}\n`;
+        msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => `${getHotelAddOnName(a)} ×${getCartHotelAddOnCount(a, hotelRoomCount)}`).join(isAr ? "، " : ", ")}\n`;
       }
       msg += `${wa.nightsLabel} ${cart.nights}\n`;
       msg += `${wa.stayCost} ${formatPrice(hotelCost, lang)}\n\n`;
@@ -287,7 +288,8 @@ export default function CartDrawer() {
                   {cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0 && (
                     <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
                       {cart.hotel.selectedAddOns.map((addOn, index) => {
-                        const addOnTotal = addOn.price * cart.nights * hotelRoomCount;
+                        const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
+                        const addOnTotal = addOn.price * cart.nights * addOnCount;
 
                         return (
                           <div
@@ -300,7 +302,7 @@ export default function CartDrawer() {
                                 {getHotelAddOnName(addOn)}
                               </span>
                               <span className="text-[10px] text-[#B45309] shrink-0">
-                                × {hotelRoomCount || 1}
+                                × {addOnCount}
                               </span>
                             </div>
                             <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">

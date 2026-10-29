@@ -5,6 +5,7 @@ import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import CartHotelSummaryCard from "@/components/cart/CartHotelSummaryCard";
 import {
+  getCartHotelAddOnCount,
   getCartHotelRoomCount,
   getCartHotelSelectedRoomName,
   getCartHotelSelectedRooms,
@@ -209,8 +210,9 @@ export default function CheckoutPageClient() {
       if (cart.hotel.selectedAddOns?.length) {
         msg += `${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns
           .map((addOn) => {
-            const addOnTotal = addOn.price * cart.nights * hotelRoomCount;
-            return `${getHotelAddOnName(addOn)}${
+            const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
+            const addOnTotal = addOn.price * cart.nights * addOnCount;
+            return `${getHotelAddOnName(addOn)} x${addOnCount}${
               addOn.price !== 0 ? ` (${formatPriceWithSign(addOnTotal, lang)})` : ""
             }`;
           })

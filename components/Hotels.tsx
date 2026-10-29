@@ -23,6 +23,10 @@ import {
 type SortKey = "default" | "MOST_BOOKED" | "TOP_RATED" | "LOWEST_PRICE";
 const DESTINATION_TRANSITION_MS = 520;
 
+function normalizeHotelSearch(value: string) {
+  return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
+}
+
 const destinationImagePositions: Record<string, string> = {
   DAHAB: "center 57%",
   EL_AIN_SOKHNA: "center 65%",
@@ -340,6 +344,8 @@ export default function Hotels() {
   const isDestinationTransitioningRef = useRef(false);
   const [sortBy, setSortBy] = useState<SortKey>("default");
   const [showDiscountsOnly, setShowDiscountsOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { destinations, items: hotels, isLoading, error, retry } = useDestinationCatalog(
     "hotels", selectedDestination, fetchDestinationHotels,
   );
@@ -364,10 +370,13 @@ export default function Hotels() {
   const activeDestination = destinationOptions.find(
     (destination) => destination.value === selectedDestination,
   );
+  const hasHotelsInDestination = hotels.some((hotel) => hotel.destination === selectedDestination);
+  const searchPlaceholder = d.searchPlaceholder.replace("{destination}", activeDestination?.label ?? "");
 
   const filteredHotels = useMemo(() => {
     if (selectedDestination === null) return [];
     const byRating = filterByRating(hotels, sortBy);
+    const normalizedQuery = normalizeHotelSearch(searchQuery);
 
     return byRating.filter((hotel) => {
       if (hotel.destination !== selectedDestination) {
@@ -378,13 +387,16 @@ export default function Hotels() {
         return false;
       }
 
-      return true;
+      return [hotel.nameAr, hotel.nameEn].some((name) =>
+        normalizeHotelSearch(name).includes(normalizedQuery),
+      );
     });
-  }, [hotels, selectedDestination, showDiscountsOnly, sortBy]);
+  }, [hotels, selectedDestination, showDiscountsOnly, sortBy, searchQuery]);
 
   const resetFilters = () => {
     setSortBy("default");
     setShowDiscountsOnly(false);
+    setSearchQuery("");
   };
 
   const changeDestination = (destination: string | null) => {
@@ -438,6 +450,39 @@ export default function Hotels() {
 
             {selectedDestination !== null ? (
               <div className="mx-auto mb-10 flex w-full max-w-2xl flex-col gap-4">
+                <div role="search" className="relative">
+                  <label htmlFor="destination-hotel-search" className="sr-only">
+                    {searchPlaceholder}
+                  </label>
+                  <svg aria-hidden="true" className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#94A3B8]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <circle cx="10.5" cy="10.5" r="6.5" />
+                    <path strokeLinecap="round" d="m16 16 4 4" />
+                  </svg>
+                  <input
+                    ref={searchInputRef}
+                    id="destination-hotel-search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="h-14 w-full rounded-2xl border border-[#E2E8F0] bg-white ps-12 pe-14 text-start text-base text-[#0F172A] shadow-sm outline-none transition focus:border-[#0EA5E9] focus:ring-4 focus:ring-[#0EA5E9]/10 placeholder:text-[#94A3B8] [&::-webkit-search-cancel-button]:appearance-none"
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      aria-label={d.clearSearch}
+                      onClick={() => {
+                        setSearchQuery("");
+                        searchInputRef.current?.focus();
+                      }}
+                      className="absolute end-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#0F172A] focus-visible:outline-2 focus-visible:outline-[#0EA5E9]"
+                    >
+                      <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" d="m6 6 12 12M6 18 18 6" />
+                      </svg>
+                    </button>
+                  ) : null}
+                </div>
                 {(sortBy !== "default" || showDiscountsOnly) && !isLoading ? (
                   <button
                     type="button"
@@ -602,21 +647,19 @@ export default function Hotels() {
 
           {!isLoading && !error && selectedDestination !== null && filteredHotels.length === 0 ? (
             <HotelsStatusCard
-              title={d.noHotelsInDestination}
+              title={hasHotelsInDestination ? d.noResults : d.noHotelsInDestination}
               description={
-                hotels.some((hotel) => hotel.destination === selectedDestination)
-                  ? isAr
-                    ? "جرّب تغيير الفلاتر لعرض نتائج أكثر."
-                    : "Try changing the filters to see more results."
+                hasHotelsInDestination
+                  ? d.noResultsDescription
                   : d.noHotelsInDestinationDescription
               }
               actionLabel={
-                hotels.some((hotel) => hotel.destination === selectedDestination)
+                hasHotelsInDestination
                   ? d.clearFilters
                   : d.backToDestinations
               }
               onAction={
-                hotels.some((hotel) => hotel.destination === selectedDestination)
+                hasHotelsInDestination
                   ? resetFilters
                   : () => changeDestination(null)
               }

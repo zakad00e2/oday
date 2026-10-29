@@ -10,7 +10,11 @@ import LocalizedDatePicker from "@/components/LocalizedDatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useCart } from "@/lib/cart-context";
 import {
+    getCartHotelAddOnCount,
+    getCartHotelAddOnsCost,
+    getCartHotelRoomCount,
     getCartHotelSelectedRooms,
+    limitHotelAddOnCounts,
     type CartHotelRoomSelection,
 } from "@/lib/cart-hotel";
 import {
@@ -265,11 +269,13 @@ function areRoomSelectionsEqual(
     return currentRooms.every((room) => cartRoomCounts.get(room.id) === room.count);
 }
 
-function resolveAddOnIdFromCart(
+function resolveAddOnCountsFromCart(
     hotel: LocalizedHotelView | null,
     cartHotel: ReturnType<typeof useCart>["cart"]["hotel"],
 ) {
-    if (!hotel || !cartHotel?.selectedAddOns?.length) return null;
+    if (!hotel || !cartHotel?.selectedAddOns?.length) return {};
+    const counts: Record<string, number> = {};
+    const roomCount = getCartHotelRoomCount(cartHotel);
 
     for (const cartAddon of cartHotel.selectedAddOns) {
         const addonNames = [cartAddon.name, cartAddon.nameAr, cartAddon.nameEn].filter(
@@ -277,15 +283,15 @@ function resolveAddOnIdFromCart(
         );
 
         const found = hotel.addons.find((addon) =>
-            addonNames.includes(addon.name) ||
+            addon.id === cartAddon.id || addonNames.includes(addon.name) ||
             addonNames.includes(addon.nameAr) ||
             addonNames.includes(addon.nameEn),
         );
 
-        if (found) return found.id;
+        if (found) counts[found.id] = getCartHotelAddOnCount(cartAddon, roomCount);
     }
 
-    return null;
+    return limitHotelAddOnCounts(counts, roomCount);
 }
 
 function HotelStateCard({
@@ -686,15 +692,40 @@ export default function HotelDetailClient() {
     }, [hotel]);
 
     const isInCart = cart.hotel?.id === hotel?.id;
-    const cartAddonId = resolveAddOnIdFromCart(hotel, cart.hotel);
+    const cartAddOnCounts = useMemo(
+        () => resolveAddOnCountsFromCart(hotel, cart.hotel),
+        [hotel, cart.hotel],
+    );
 
     const today = formatIsoDate(new Date());
     const tomorrowDate = new Date();
     tomorrowDate.setDate(tomorrowDate.getDate() + 1);
     const tomorrow = formatIsoDate(tomorrowDate);
 
-    const [roomCounts, setRoomCounts] = useState<Record<string, number>>({});
-    const [selectedAddOnId, setSelectedAddOnId] = useState<string | null>(null);
+    const [selection, setSelection] = useState<{
+        roomCounts: Record<string, number>;
+        addOnCounts: Record<string, number>;
+    }>({ roomCounts: {}, addOnCounts: {} });
+    const { roomCounts, addOnCounts } = selection;
+    const setRoomCounts = (update: (current: Record<string, number>) => Record<string, number>) => {
+        setSelection((current) => {
+            const nextRoomCounts = update(current.roomCounts);
+            const count = Object.values(nextRoomCounts).reduce((sum, value) => sum + value, 0);
+            return { roomCounts: nextRoomCounts, addOnCounts: limitHotelAddOnCounts(current.addOnCounts, count) };
+        });
+    };
+    const changeAddOnCount = (id: string, delta: number) => {
+        setSelection((current) => {
+            const roomCount = Object.values(current.roomCounts).reduce((sum, count) => sum + count, 0);
+            const allocated = Object.values(current.addOnCounts).reduce((sum, count) => sum + count, 0);
+            if (delta > 0 && allocated >= roomCount) return current;
+            const next = { ...current.addOnCounts };
+            const count = Math.max(0, (next[id] ?? 0) + delta);
+            if (count === 0) delete next[id];
+            else next[id] = count;
+            return { ...current, addOnCounts: next };
+        });
+    };
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
 
@@ -706,12 +737,14 @@ export default function HotelDetailClient() {
 
         if (isInCart && cartHotel) {
             const nextRoomCounts = resolveRoomCountsFromCart(hotel, cartHotel);
-            setRoomCounts(
-                Object.keys(nextRoomCounts).length > 0
+            const restoredRooms = Object.keys(nextRoomCounts).length > 0
                     ? nextRoomCounts
-                    : getDefaultRoomCounts(hotel),
-            );
-            setSelectedAddOnId(cartAddonId);
+                    : getDefaultRoomCounts(hotel);
+            const restoredRoomCount = Object.values(restoredRooms).reduce((sum, count) => sum + count, 0);
+            setSelection({
+                roomCounts: restoredRooms,
+                addOnCounts: limitHotelAddOnCounts(cartAddOnCounts, restoredRoomCount),
+            });
             if (cartHotel.checkIn) {
                 setCheckIn(cartHotel.checkIn);
             }
@@ -721,9 +754,8 @@ export default function HotelDetailClient() {
             return;
         }
 
-        setRoomCounts(getDefaultRoomCounts(hotel));
-        setSelectedAddOnId(null);
-    }, [hotel?.id, isInCart, cart.hotel?.slug, cart.hotel?.checkIn, cart.hotel?.checkOut, cartAddonId]);
+        setSelection({ roomCounts: getDefaultRoomCounts(hotel), addOnCounts: {} });
+    }, [hotel?.id, isInCart, cart.hotel?.slug, cart.hotel?.checkIn, cart.hotel?.checkOut, cartAddOnCounts]);
 
     useEffect(() => {
         if (checkOut <= checkIn) {
@@ -752,30 +784,35 @@ export default function HotelDetailClient() {
         (sum, room) => sum + (room.pricePerNight > 0 ? room.pricePerNight * room.count * nights : Number.NaN),
         0,
     );
-    const selectedAddon = hotel?.addons.find((addon) => addon.id === selectedAddOnId) ?? null;
-    const selectedAddOns = selectedAddon
-        ? [{
-            name: selectedAddon.name,
-            nameAr: selectedAddon.nameAr,
-            nameEn: selectedAddon.nameEn,
-            prices: selectedAddon.prices,
-            price: selectedAddon.price,
-        }]
-        : [];
+    const selectedAddOns = (hotel?.addons ?? []).flatMap((addon) => {
+        const count = addOnCounts[addon.id] ?? 0;
+        return count > 0 ? [{
+            id: addon.id,
+            name: addon.name,
+            nameAr: addon.nameAr,
+            nameEn: addon.nameEn,
+            prices: addon.prices,
+            price: addon.price,
+            count,
+        }] : [];
+    });
+    const allocatedRoomCount = selectedAddOns.reduce((sum, addon) => sum + addon.count, 0);
 
-    const totalPrice = selectedRoomBaseCost + (
-        selectedAddon ? selectedAddon.price * selectedRoomCount * nights : 0
-    );
+    const totalPrice = selectedRoomBaseCost + getCartHotelAddOnsCost({ selectedRooms, selectedAddOns }, nights);
 
     const hasChanges = Boolean(
         isInCart && hotel && (
             !areRoomSelectionsEqual(selectedRooms, cartSelectedRooms) ||
             selectedRooms.some(room => !samePricePair(room.prices, cart.hotel?.selectedRooms?.find(saved => saved.id === room.id)?.prices)) ||
-            (selectedAddon !== null && !samePricePair(selectedAddon.prices, cart.hotel?.selectedAddOns?.[0]?.prices)) ||
+            selectedAddOns.some((addOn) => !samePricePair(
+                addOn.prices,
+                cart.hotel?.selectedAddOns?.find((saved) => saved.id === addOn.id)?.prices,
+            )) ||
             nights !== cart.nights ||
             checkIn !== (cart.hotel?.checkIn ?? "") ||
             checkOut !== (cart.hotel?.checkOut ?? "") ||
-            selectedAddOnId !== cartAddonId
+            Object.keys(addOnCounts).length !== Object.keys(cartAddOnCounts).length ||
+            Object.entries(addOnCounts).some(([id, count]) => cartAddOnCounts[id] !== count)
         ),
     );
 
@@ -1001,38 +1038,77 @@ export default function HotelDetailClient() {
 
                                 {hotel.addons.length > 0 ? (
                                     <div className="flex flex-col gap-3">
+                                        <p className="text-xs leading-relaxed text-[#64748b]" aria-live="polite">
+                                            {isAr
+                                                ? `حدد عدد الغرف لكل ترقية. الغرف المتبقية بدون ترقية: ${selectedRoomCount - allocatedRoomCount}`
+                                                : `Choose rooms for each upgrade. Rooms without an upgrade: ${selectedRoomCount - allocatedRoomCount}`}
+                                        </p>
                                         {hotel.addons.map((addon) => {
-                                            const isSelected = selectedAddOnId === addon.id;
+                                            const count = addOnCounts[addon.id] ?? 0;
+                                            const isSelected = count > 0;
                                             return (
-                                                <button
+                                                <div
                                                     key={addon.id}
-                                                    type="button"
-                                                    onClick={() => setSelectedAddOnId((current) => current === addon.id ? null : addon.id)}
-                                                    className={`flex items-start justify-between rounded-2xl border-2 p-4 text-start transition-all ${
+                                                    role="group"
+                                                    aria-label={addon.name}
+                                                    className={`relative rounded-2xl border-2 p-4 text-start transition-all ${
                                                         isSelected
                                                             ? "border-[#F59E0B] bg-[#F59E0B]/5"
                                                             : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"
                                                     }`}
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                                                            isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"
-                                                        }`}>
-                                                            {isSelected ? (
-                                                                <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            ) : null}
+                                                    <button
+                                                        type="button"
+                                                        aria-label={addon.name}
+                                                        aria-pressed={isSelected}
+                                                        disabled={!isSelected && allocatedRoomCount >= selectedRoomCount}
+                                                        onClick={() => changeAddOnCount(addon.id, isSelected ? -count : 1)}
+                                                        className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F59E0B] disabled:cursor-not-allowed"
+                                                    />
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                                                isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"
+                                                            }`}>
+                                                                {isSelected ? (
+                                                                    <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                ) : null}
+                                                            </div>
+                                                            <div>
+                                                                <span className="block text-sm font-bold text-[#0f172a]">{addon.name}</span>
+                                                                <span className="text-xs text-[#64748b]">{addon.description}</span>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <span className="block text-sm font-bold text-[#0f172a]">{addon.name}</span>
-                                                            <span className="text-xs text-[#64748b]">{addon.description}</span>
+                                                        <span className={`mt-0.5 shrink-0 font-semibold ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
+                                                            {formatPriceWithSign(addon.price, lang)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-2 text-xs text-[#64748b]">
+                                                        {isAr ? "السعر لكل غرفة في الليلة" : "Price per room per night"}
+                                                    </p>
+                                                    <div className="mt-3 flex items-center justify-between border-t border-[#e2e8f0] pt-3">
+                                                        <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
+                                                        <div className="relative z-20 flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                aria-label={isAr ? `تقليل غرف ترقية ${addon.name}` : `Decrease rooms for ${addon.name}`}
+                                                                disabled={count === 0}
+                                                                onClick={() => changeAddOnCount(addon.id, -1)}
+                                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F59E0B]/10 font-bold text-[#92400E] transition hover:bg-[#F59E0B]/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                                            >−</button>
+                                                            <span className="w-5 text-center text-sm font-bold text-[#0f172a]" aria-live="polite">{count}</span>
+                                                            <button
+                                                                type="button"
+                                                                aria-label={isAr ? `زيادة غرف ترقية ${addon.name}` : `Increase rooms for ${addon.name}`}
+                                                                disabled={allocatedRoomCount >= selectedRoomCount}
+                                                                onClick={() => changeAddOnCount(addon.id, 1)}
+                                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F59E0B]/10 font-bold text-[#92400E] transition hover:bg-[#F59E0B]/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                                            >+</button>
                                                         </div>
                                                     </div>
-                                                    <span className={`mt-0.5 shrink-0 font-semibold ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
-                                                        {formatPriceWithSign(addon.price, lang)}
-                                                    </span>
-                                                </button>
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -1108,11 +1184,11 @@ export default function HotelDetailClient() {
                                                 <span className="text-[#0EA5E9]">x{room.count}</span>
                                             </span>
                                         ))}
-                                        {selectedAddon ? (
-                                            <span className="inline-flex items-center rounded-full bg-[#FFFBEB] px-3 py-1 text-xs font-semibold text-[#92400E]">
-                                                + {selectedAddon.name}
+                                        {selectedAddOns.map((addon) => (
+                                            <span key={addon.id} className="inline-flex items-center rounded-full bg-[#FFFBEB] px-3 py-1 text-xs font-semibold text-[#92400E]">
+                                                + {addon.name} ×{addon.count}
                                             </span>
-                                        ) : null}
+                                        ))}
                                     </div>
                                 ) : (
                                     <p className="mt-2 text-sm text-[#94a3b8]">

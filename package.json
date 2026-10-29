@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:pricing": "node --test scripts/visitor-pricing.test.cjs",
+    "test:cart-hotel": "node --experimental-strip-types --test scripts/cart-hotel.test.mjs",
     "test:destinations": "node --test scripts/destinations.test.cjs",
     "test:mascot": "node --experimental-strip-types --test scripts/mascot-model.test.mjs"
   },

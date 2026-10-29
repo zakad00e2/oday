@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import type { CartHotel } from "@/lib/cart-context";
 import {
+  getCartHotelAddOnCount,
   getCartHotelSelectedRoomName,
   type CartHotelAddOn,
   type CartHotelRoomSelection,
@@ -113,7 +114,8 @@ export default function CartHotelSummaryCard({
       {hotel.selectedAddOns?.length ? (
         <div className="mx-3.5 mb-3 divide-y divide-[#FDE68A]/40 rounded-xl border border-[#FDE68A]/50 bg-[#FFFBEB]">
           {hotel.selectedAddOns.map((addOn, index) => {
-            const addOnTotal = addOn.price * nights * hotelRoomCount;
+            const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
+            const addOnTotal = addOn.price * nights * addOnCount;
 
             return (
               <div
@@ -123,7 +125,7 @@ export default function CartHotelSummaryCard({
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="shrink-0 text-[10px]">+</span>
                   <span className="truncate text-xs font-semibold text-[#92400E]">
-                    {getHotelAddOnName(addOn)} x{hotelRoomCount}
+                    {getHotelAddOnName(addOn)} x{addOnCount}
                   </span>
                 </div>
                 <span className="shrink-0 text-xs font-bold text-[#92400E]">

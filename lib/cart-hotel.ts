@@ -1,10 +1,36 @@
 import type { PricePair } from "./visitor-pricing";
 export interface CartHotelAddOn {
+  id?: string;
   name: string;
   nameAr?: string;
   nameEn?: string;
   prices?: PricePair;
   price: number;
+  count?: number;
+}
+
+function wholeRoomCount(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+export function getCartHotelAddOnCount(addOn: CartHotelAddOn, roomCount: number): number {
+  return Math.min(wholeRoomCount(addOn.count ?? roomCount), wholeRoomCount(roomCount));
+}
+
+export function limitHotelAddOnCounts(
+  counts: Record<string, number>,
+  roomCount: number,
+): Record<string, number> {
+  let remaining = wholeRoomCount(roomCount);
+  const limited: Record<string, number> = {};
+  for (const [id, value] of Object.entries(counts)) {
+    const count = Math.min(wholeRoomCount(value), remaining);
+    if (count > 0) {
+      limited[id] = count;
+      remaining -= count;
+    }
+  }
+  return limited;
 }
 
 export interface CartHotelRoomSelection {
@@ -120,9 +146,9 @@ export function getCartHotelAddOnsCost(
   nights: number,
 ): number {
   const safeNights = Math.max(1, nights || 1);
-  return (
-    getCartHotelAddOnsUnitTotal(hotel) *
-    getCartHotelRoomCount(hotel) *
-    safeNights
+  const roomCount = getCartHotelRoomCount(hotel);
+  return (hotel?.selectedAddOns ?? []).reduce(
+    (sum, addOn) => sum + addOn.price * getCartHotelAddOnCount(addOn, roomCount) * safeNights,
+    0,
   );
 }
