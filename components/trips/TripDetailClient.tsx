@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import TripDetailSkeleton from "@/components/detail-skeletons/TripDetailSkeleton";
@@ -11,8 +11,10 @@ import TripSchedule from "@/components/trips/TripSchedule";
 import TripIncludes from "@/components/trips/TripIncludes";
 import TripGallery from "@/components/trips/TripGallery";
 import LocalizedDatePicker from "@/components/LocalizedDatePicker";
-import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/currency";
+import { type CartTrip, useCart } from "@/lib/cart-context";
+import { findTripSelection } from "@/lib/trip-selection";
+import { pricePair, samePricePair } from "@/lib/visitor-pricing";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { isYouTubeShortUrl, toYouTubeEmbedUrl } from "@/lib/youtube";
 
@@ -57,7 +59,15 @@ export default function TripDetailClient() {
     const { lang } = useI18n();
     const isAr = lang === "ar";
 
-    const [trip, setTrip] = useState<TripRecord | null>(null);
+    const { formatPrice, resolvePrice } = useVisitorPricing();
+    const [tripData, setTrip] = useState<TripRecord | null>(null);
+    const trip = useMemo(() => tripData ? {
+        ...tripData,
+        prices: pricePair(tripData.startingPrice, tripData.startingPriceEgp),
+        startingPrice: resolvePrice(tripData.startingPrice, tripData.startingPriceEgp),
+        options: sortTripSelectionsByPrice(tripData.options.map(option => ({ ...option, prices: pricePair(option.price, option.priceEgp), price: resolvePrice(option.price, option.priceEgp) }))),
+        addOns: sortTripSelectionsByPrice(tripData.addOns.map(addOn => ({ ...addOn, prices: pricePair(addOn.price, addOn.priceEgp), price: resolvePrice(addOn.price, addOn.priceEgp) }))),
+    } : null, [tripData, resolvePrice]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -112,36 +122,41 @@ export default function TripDetailClient() {
     const [justAdded, setJustAdded] = useState(false);
     const todayIso = formatIsoDate(new Date());
 
+    // Prices change with visitor category; saved choices/quantities do not.
+    const savedSelectionKey = JSON.stringify(cart.trips.find(item => item.slug === tripData?.slug) ?? null,
+        (key, value) => ["price", "startingPrice", "prices"].includes(key) ? undefined : value);
+    const savedCartTrip = useMemo(() => JSON.parse(savedSelectionKey) as CartTrip | null, [savedSelectionKey]);
+
     useEffect(() => {
-        if (!trip) return;
-        if (trip.options.length > 0) {
-            setSelectedOptionIds(new Set([trip.options[0].id]));
+        if (!tripData) return;
+        if (tripData.options.length > 0) {
+            setSelectedOptionIds(new Set([tripData.options[0].id]));
         } else {
             setSelectedOptionIds(new Set());
         }
         const p: Record<string, number> = {};
-        trip.options.forEach((o) => { p[o.id] = 1; });
+        tripData.options.forEach((o) => { p[o.id] = 1; });
         setPersonCounts(p);
 
         const ap: Record<string, number> = {};
-        trip.addOns.forEach((a) => { ap[a.id] = 1; });
+        tripData.addOns.forEach((a) => { ap[a.id] = 1; });
         setAddOnPersonCounts(ap);
         setSelectedAddOnIds(new Set());
         setSelectedDate("");
         setDateError("");
-    }, [trip?.id]);
+    }, [tripData]);
 
     useEffect(() => {
-        if (!trip) return;
-        const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
+        if (!tripData) return;
+        const cartTrip = savedCartTrip;
         if (!cartTrip) return;
 
         if (cartTrip.selectedOptions && cartTrip.selectedOptions.length > 0) {
             const optionIds = new Set<string>();
             const newPersonCounts: Record<string, number> = {};
-            trip.options.forEach((o) => { newPersonCounts[o.id] = 1; });
+            tripData.options.forEach((o) => { newPersonCounts[o.id] = 1; });
             cartTrip.selectedOptions.forEach((selectedOption) => {
-                const matchingOption = trip.options.find((o) => o.nameAr === selectedOption.nameAr);
+                const matchingOption = findTripSelection(tripData.options, selectedOption);
                 if (matchingOption) {
                     optionIds.add(matchingOption.id);
                     newPersonCounts[matchingOption.id] = selectedOption.persons || 1;
@@ -154,9 +169,9 @@ export default function TripDetailClient() {
         if (cartTrip.selectedAddOns && cartTrip.selectedAddOns.length > 0) {
             const addOnIds = new Set<string>();
             const newAddOnPersonCounts: Record<string, number> = {};
-            trip.addOns.forEach((a) => { newAddOnPersonCounts[a.id] = 1; });
+            tripData.addOns.forEach((a) => { newAddOnPersonCounts[a.id] = 1; });
             cartTrip.selectedAddOns.forEach((selectedAddOn) => {
-                const matchingAddOn = trip.addOns.find((a) => a.nameAr === selectedAddOn.nameAr);
+                const matchingAddOn = findTripSelection(tripData.addOns, selectedAddOn);
                 if (matchingAddOn) {
                     addOnIds.add(matchingAddOn.id);
                     newAddOnPersonCounts[matchingAddOn.id] = selectedAddOn.persons || 1;
@@ -168,7 +183,7 @@ export default function TripDetailClient() {
 
         setSelectedDate(cartTrip.travelDate ?? "");
         setDateError("");
-    }, [trip?.slug, JSON.stringify(cart.trips.find((t) => t.slug === trip?.slug))]);
+    }, [tripData, savedCartTrip]);
 
     useEffect(() => {
         if (justAdded) {
@@ -219,25 +234,26 @@ export default function TripDetailClient() {
         trip.galleryImages.length > 0 ? trip.galleryImages : trip.heroImage ? [trip.heroImage] : [];
 
     const selectedOptions = trip.options.filter((o) => selectedOptionIds.has(o.id));
-    const optionsTotal = selectedOptions.reduce((sum, o) => sum + o.price * (personCounts[o.id] || 1), 0);
+    const optionsTotal = selectedOptions.reduce((sum, o) => sum + (o.price > 0 ? o.price * (personCounts[o.id] || 1) : Number.NaN), 0);
     const addOnsTotal = trip.addOns
         .filter((a) => selectedAddOnIds.has(a.id))
         .reduce((sum, a) => sum + a.price * (addOnPersonCounts[a.id] || 1), 0);
-    const totalPriceGroup = optionsTotal + addOnsTotal;
+    const baseTotal = selectedOptions.length > 0 ? optionsTotal : trip.startingPrice > 0 ? trip.startingPrice * (cart.guests.adults + cart.guests.children) : Number.NaN;
+    const totalPriceGroup = baseTotal + addOnsTotal;
 
     const isInCart = cart.trips.some((t) => t.slug === trip.slug);
     const cartTrip = cart.trips.find((t) => t.slug === trip.slug);
     const selectedAddOns = trip.addOns.filter((a) => selectedAddOnIds.has(a.id));
 
-    let hasChanges = false;
+    let hasChanges = Boolean(cartTrip && !samePricePair(cartTrip.prices, trip.prices));
     if (isInCart && cartTrip) {
         const cartOpts = cartTrip.selectedOptions || [];
         if (cartOpts.length !== selectedOptions.length) {
             hasChanges = true;
         } else {
             for (const co of cartOpts) {
-                const match = selectedOptions.find(o => o.nameAr === co.nameAr);
-                if (!match || (personCounts[match.id] || 1) !== (co.persons || 1)) {
+                const match = findTripSelection(selectedOptions, co);
+                if (!match || !samePricePair(co.prices, match.prices) || (personCounts[match.id] || 1) !== (co.persons || 1)) {
                     hasChanges = true;
                     break;
                 }
@@ -250,8 +266,8 @@ export default function TripDetailClient() {
                 hasChanges = true;
             } else {
                 for (const ca of cartAdds) {
-                    const match = selectedAddOns.find(a => a.nameAr === ca.nameAr);
-                    if (!match || (addOnPersonCounts[match.id] || 1) !== (ca.persons || 1)) {
+                    const match = findTripSelection(selectedAddOns, ca);
+                    if (!match || !samePricePair(ca.prices, match.prices) || (addOnPersonCounts[match.id] || 1) !== (ca.persons || 1)) {
                         hasChanges = true;
                         break;
                     }
@@ -303,13 +319,14 @@ export default function TripDetailClient() {
             titleAr: trip.titleAr,
             titleEn: trip.titleEn,
             heroImage: trip.heroImage,
+            prices: trip.prices,
             startingPrice: trip.startingPrice,
             travelDate: selectedDate,
             selectedOptions: selectedOptions.length > 0
-                ? selectedOptions.map((o) => ({ nameAr: o.nameAr, nameEn: o.nameEn, price: o.price, persons: personCounts[o.id] || 1 }))
+                ? selectedOptions.map((o) => ({ id: o.id, nameAr: o.nameAr, nameEn: o.nameEn, price: o.price, prices: o.prices, persons: personCounts[o.id] || 1 }))
                 : undefined,
             selectedAddOns: selectedAddOns.length > 0
-                ? selectedAddOns.map((a) => ({ nameAr: a.nameAr, nameEn: a.nameEn, price: a.price, persons: addOnPersonCounts[a.id] || 1 }))
+                ? selectedAddOns.map((a) => ({ id: a.id, nameAr: a.nameAr, nameEn: a.nameEn, price: a.price, prices: a.prices, persons: addOnPersonCounts[a.id] || 1 }))
                 : undefined,
         });
         if (!wasInCartBefore) {
@@ -424,7 +441,7 @@ export default function TripDetailClient() {
                                                             <span className={`font-black shrink-0 ${
                                                                 isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"
                                                             }`}>
-                                                                {option.price > 0 ? formatPrice(option.price, lang) : "—"}
+                                                                {formatPrice(option.price > 0 ? option.price : Number.NaN, lang)}
                                                             </span>
                                                         </div>
                                                         {isSelected && (
@@ -491,7 +508,7 @@ export default function TripDetailClient() {
                                                                 </div>
                                                             </div>
                                                             <span className={`font-black shrink-0 ${isAddonSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>
-                                                                {addOn.price > 0 ? formatPrice(addOn.price, lang) : "—"}
+                                                                {addOn.price === 0 ? (isAr ? "مجاناً" : "Free") : formatPrice(addOn.price, lang)}
                                                             </span>
                                                         </div>
                                                         {isAddonSelected && (
@@ -551,9 +568,9 @@ export default function TripDetailClient() {
                                     )}
                                     <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-0.5 sm:gap-1.5">
                                         <span className="text-2xl font-black text-[#0EA5E9]">
-                                            {totalPriceGroup > 0
+                                            {(totalPriceGroup > 0 || !Number.isFinite(totalPriceGroup))
                                                 ? formatPrice(totalPriceGroup, lang)
-                                                : trip.startingPrice > 0
+                                                : (trip.startingPrice > 0 || !Number.isFinite(trip.startingPrice))
                                                     ? `${isAr ? "يبدأ من" : "From"} ${formatPrice(trip.startingPrice, lang)}`
                                                     : isAr ? "عند الطلب" : "On request"}
                                         </span>

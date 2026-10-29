@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useState,
+  useMemo,
   useCallback,
   useEffect,
   ReactNode,
@@ -18,6 +19,10 @@ import type {
   CartHotelRoomSelection,
 } from "./cart-hotel";
 
+import { useVisitorPricing } from "./visitor-pricing-context";
+import type { PricePair } from "./visitor-pricing";
+import { resolveCartPrices } from "./cart-visitor-pricing";
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface CartHotel {
@@ -30,6 +35,7 @@ export interface CartHotel {
   cityAr?: string;
   cityEn?: string;
   image: string;
+  prices?: PricePair;
   pricePerNight: number;
   stars: number;
   roomsCount?: number;
@@ -47,11 +53,12 @@ export interface CartTrip {
   titleAr: string;
   titleEn?: string;
   heroImage: string;
+  prices?: PricePair;
   startingPrice: number; // per person, 0 = TBD
   travelDate?: string;
   persons?: number;      // number of persons selected
-  selectedOptions?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];
-  selectedAddOns?: { nameAr: string; nameEn?: string; price: number; persons?: number }[];
+  selectedOptions?: { id?: string; nameAr: string; nameEn?: string; price: number; prices?: PricePair; persons?: number }[];
+  selectedAddOns?: { id?: string; nameAr: string; nameEn?: string; price: number; prices?: PricePair; persons?: number }[];
 }
 
 export interface CartGuests {
@@ -99,7 +106,9 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   // Always start with defaultCart so server and client render identically (avoids hydration mismatch)
-  const [cart, setCart] = useState<CartState>(defaultCart);
+  const [rawCart, setCart] = useState<CartState>(defaultCart);
+  const { currency } = useVisitorPricing();
+  const cart = useMemo(() => resolveCartPrices(rawCart, currency), [rawCart, currency]);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -126,11 +135,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isInitialized) return;
     try {
-      localStorage.setItem("oday-cart", JSON.stringify(cart));
+      localStorage.setItem("oday-cart", JSON.stringify(rawCart));
     } catch {
       // ignore
     }
-  }, [cart, isInitialized]);
+  }, [rawCart, isInitialized]);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);

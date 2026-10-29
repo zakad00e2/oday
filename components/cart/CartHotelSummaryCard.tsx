@@ -8,7 +8,7 @@ import {
   type CartHotelAddOn,
   type CartHotelRoomSelection,
 } from "@/lib/cart-hotel";
-import { formatPrice, formatPriceWithSign } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 
 interface CartHotelSummaryCardLabels {
   hotelStay: string;
@@ -47,6 +47,7 @@ export default function CartHotelSummaryCard({
   actions,
   className,
 }: CartHotelSummaryCardProps) {
+  const { formatPrice, formatPriceWithSign } = useVisitorPricing();
   return (
     <div
       className={`rounded-2xl border border-[#e2e8f0] bg-white overflow-hidden${
@@ -126,7 +127,7 @@ export default function CartHotelSummaryCard({
                   </span>
                 </div>
                 <span className="shrink-0 text-xs font-bold text-[#92400E]">
-                  {addOn.price > 0
+                  {addOn.price !== 0
                     ? formatPriceWithSign(addOnTotal, lang)
                     : labels.free}
                 </span>

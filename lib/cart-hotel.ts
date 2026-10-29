@@ -1,7 +1,9 @@
+import type { PricePair } from "./visitor-pricing";
 export interface CartHotelAddOn {
   name: string;
   nameAr?: string;
   nameEn?: string;
+  prices?: PricePair;
   price: number;
 }
 
@@ -10,6 +12,7 @@ export interface CartHotelRoomSelection {
   name: string;
   nameAr?: string;
   nameEn?: string;
+  prices?: PricePair;
   pricePerNight: number;
   count: number;
 }
@@ -37,7 +40,8 @@ function normalizeSelectedRoom(
     name: room.name,
     nameAr: room.nameAr,
     nameEn: room.nameEn,
-    pricePerNight: Math.max(0, room.pricePerNight || 0),
+    prices: room.prices,
+    pricePerNight: Math.max(0, room.pricePerNight ?? Number.NaN),
     count,
   };
 }
@@ -71,7 +75,7 @@ export function getCartHotelSelectedRooms(
       name: hotel.roomName ?? hotel.roomNameAr ?? hotel.roomNameEn ?? "Room",
       nameAr: hotel.roomNameAr,
       nameEn: hotel.roomNameEn,
-      pricePerNight: Math.max(0, hotel.pricePerNight || 0),
+      pricePerNight: Math.max(0, hotel.pricePerNight ?? Number.NaN),
       count: Math.max(1, hotel.roomsCount || 1),
     },
   ];
@@ -99,7 +103,7 @@ export function getCartHotelBaseCost(
 ): number {
   const safeNights = Math.max(1, nights || 1);
   return getCartHotelSelectedRooms(hotel).reduce(
-    (sum, room) => sum + room.pricePerNight * room.count * safeNights,
+    (sum, room) => sum + (room.pricePerNight > 0 ? room.pricePerNight * room.count * safeNights : Number.NaN),
     0,
   );
 }

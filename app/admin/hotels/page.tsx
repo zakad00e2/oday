@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
+import DualPriceInputs from "@/components/admin/DualPriceInputs";
+import { isValidPriceInput, hasRetainedEgpPrices } from "@/lib/visitor-pricing";
 import { formatPrice } from "@/lib/currency";
 import {
   HOTEL_DESTINATION_OPTIONS,
@@ -25,6 +27,7 @@ interface Room {
   nameAr: string;
   nameEn: string;
   price: number;
+  priceEgp?: number | null;
   descriptionAr: string;
   descriptionEn: string;
 }
@@ -33,6 +36,7 @@ interface RoomAddOn {
   nameAr: string;
   nameEn: string;
   price: number;
+  priceEgp?: number | null;
   descriptionAr: string;
   descriptionEn: string;
 }
@@ -57,9 +61,11 @@ interface Hotel {
   youtubeUrl: string;
   stars: number;
   price: number;
+  priceEgp?: number | null;
   filterTag?: "most_booked" | "highest_rated" | "lowest_price" | null;
   discount?: string;
   originalPrice?: number;
+  originalPriceEgp?: number | null;
   amenities: Amenity[];
   rooms: Room[];
   roomAddOns: RoomAddOn[];
@@ -214,7 +220,8 @@ const emptyHotel: Omit<Hotel, "id"> = {
   gallery: [],
   youtubeUrl: "",
   stars: 5,
-  price: 0,
+  price: Number.NaN,
+  priceEgp: null,
   filterTag: null,
   discount: "",
   originalPrice: undefined,
@@ -232,7 +239,8 @@ const emptyAmenityInput: Amenity = {
 const emptyRoomInput: Room = {
   nameAr: "",
   nameEn: "",
-  price: 0,
+  price: Number.NaN,
+  priceEgp: null,
   descriptionAr: "",
   descriptionEn: "",
 };
@@ -240,7 +248,8 @@ const emptyRoomInput: Room = {
 const emptyRoomAddOnInput: RoomAddOn = {
   nameAr: "",
   nameEn: "",
-  price: 0,
+  price: Number.NaN,
+  priceEgp: null,
   descriptionAr: "",
   descriptionEn: "",
 };
@@ -348,6 +357,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
     youtubeUrl: hotel.youtubeVideoUrl,
     stars: hotel.stars,
     price: hotel.initialPrice,
+    priceEgp: hotel.initialPriceEgp,
     filterTag:
       hotel.ratingValue === "MOST_BOOKED"
         ? "most_booked"
@@ -358,6 +368,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
             : null,
     discount: hotel.discountPercentage ? `${hotel.discountPercentage}%` : "",
     originalPrice: hotel.originalPrice ?? undefined,
+    originalPriceEgp: hotel.originalPriceEgp,
     amenities: hotel.facilitiesAr.map((labelAr, index) => ({
       labelAr,
       labelEn: hotel.facilitiesEn[index] ?? "",
@@ -366,6 +377,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
       nameAr: room.nameAr,
       nameEn: room.nameEn,
       price: room.price,
+      priceEgp: room.priceEgp,
       descriptionAr: room.descriptionAr || capacityLabel(room.capacity, "ar"),
       descriptionEn: room.descriptionEn || capacityLabel(room.capacity, "en"),
     })),
@@ -373,6 +385,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
       nameAr: addon.nameAr,
       nameEn: addon.nameEn,
       price: addon.price,
+      priceEgp: addon.priceEgp,
       descriptionAr: addon.descriptionAr,
       descriptionEn: addon.descriptionEn,
     })),
@@ -436,6 +449,8 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
     mainImage,
     gallery,
     initialPrice: Math.max(0, hotel.price),
+    initialPriceEgp: hotel.priceEgp,
+    originalPriceEgp: hotel.originalPriceEgp,
     originalPrice: hotel.originalPrice && hotel.originalPrice > 0 ? hotel.originalPrice : null,
     isDiscounted: Boolean(discountPercentage),
     discountPercentage,
@@ -461,6 +476,7 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
     rooms: hotel.rooms.map((room) => ({
       capacity: extractCapacity(room.descriptionAr, room.descriptionEn),
       price: Math.max(0, room.price),
+      priceEgp: room.priceEgp,
       nameAr: room.nameAr.trim(),
       nameEn: room.nameEn.trim() || room.nameAr.trim(),
       descriptionAr: room.descriptionAr.trim(),
@@ -468,6 +484,7 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
     })),
     addons: hotel.roomAddOns.map((addOn) => ({
       price: Math.max(0, addOn.price),
+      priceEgp: addOn.priceEgp,
       nameAr: addOn.nameAr.trim(),
       nameEn: addOn.nameEn.trim() || addOn.nameAr.trim(),
       descriptionAr: addOn.descriptionAr.trim(),
@@ -587,11 +604,13 @@ export default function AdminHotels() {
   };
 
   const addRoom = () => {
+    if (!isValidPriceInput(roomInput.price) || !isValidPriceInput(roomInput.priceEgp)) { setModalError("أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة."); return; }
     if (!roomInput.nameAr.trim()) return;
     const newRoom = {
       nameAr: roomInput.nameAr.trim(),
       nameEn: roomInput.nameEn.trim(),
       price: roomInput.price,
+      priceEgp: roomInput.priceEgp,
       descriptionAr: roomInput.descriptionAr.trim(),
       descriptionEn: roomInput.descriptionEn.trim(),
     };
@@ -623,11 +642,13 @@ export default function AdminHotels() {
   };
 
   const addRoomAddOn = () => {
+    if (!isValidPriceInput(roomAddOnInput.price) || !isValidPriceInput(roomAddOnInput.priceEgp)) { setModalError("أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة."); return; }
     if (!roomAddOnInput.nameAr.trim()) return;
     const newAddOn = {
       nameAr: roomAddOnInput.nameAr.trim(),
       nameEn: roomAddOnInput.nameEn.trim(),
       price: roomAddOnInput.price,
+      priceEgp: roomAddOnInput.priceEgp,
       descriptionAr: roomAddOnInput.descriptionAr.trim(),
       descriptionEn: roomAddOnInput.descriptionEn.trim(),
     };
@@ -726,6 +747,15 @@ export default function AdminHotels() {
 
   const handleSave = async () => {
     setModalError(null);
+    const entries = [{ price: form.price, priceEgp: form.priceEgp }, ...form.rooms, ...form.roomAddOns];
+    if (entries.some(entry => !isValidPriceInput(entry.price) || !isValidPriceInput(entry.priceEgp))) {
+      setModalError("أدخل سعر الدولار وسعر الجنيه للفندق وجميع الغرف والإضافات. يمكن إدخال صفر للإضافات المجانية.");
+      return;
+    }
+    if (form.discount && (!isValidPriceInput(form.originalPrice) || !isValidPriceInput(form.originalPriceEgp) || form.originalPrice! <= form.price || form.originalPriceEgp! <= form.priceEgp!)) {
+      setModalError("أدخل السعر الأصلي بكل عملة بقيمة أكبر من السعر الحالي.");
+      return;
+    }
 
     if (!form.nameAr.trim()) {
       setModalError("Hotel name is required.");
@@ -758,6 +788,7 @@ export default function AdminHotels() {
         nameAr: room.nameAr.trim(),
         nameEn: room.nameEn.trim(),
         price: room.price,
+      priceEgp: room.priceEgp,
         descriptionAr: room.descriptionAr.trim(),
         descriptionEn: room.descriptionEn.trim(),
       })),
@@ -765,6 +796,7 @@ export default function AdminHotels() {
         nameAr: addOn.nameAr.trim(),
         nameEn: addOn.nameEn.trim(),
         price: addOn.price,
+      priceEgp: addOn.priceEgp,
         descriptionAr: addOn.descriptionAr.trim(),
         descriptionEn: addOn.descriptionEn.trim(),
       })),
@@ -805,6 +837,14 @@ export default function AdminHotels() {
           : [nextHotel, ...current],
       );
 
+      const pricesRetained = nextHotel.priceEgp === payload.priceEgp
+        && (!payload.discount || nextHotel.originalPriceEgp === payload.originalPriceEgp)
+        && hasRetainedEgpPrices(payload.rooms, nextHotel.rooms)
+        && hasRetainedEgpPrices(payload.roomAddOns, nextHotel.roomAddOns);
+      if (!pricesRetained) {
+        setModalError("استقبل الخادم الطلب لكنه لم يؤكد حفظ أسعار الجنيه. يلزم تحديث الباك إند؛ احتفظ بالقيم المدخلة لحين الربط.");
+        return;
+      }
       setNotice({
         tone: "success",
         message: editing ? "Hotel changes saved successfully." : "Hotel added successfully.",
@@ -919,7 +959,7 @@ export default function AdminHotels() {
                     <p className="text-[11px] text-[#9CA3AF] mt-0.5" dir="ltr">{hotel.nameEn || "—"}</p>
                   </div>
                   <span className="text-sm font-semibold text-[#111] shrink-0">
-                    {formatPrice(hotel.price, "ar")}<span className="text-[10px] text-[#9CA3AF] font-normal">/ليلة</span>
+                    {formatPrice(hotel.price, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(hotel.priceEgp ?? Number.NaN, "ar", "EGP")}</span><span className="text-[10px] text-[#9CA3AF] font-normal">/ليلة</span>
                   </span>
                 </div>
                 <p className="text-xs text-[#6B7280] mb-3 line-clamp-2">{hotel.descriptionAr}</p>
@@ -1024,8 +1064,7 @@ export default function AdminHotels() {
                     <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="hotel-name-slug" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي ($/ليلة)</label>
-                    <input type="number" value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="السعر الابتدائي / ليلة" usd={form.price} egp={form.priceEgp} onChange={(price, priceEgp) => setForm({ ...form, price, priceEgp })} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">نظام الوجبات</label>
@@ -1104,7 +1143,7 @@ export default function AdminHotels() {
                     <div className="flex items-center gap-3 mb-2">
                       <button
                         type="button"
-                        onClick={() => setForm({ ...form, discount: form.discount ? "" : "10%", originalPrice: form.discount ? undefined : (form.price ? Math.round(form.price * 1.2) : undefined) })}
+                        onClick={() => setForm({ ...form, discount: form.discount ? "" : "10%", originalPrice: undefined, originalPriceEgp: null })}
                         className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${form.discount ? "bg-[#111]" : "bg-[#E5E7EB]"}`}
                       >
                         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.discount ? "left-5" : "left-0.5"}`} />
@@ -1118,8 +1157,7 @@ export default function AdminHotels() {
                           <input value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} placeholder="20%" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-[#9CA3AF] mb-1">السعر الأصلي (قبل الخصم $)</label>
-                          <input type="number" value={form.originalPrice || ""} onChange={(e) => setForm({ ...form, originalPrice: e.target.value ? Number(e.target.value) : undefined })} placeholder="150" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                          <DualPriceInputs label="السعر الأصلي قبل الخصم" usd={form.originalPrice ?? Number.NaN} egp={form.originalPriceEgp} onChange={(originalPrice, originalPriceEgp) => setForm({ ...form, originalPrice, originalPriceEgp })} />
                         </div>
                       </div>
                     )}
@@ -1241,7 +1279,7 @@ export default function AdminHotels() {
                     <input value={roomInput.descriptionEn} onChange={(e) => setRoomInput({ ...roomInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomInput.price || ""} onChange={(e) => setRoomInput({ ...roomInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="سعر الغرفة / ليلة" usd={roomInput.price} egp={roomInput.priceEgp} onChange={(price, priceEgp) => setRoomInput({ ...roomInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoom} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1262,7 +1300,7 @@ export default function AdminHotels() {
                           <p className="font-medium text-[#111]">{room.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {room.nameEn || "—"}</span></p>
                         </div>
                         <div className="flex items-center gap-2 mr-3">
-                          <span className="font-semibold text-[#111] text-xs">{formatPrice(room.price, "ar")}</span>
+                          <span className="font-semibold text-[#111] text-xs">{formatPrice(room.price, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(room.priceEgp ?? Number.NaN, "ar", "EGP")}</span></span>
                           <button type="button" onClick={() => startEditRoom(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>
@@ -1292,7 +1330,7 @@ export default function AdminHotels() {
                     <input value={roomAddOnInput.descriptionEn} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, descriptionEn: e.target.value })} placeholder="Add-on description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={roomAddOnInput.price || ""} onChange={(e) => setRoomAddOnInput({ ...roomAddOnInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="سعر إضافة الغرفة / ليلة" usd={roomAddOnInput.price} egp={roomAddOnInput.priceEgp} onChange={(price, priceEgp) => setRoomAddOnInput({ ...roomAddOnInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addRoomAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1313,7 +1351,7 @@ export default function AdminHotels() {
                           <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
                         </div>
                         <div className="flex items-center gap-2 mr-3">
-                          <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}</span>
+                          <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(addOn.priceEgp ?? Number.NaN, "ar", "EGP")}</span></span>
                           <button type="button" onClick={() => startEditRoomAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>

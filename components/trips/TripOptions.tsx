@@ -1,7 +1,7 @@
 "use client";
 
 import { TripOption } from "@/lib/trips-types";
-import { formatPrice } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import ScrollReveal from "../ScrollReveal";
 
 interface TripOptionsProps {
@@ -19,6 +19,7 @@ export default function TripOptions({
     quantities,
     onUpdateQuantity,
 }: TripOptionsProps) {
+    const { formatPrice, resolvePrice } = useVisitorPricing();
     return (
         <section className="py-10 md:py-14 border-b border-[#e2e8f0]">
             <ScrollReveal>
@@ -34,6 +35,7 @@ export default function TripOptions({
 
             <div className="flex flex-col gap-4">
                 {options.map((option, i) => {
+                    const activePrice = resolvePrice(option.price, option.priceEgp);
                     const isSelected = selectedOptionId === option.id;
                     const qty = quantities[option.id] || 1;
 
@@ -64,9 +66,9 @@ export default function TripOptions({
                                     </div>
 
                                     <div className="text-left shrink-0">
-                                        {option.price > 0 ? (
+                                        {activePrice !== 0 ? (
                                             <div className="text-xl font-black text-[#0f172a]">
-                                                {formatPrice(option.price, "ar")}
+                                                {formatPrice(activePrice, "ar")}
                                             </div>
                                         ) : (
                                             <span className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-full px-3 py-1">
@@ -97,8 +99,8 @@ export default function TripOptions({
                                                 +
                                             </button>
                                         </div>
-                                        {option.price > 0 && qty > 1 && (
-                                            <span className="text-sm font-bold text-[#0EA5E9]">= {formatPrice(option.price * qty, "ar")}</span>
+                                        {activePrice !== 0 && qty > 1 && (
+                                            <span className="text-sm font-bold text-[#0EA5E9]">= {formatPrice(activePrice * qty, "ar")}</span>
                                         )}
                                     </div>
                                 )}

@@ -1,7 +1,7 @@
 "use client";
 
 import FlexibleImage from "@/components/FlexibleImage";
-import { formatPrice } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import ScrollReveal from "../ScrollReveal";
 
 export default function TripDetailHero({
@@ -21,6 +21,7 @@ export default function TripDetailHero({
     onBookNow: () => void;
     isAr: boolean;
 }) {
+    const { formatPrice } = useVisitorPricing();
     return (
         <section className="w-full px-3 md:px-5 pt-20 pb-10">
             <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col justify-end mx-auto max-w-[1600px] shadow-2xl">
@@ -91,7 +92,7 @@ export default function TripDetailHero({
                                 </svg>
                                 {duration}
                             </div>
-                            {startingPrice > 0 && (
+                            {startingPrice !== 0 && (
                                 <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
                                     {isAr ? "يبدأ من" : "From"} <span className="text-[#60A5FA] text-lg font-bold">{formatPrice(startingPrice, isAr ? "ar" : "en")}</span>
                                 </div>

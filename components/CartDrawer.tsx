@@ -14,7 +14,7 @@ import {
   calculateTripLineCost,
   calculateTripQuantity,
 } from "@/lib/cart-pricing";
-import { formatPrice, formatPriceWithSign } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 /* ── Counter sub-component ── */
@@ -32,6 +32,7 @@ function Counter({ value, onDec, onInc }: { value: number; onDec: () => void; on
 void Counter;
 
 export default function CartDrawer() {
+  const { formatPrice, formatPriceWithSign, currency, inquiryPricing } = useVisitorPricing();
   const {
     cart,
     isOpen,
@@ -72,11 +73,10 @@ export default function CartDrawer() {
 
     wasOpenRef.current = true;
     window.tatheer?.("begin_checkout", {
-      value: totalPrice,
-      currency: "USD",
+      ...(Number.isFinite(totalPrice) && currency ? { value: totalPrice, currency } : {}),
       items_count: totalItems,
     });
-  }, [isOpen, totalItems, totalPrice]);
+  }, [isOpen, totalItems, totalPrice, currency]);
 
   const guestsTotal = cart.guests.adults + cart.guests.children;
   const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];
@@ -95,7 +95,7 @@ export default function CartDrawer() {
     const wa = d.whatsapp;
     const hotelCheckInLabel = isAr ? "تاريخ الوصول:" : "Check-in date:";
     const hotelCheckOutLabel = isAr ? "تاريخ المغادرة:" : "Check-out date:";
-    let msg = `*${wa.header}*\n\n`;
+    let msg = `*${wa.header}*\n\n${inquiryPricing(lang)}\n`;
     if (cart.hotel) {
       msg += `*${wa.hotel}* ${getHotelName(cart.hotel)} — ${getHotelCity(cart.hotel)}\n`;
       if (cart.hotel.checkIn) msg += `${hotelCheckInLabel} ${cart.hotel.checkIn}\n`;
@@ -120,8 +120,8 @@ export default function CartDrawer() {
         if (t.selectedOptions && t.selectedOptions.length > 0) {
           const optTotal = t.selectedOptions.reduce((s, o) => s + o.price * (o.persons ?? 1), 0);
           msg += ` — ${t.selectedOptions.map((o) => getTripOptionName(o)).join(isAr ? "، " : ", ")}`;
-          if (optTotal > 0) msg += ` (${formatPrice(optTotal, lang)})`;
-        } else if (t.startingPrice > 0) {
+          if (optTotal !== 0) msg += ` (${formatPrice(optTotal, lang)})`;
+        } else if (t.startingPrice !== 0) {
           msg += ` — ${formatPrice(t.startingPrice * guestsTotal, lang)}`;
         }
         if (t.travelDate) {
@@ -134,7 +134,7 @@ export default function CartDrawer() {
             const addOnTotal = getTripAddOnTotal(t, a);
             msg += `    + ${getTripAddOnName(a)}`;
             if (addOnQuantity > 1) msg += ` x${addOnQuantity}`;
-            if (a.price > 0) msg += ` (${formatPriceWithSign(addOnTotal, lang)})`;
+            if (a.price !== 0) msg += ` (${formatPriceWithSign(addOnTotal, lang)})`;
             msg += "\n";
           });
         }
@@ -142,7 +142,7 @@ export default function CartDrawer() {
       msg += "\n";
     }
     if (cart.travelDate) msg += `${wa.travelDate} ${cart.travelDate}\n`;
-    if (totalPrice > 0) msg += `\n*${wa.estimatedTotal} ${formatPrice(totalPrice, lang)}*`;
+    if (totalItems > 0) msg += `\n*${wa.estimatedTotal} ${formatPrice(totalPrice, lang)}*`;
     return msg;
   };
 
@@ -304,7 +304,7 @@ export default function CartDrawer() {
                               </span>
                             </div>
                             <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
-                              {addOn.price > 0
+                              {addOn.price !== 0
                                 ? formatPriceWithSign(addOnTotal, lang)
                                 : d.free}
                             </span>
@@ -436,7 +436,7 @@ export default function CartDrawer() {
                                   )}
                                 </div>
                                 <span className="text-xs font-bold text-[#0F172A] shrink-0 ms-2">
-                                  {o.price > 0 ? formatPrice(o.price * (o.persons ?? 1), lang) : "—"}
+                                  {o.price !== 0 ? formatPrice(o.price * (o.persons ?? 1), lang) : "—"}
                                 </span>
                               </div>
                             ))}
@@ -458,7 +458,7 @@ export default function CartDrawer() {
                                   <span className="text-[10px] text-[#B45309] shrink-0">&times; {addOnQuantity}</span>
                                 </div>
                                 <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
-                                  {a.price > 0 ? formatPriceWithSign(addOnTotal, lang) : d.free}
+                                  {a.price !== 0 ? formatPriceWithSign(addOnTotal, lang) : d.free}
                                 </span>
                                 </div>
                               );
@@ -511,7 +511,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#94A3B8]">{d.estimatedTotal}</span>
               <span className="text-2xl font-black text-[#0F172A] tracking-tight">
-                {totalPrice > 0 ? formatPrice(totalPrice, lang) : d.onRequest}
+                {formatPrice(totalPrice > 0 ? totalPrice : Number.NaN, lang)}
               </span>
             </div>
 

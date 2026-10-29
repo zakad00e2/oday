@@ -8,6 +8,7 @@ export interface TripOption {
     nameEn: string;
     descriptionAr: string;
     descriptionEn: string;
+    priceEgp?: number | null;
     price: number;           // 0 = placeholder / TBD
     maxQuantity?: number;    // if user can select quantity (e.g. buggy count)
     capacityLabelAr?: string;  // e.g. "شخص واحد"
@@ -18,6 +19,7 @@ export interface TripAddOn {
     id: string;
     nameAr: string;
     nameEn: string;
+    priceEgp?: number | null;
     price: number;           // 0 = placeholder / TBD
     descriptionAr: string;
     descriptionEn: string;
@@ -53,6 +55,7 @@ export interface TripDetail {
     essentialsEn: string[];
     options: TripOption[];
     addOns: TripAddOn[];
+    startingPriceEgp?: number | null;
     startingPrice: number;   // 0 = placeholder / TBD
     bookingFields: string[]; // fields to show in the booking form
 }

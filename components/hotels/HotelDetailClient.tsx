@@ -18,7 +18,8 @@ import {
     readHotelDetailCache,
     writeHotelDetailCache,
 } from "@/lib/hotel-client-cache";
-import { formatPrice, formatPriceWithSign } from "@/lib/currency";
+import { pricePair, samePricePair, type PricePair } from "@/lib/visitor-pricing";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
 
@@ -28,6 +29,7 @@ interface LocalizedHotelRoom {
     name: string;
     nameAr: string;
     nameEn: string;
+    prices: PricePair;
     price: number;
     description: string;
 }
@@ -40,6 +42,7 @@ interface LocalizedHotelAddon {
     description: string;
     descriptionAr: string;
     descriptionEn: string;
+    prices: PricePair;
     price: number;
 }
 
@@ -133,7 +136,7 @@ function toEmbedUrl(url: string) {
     return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : "";
 }
 
-function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): LocalizedHotelView {
+function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en", resolvePrice: (usd: unknown, egp: unknown) => number): LocalizedHotelView {
     const isAr = language === "ar";
     const mainImages = hotel.mainImages.length > 0 ? hotel.mainImages : hotel.mainImage ? [hotel.mainImage] : [];
     const gallery = hotel.gallery.length > 0 ? hotel.gallery : mainImages;
@@ -162,13 +165,14 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): Loc
             name: isAr ? room.nameAr : room.nameEn,
             nameAr: room.nameAr,
             nameEn: room.nameEn,
-            price: room.price,
+            prices: pricePair(room.price, room.priceEgp),
+            price: resolvePrice(room.price, room.priceEgp),
             description:
                 (isAr ? room.descriptionAr : room.descriptionEn) ||
                 (isAr ? room.descriptionEn : room.descriptionAr) ||
                 (isAr ? `السعة: ${room.capacity}` : `Capacity: ${room.capacity}`),
             }))
-            .sort((left, right) => left.price - right.price || left.name.localeCompare(right.name)),
+            .sort((left, right) => (Number.isFinite(left.price) ? left.price : Infinity) - (Number.isFinite(right.price) ? right.price : Infinity) || left.name.localeCompare(right.name)),
         addons: hotel.addons
             .map((addon) => ({
                 id: addon.id,
@@ -178,9 +182,10 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en"): Loc
                 description: isAr ? addon.descriptionAr : addon.descriptionEn,
                 descriptionAr: addon.descriptionAr,
                 descriptionEn: addon.descriptionEn,
-                price: addon.price,
+                prices: pricePair(addon.price, addon.priceEgp),
+            price: resolvePrice(addon.price, addon.priceEgp),
             }))
-            .sort((left, right) => left.price - right.price || left.name.localeCompare(right.name)),
+            .sort((left, right) => (Number.isFinite(left.price) ? left.price : Infinity) - (Number.isFinite(right.price) ? right.price : Infinity) || left.name.localeCompare(right.name)),
     };
 }
 
@@ -240,6 +245,7 @@ function buildSelectedRoomsFromCounts(
             name: room.name,
             nameAr: room.nameAr,
             nameEn: room.nameEn,
+            prices: room.prices,
             pricePerNight: room.price,
             count,
         }];
@@ -578,6 +584,7 @@ export default function HotelDetailClient() {
     const { lang } = useI18n();
     const isAr = lang === "ar";
     const { cart, openCart, setHotel, setNights } = useCart();
+    const { formatPrice, formatPriceWithSign, resolvePrice, currency } = useVisitorPricing();
     const [hotelData, setHotelData] = useState<HotelRecord | null>(() => readHotelDetailCache(slug)?.hotel ?? null);
     const [isLoading, setIsLoading] = useState(() => readHotelDetailCache(slug) === null);
     const [error, setError] = useState<string | null>(null);
@@ -661,8 +668,8 @@ export default function HotelDetailClient() {
     }, [loadHotel, slug]);
 
     const hotel = useMemo(
-        () => (hotelData ? buildLocalizedHotelView(hotelData, lang) : null),
-        [hotelData, lang],
+        () => (hotelData ? buildLocalizedHotelView(hotelData, lang, resolvePrice) : null),
+        [hotelData, lang, resolvePrice],
     );
     const viewedHotelIdRef = useRef<string | null>(null);
 
@@ -691,31 +698,32 @@ export default function HotelDetailClient() {
     const [checkIn, setCheckIn] = useState(today);
     const [checkOut, setCheckOut] = useState(tomorrow);
 
+    const selectionSnapshot = useRef({ hotel, cartHotel: cart.hotel });
+    selectionSnapshot.current = { hotel, cartHotel: cart.hotel };
     useEffect(() => {
-        if (!hotel) {
-            return;
-        }
+        const { hotel, cartHotel } = selectionSnapshot.current;
+        if (!hotel) return;
 
-        if (isInCart && cart.hotel) {
-            const nextRoomCounts = resolveRoomCountsFromCart(hotel, cart.hotel);
+        if (isInCart && cartHotel) {
+            const nextRoomCounts = resolveRoomCountsFromCart(hotel, cartHotel);
             setRoomCounts(
                 Object.keys(nextRoomCounts).length > 0
                     ? nextRoomCounts
                     : getDefaultRoomCounts(hotel),
             );
             setSelectedAddOnId(cartAddonId);
-            if (cart.hotel.checkIn) {
-                setCheckIn(cart.hotel.checkIn);
+            if (cartHotel.checkIn) {
+                setCheckIn(cartHotel.checkIn);
             }
-            if (cart.hotel.checkOut) {
-                setCheckOut(cart.hotel.checkOut);
+            if (cartHotel.checkOut) {
+                setCheckOut(cartHotel.checkOut);
             }
             return;
         }
 
         setRoomCounts(getDefaultRoomCounts(hotel));
         setSelectedAddOnId(null);
-    }, [hotel, isInCart, cart.hotel, cartAddonId]);
+    }, [hotel?.id, isInCart, cart.hotel?.slug, cart.hotel?.checkIn, cart.hotel?.checkOut, cartAddonId]);
 
     useEffect(() => {
         if (checkOut <= checkIn) {
@@ -741,7 +749,7 @@ export default function HotelDetailClient() {
     );
     const selectedRoomCount = selectedRooms.reduce((sum, room) => sum + room.count, 0);
     const selectedRoomBaseCost = selectedRooms.reduce(
-        (sum, room) => sum + room.pricePerNight * room.count * nights,
+        (sum, room) => sum + (room.pricePerNight > 0 ? room.pricePerNight * room.count * nights : Number.NaN),
         0,
     );
     const selectedAddon = hotel?.addons.find((addon) => addon.id === selectedAddOnId) ?? null;
@@ -750,6 +758,7 @@ export default function HotelDetailClient() {
             name: selectedAddon.name,
             nameAr: selectedAddon.nameAr,
             nameEn: selectedAddon.nameEn,
+            prices: selectedAddon.prices,
             price: selectedAddon.price,
         }]
         : [];
@@ -761,6 +770,8 @@ export default function HotelDetailClient() {
     const hasChanges = Boolean(
         isInCart && hotel && (
             !areRoomSelectionsEqual(selectedRooms, cartSelectedRooms) ||
+            selectedRooms.some(room => !samePricePair(room.prices, cart.hotel?.selectedRooms?.find(saved => saved.id === room.id)?.prices)) ||
+            (selectedAddon !== null && !samePricePair(selectedAddon.prices, cart.hotel?.selectedAddOns?.[0]?.prices)) ||
             nights !== cart.nights ||
             checkIn !== (cart.hotel?.checkIn ?? "") ||
             checkOut !== (cart.hotel?.checkOut ?? "") ||
@@ -922,7 +933,7 @@ export default function HotelDetailClient() {
                                                             </div>
                                                         </div>
                                                         <span className={`shrink-0 font-semibold ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
-                                                            {formatPrice(hotelRoom.price, lang)}
+                                                            {formatPrice(hotelRoom.price > 0 ? hotelRoom.price : Number.NaN, lang)}
                                                         </span>
                                                     </div>
 
@@ -1119,8 +1130,8 @@ export default function HotelDetailClient() {
                                     const primaryRoom = selectedRooms[0];
 
                                     window.tatheer?.("add_to_cart", {
-                                        value: totalPrice,
-                                        currency: "USD",
+                                        ...(Number.isFinite(totalPrice) ? { value: totalPrice } : {}),
+                                        currency: currency ?? undefined,
                                         content_type: "hotel",
                                         content_id: hotel.id,
                                     });
@@ -1135,6 +1146,7 @@ export default function HotelDetailClient() {
                                         cityAr: hotel.cityAr,
                                         cityEn: hotel.cityEn,
                                         image: hotel.image,
+                                        prices: primaryRoom.prices,
                                         pricePerNight: primaryRoom.pricePerNight,
                                         stars: hotel.stars,
                                         roomName: primaryRoom.name,

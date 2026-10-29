@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload from "@/components/admin/FileUpload";
+import DualPriceInputs from "@/components/admin/DualPriceInputs";
+import { isValidPriceInput, hasRetainedEgpPrices } from "@/lib/visitor-pricing";
 import { formatPrice } from "@/lib/currency";
 import {
   DEFAULT_TRIP_DESTINATION,
@@ -30,6 +32,7 @@ interface OptionInput {
   descriptionAr: string;
   descriptionEn: string;
   price: number;
+  priceEgp?: number | null;
 }
 
 interface AddOnInput {
@@ -38,6 +41,7 @@ interface AddOnInput {
   descriptionAr: string;
   descriptionEn: string;
   price: number;
+  priceEgp?: number | null;
 }
 
 type GalleryUploadItem = {
@@ -58,6 +62,7 @@ interface TripForm {
   galleryImages: string[];
   youtubeUrl: string;
   startingPrice: number;
+  startingPriceEgp?: number | null;
   startTime: string;
   endTime: string;
   durationAr: string;
@@ -80,7 +85,8 @@ const emptyForm: TripForm = {
   heroImage: "",
   galleryImages: [],
   youtubeUrl: "",
-  startingPrice: 0,
+  startingPrice: Number.NaN,
+  startingPriceEgp: null,
   startTime: "",
   endTime: "",
   durationAr: "",
@@ -96,7 +102,8 @@ const emptyOptionInput: OptionInput = {
   nameEn: "",
   descriptionAr: "",
   descriptionEn: "",
-  price: 0,
+  price: Number.NaN,
+  priceEgp: null,
 };
 
 const emptyAddOnInput: AddOnInput = {
@@ -104,14 +111,23 @@ const emptyAddOnInput: AddOnInput = {
   nameEn: "",
   descriptionAr: "",
   descriptionEn: "",
-  price: 0,
+  price: Number.NaN,
+  priceEgp: null,
 };
+
+function assertTripEgpPrices(form: TripForm, saved: TripRecord) {
+  const retained = saved.startingPriceEgp === form.startingPriceEgp
+    && hasRetainedEgpPrices(form.options, saved.options)
+    && hasRetainedEgpPrices(form.addOns, saved.addOns);
+  if (!retained) throw new Error("استقبل الخادم الطلب لكنه لم يؤكد حفظ أسعار الجنيه. يلزم تحديث الباك إند؛ القيم المدخلة ما زالت في النموذج.");
+}
 
 function normalizeOptionForPersistence(option: OptionInput) {
   const nameAr = option.nameAr.trim();
   const descriptionAr = option.descriptionAr.trim();
 
   return {
+    priceEgp: option.priceEgp,
     price: Number.isFinite(option.price) ? Math.max(0, option.price) : 0,
     nameAr,
     nameEn: option.nameEn.trim() || nameAr,
@@ -125,6 +141,7 @@ function normalizeAddOnForPersistence(addOn: AddOnInput) {
   const descriptionAr = addOn.descriptionAr.trim();
 
   return {
+    priceEgp: addOn.priceEgp,
     price: Number.isFinite(addOn.price) ? Math.max(0, addOn.price) : 0,
     nameAr,
     nameEn: addOn.nameEn.trim() || nameAr,
@@ -141,6 +158,7 @@ function createTripMutationInput(form: TripForm, slug: string): TripMutationInpu
   return {
     destination: form.destination,
     slug,
+    priceEgp: form.startingPriceEgp,
     price: Number.isFinite(form.startingPrice) ? Math.max(0, form.startingPrice) : 0,
     startTime: normalizedStartTime,
     endTime: normalizedEndTime,
@@ -178,6 +196,7 @@ function didTripCollectionsChange(originalTrip: TripRecord, form: TripForm) {
       descriptionAr: option.descriptionAr,
       descriptionEn: option.descriptionEn,
       price: option.price,
+      priceEgp: option.priceEgp,
     }),
   );
   const nextOptions = form.options.map(normalizeOptionForPersistence);
@@ -193,6 +212,7 @@ function didTripCollectionsChange(originalTrip: TripRecord, form: TripForm) {
       descriptionAr: addOn.descriptionAr,
       descriptionEn: addOn.descriptionEn,
       price: addOn.price,
+      priceEgp: addOn.priceEgp,
     }),
   );
   const nextAddOns = form.addOns.map(normalizeAddOnForPersistence);
@@ -385,6 +405,7 @@ function tripRecordToForm(trip: TripRecord): TripForm {
     galleryImages: [...trip.galleryImages],
     youtubeUrl: trip.youtubeUrl,
     startingPrice: trip.startingPrice,
+    startingPriceEgp: trip.startingPriceEgp,
     startTime: normalizeTimeInput(trip.schedule.startTime),
     endTime: normalizeTimeInput(trip.schedule.endTime),
     durationAr: trip.schedule.durationAr,
@@ -397,6 +418,7 @@ function tripRecordToForm(trip: TripRecord): TripForm {
       descriptionAr: o.descriptionAr,
       descriptionEn: o.descriptionEn,
       price: o.price,
+      priceEgp: o.priceEgp,
     })),
     addOns: trip.addOns.map((a) => ({
       nameAr: a.nameAr,
@@ -404,6 +426,7 @@ function tripRecordToForm(trip: TripRecord): TripForm {
       descriptionAr: a.descriptionAr,
       descriptionEn: a.descriptionEn,
       price: a.price,
+      priceEgp: a.priceEgp,
     })),
   };
 }
@@ -578,6 +601,7 @@ export default function AdminTrips() {
   };
 
   const addOption = () => {
+    if (!isValidPriceInput(optionInput.price) || !isValidPriceInput(optionInput.priceEgp)) { setNotice({ type: "error", message: "أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة." }); return; }
     if (!optionInput.nameAr.trim()) return;
     const newOption = {
       nameAr: optionInput.nameAr.trim(),
@@ -585,6 +609,7 @@ export default function AdminTrips() {
       descriptionAr: optionInput.descriptionAr.trim(),
       descriptionEn: optionInput.descriptionEn.trim() || optionInput.descriptionAr.trim(),
       price: optionInput.price,
+      priceEgp: optionInput.priceEgp,
     };
 
     if (editingOptionIndex !== null) {
@@ -614,6 +639,7 @@ export default function AdminTrips() {
   };
 
   const addAddOn = () => {
+    if (!isValidPriceInput(addOnInput.price) || !isValidPriceInput(addOnInput.priceEgp)) { setNotice({ type: "error", message: "أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة." }); return; }
     if (!addOnInput.nameAr.trim()) return;
     const newAddOn = {
       nameAr: addOnInput.nameAr.trim(),
@@ -621,6 +647,7 @@ export default function AdminTrips() {
       descriptionAr: addOnInput.descriptionAr.trim(),
       descriptionEn: addOnInput.descriptionEn.trim() || addOnInput.descriptionAr.trim(),
       price: addOnInput.price,
+      priceEgp: addOnInput.priceEgp,
     };
 
     if (editingAddOnIndex !== null) {
@@ -695,6 +722,11 @@ export default function AdminTrips() {
   };
 
   const handleSave = async () => {
+    const entries = [{ price: form.startingPrice, priceEgp: form.startingPriceEgp }, ...form.options, ...form.addOns];
+    if (entries.some(entry => !isValidPriceInput(entry.price) || !isValidPriceInput(entry.priceEgp))) {
+      setNotice({ type: "error", message: "أدخل سعر الدولار وسعر الجنيه للرحلة وجميع الخيارات والإضافات." });
+      return;
+    }
     if (!form.titleAr.trim()) return;
 
     const normalizedStartTime = normalizeTimeInput(form.startTime);
@@ -789,6 +821,7 @@ export default function AdminTrips() {
 
             const replacementTrip = await createTrip(mutationInput, replacementMedia);
             replacementTripId = replacementTrip.id;
+            assertTripEgpPrices(form, replacementTrip);
             await deleteTrip(editing.id);
           } catch (error) {
             if (replacementTripId) {
@@ -806,15 +839,17 @@ export default function AdminTrips() {
             throw error;
           }
         } else {
-          await updateTrip(
+          const savedTrip = await updateTrip(
             editing.id,
             stripCollectionsFromMutationInput(mutationInput),
             media,
           );
+          assertTripEgpPrices(form, savedTrip);
         }
         setNotice({ type: "success", message: "تم تحديث الرحلة بنجاح" });
       } else {
-        await createTrip(mutationInput, media);
+        const savedTrip = await createTrip(mutationInput, media);
+        assertTripEgpPrices(form, savedTrip);
         setNotice({ type: "success", message: "تمت إضافة الرحلة بنجاح" });
       }
 
@@ -1034,7 +1069,7 @@ export default function AdminTrips() {
                       <p>{trip.schedule.durationAr || "—"}</p>
                       <p className="text-[11px] text-[#9CA3AF] mt-1" dir="ltr">{trip.schedule.startTime || "—"} - {trip.schedule.endTime || "—"}</p>
                     </td>
-                    <td className="px-5 py-3 font-semibold text-[#111]">{formatPrice(trip.startingPrice, "ar")}</td>
+                    <td className="px-5 py-3 font-semibold text-[#111]">{formatPrice(trip.startingPrice, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(trip.startingPriceEgp ?? Number.NaN, "ar", "EGP")}</span></td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap gap-2">
                         <span className="bg-[#EFF6FF] text-[#2563EB] text-[10px] font-medium px-2 py-0.5 rounded-full">{trip.galleryImages.length} صور</span>
@@ -1130,8 +1165,7 @@ export default function AdminTrips() {
                     <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="trip-name-slug" dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5">السعر الابتدائي ($)</label>
-                    <input type="number" value={form.startingPrice || ""} onChange={(e) => setForm({ ...form, startingPrice: Number(e.target.value) })} dir="ltr" className="w-full border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="السعر الابتدائي للرحلة" usd={form.startingPrice} egp={form.startingPriceEgp} onChange={(startingPrice, startingPriceEgp) => setForm({ ...form, startingPrice, startingPriceEgp })} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1.5">الجملة التعريفية بالعربي</label>
@@ -1267,7 +1301,7 @@ export default function AdminTrips() {
                     <textarea value={optionInput.descriptionEn} onChange={(e) => setOptionInput({ ...optionInput, descriptionEn: e.target.value })} placeholder="Option description in English" dir="ltr" rows={3} className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors resize-none" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={optionInput.price || ""} onChange={(e) => setOptionInput({ ...optionInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="سعر خيار الرحلة" usd={optionInput.price} egp={optionInput.priceEgp} onChange={(price, priceEgp) => setOptionInput({ ...optionInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addOption} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1289,7 +1323,7 @@ export default function AdminTrips() {
                             <p className="font-medium text-[#111]">{option.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {option.nameEn || "—"}</span></p>
                           </div>
                           <div className="flex items-center gap-2 mr-3">
-                            <span className="font-semibold text-[#111] text-xs">{formatPrice(option.price, "ar")}</span>
+                            <span className="font-semibold text-[#111] text-xs">{formatPrice(option.price, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(option.priceEgp ?? Number.NaN, "ar", "EGP")}</span></span>
                             <button type="button" onClick={() => startEditOption(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                             </button>
@@ -1321,7 +1355,7 @@ export default function AdminTrips() {
                     <input value={addOnInput.descriptionEn} onChange={(e) => setAddOnInput({ ...addOnInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    <input type="number" value={addOnInput.price || ""} onChange={(e) => setAddOnInput({ ...addOnInput, price: Number(e.target.value) })} placeholder="السعر ($)" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
+                    <DualPriceInputs label="سعر إضافة الرحلة" usd={addOnInput.price} egp={addOnInput.priceEgp} onChange={(price, priceEgp) => setAddOnInput({ ...addOnInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={addAddOn} className="flex-1 md:flex-none px-4 py-2.5 bg-[#111] text-white rounded-xl text-sm font-medium hover:bg-[#333] transition-colors">
@@ -1343,7 +1377,7 @@ export default function AdminTrips() {
                             <p className="font-medium text-[#111]">{addOn.nameAr} <span className="text-[#9CA3AF]" dir="ltr">/ {addOn.nameEn || "—"}</span></p>
                           </div>
                           <div className="flex items-center gap-2 mr-3">
-                            <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}</span>
+                            <span className="font-semibold text-[#111] text-xs">{formatPrice(addOn.price, "ar")}<span className="block text-xs text-[#64748b]">{formatPrice(addOn.priceEgp ?? Number.NaN, "ar", "EGP")}</span></span>
                             <button type="button" onClick={() => startEditAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                             </button>

@@ -16,11 +16,12 @@ import {
   calculateTripLineCost,
   calculateTripQuantity,
 } from "@/lib/cart-pricing";
-import { formatPrice, formatPriceWithSign } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { openExternalUrl } from "@/lib/external-links";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 export default function CheckoutPageClient() {
+  const { formatPrice, formatPriceWithSign, currency, inquiryPricing } = useVisitorPricing();
   const { cart, totalPrice, totalItems, clearCart, setGuests } = useCart();
   const { lang } = useI18n();
   const isAr = lang === "ar";
@@ -180,7 +181,7 @@ export default function CheckoutPageClient() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    let msg = `*${t.whatsapp.header}*\n\n`;
+    let msg = `*${t.whatsapp.header}*\n\n${inquiryPricing(lang)}\n`;
     msg += `${t.whatsapp.name}: ${name}\n`;
     msg += `${t.whatsapp.phone}: ${phone}\n`;
     if (email.trim()) msg += `${t.whatsapp.email}: ${email}\n`;
@@ -198,7 +199,7 @@ export default function CheckoutPageClient() {
         msg += `${t.whatsapp.room}:\n`;
         hotelSelectedRooms.forEach((room) => {
           msg += `- ${getCartHotelSelectedRoomName(room, lang)} x${room.count}`;
-          if (room.pricePerNight > 0) {
+          if (room.pricePerNight !== 0) {
             msg += ` (${formatPrice(room.pricePerNight, lang)})`;
           }
           msg += "\n";
@@ -210,7 +211,7 @@ export default function CheckoutPageClient() {
           .map((addOn) => {
             const addOnTotal = addOn.price * cart.nights * hotelRoomCount;
             return `${getHotelAddOnName(addOn)}${
-              addOn.price > 0 ? ` (${formatPriceWithSign(addOnTotal, lang)})` : ""
+              addOn.price !== 0 ? ` (${formatPriceWithSign(addOnTotal, lang)})` : ""
             }`;
           })
           .join(isAr ? "، " : ", ")}\n`;
@@ -238,7 +239,7 @@ export default function CheckoutPageClient() {
             const optionTotal = option.price * optionPersons;
             msg += `  • ${getTripOptionName(option)}`;
             if (optionPersons > 1) msg += ` x${optionPersons}`;
-            if (option.price > 0) msg += ` (${formatPrice(optionTotal, lang)})`;
+            if (option.price !== 0) msg += ` (${formatPrice(optionTotal, lang)})`;
             msg += "\n";
           });
         }
@@ -249,20 +250,20 @@ export default function CheckoutPageClient() {
             const addOnTotal = addOn.price * addOnPersons;
             msg += `  + ${getTripAddOnName(addOn)}`;
             if (addOnPersons > 1) msg += ` x${addOnPersons}`;
-            if (addOn.price > 0) msg += ` (${formatPriceWithSign(addOnTotal, lang)})`;
+            if (addOn.price !== 0) msg += ` (${formatPriceWithSign(addOnTotal, lang)})`;
             msg += "\n";
           });
         }
 
         const tripCost = calculateTripLineCost(trip, guestsTotal);
-        if (tripCost > 0) {
+        if (tripCost !== 0) {
           msg += `  ${t.whatsapp.cost}: ${formatPrice(tripCost, lang)}\n`;
         }
       });
       msg += "\n";
     }
 
-    if (totalPrice > 0) {
+    if (totalItems > 0) {
       msg += `*${t.whatsapp.estimatedTotal}: ${formatPrice(totalPrice, lang)}*\n`;
     }
     if (notes.trim()) msg += `\n${t.whatsapp.notes}: ${notes}\n`;
@@ -271,8 +272,7 @@ export default function CheckoutPageClient() {
     const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
     setIsSubmitting(true);
     window.tatheer?.("purchase", {
-      value: totalPrice,
-      currency: "USD",
+      ...(Number.isFinite(totalPrice) && currency ? { value: totalPrice, currency } : {}),
       ...(cart.hotel
         ? {
             content_type: "hotel",
@@ -622,7 +622,7 @@ export default function CheckoutPageClient() {
                                 )}
                               </div>
                               <span className="text-xs font-bold text-[#0F172A] shrink-0">
-                                {option.price > 0 ? formatPrice(optionTotal, lang) : "—"}
+                                {option.price !== 0 ? formatPrice(optionTotal, lang) : "—"}
                               </span>
                             </div>
                           );
@@ -647,7 +647,7 @@ export default function CheckoutPageClient() {
                                 )}
                               </div>
                               <span className="text-xs font-bold text-[#92400E] shrink-0">
-                                {addOn.price > 0 ? formatPriceWithSign(addOnTotal, lang) : t.summary.free}
+                                {addOn.price !== 0 ? formatPriceWithSign(addOnTotal, lang) : t.summary.free}
                               </span>
                             </div>
                           );
@@ -658,7 +658,7 @@ export default function CheckoutPageClient() {
                     <div className="border-t border-[#F1F5F9] px-4 py-3 flex items-center justify-between">
                       <span className="text-xs text-[#64748b]">{t.summary.estimatedTotal}</span>
                       <span className="text-sm font-semibold text-[#0f172a]">
-                        {tripCost > 0 ? formatPrice(tripCost, lang) : "—"}
+                        {formatPrice(tripCost > 0 ? tripCost : Number.NaN, lang)}
                       </span>
                     </div>
                   </div>
@@ -683,7 +683,7 @@ export default function CheckoutPageClient() {
             <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">
               <span className="font-semibold text-[#0f172a]">{t.summary.estimatedTotal}</span>
               <span className="text-2xl font-semibold text-[#0EA5E9]">
-                {totalPrice > 0 ? formatPrice(totalPrice, lang) : t.summary.onRequest}
+                {formatPrice(totalPrice > 0 ? totalPrice : Number.NaN, lang)}
               </span>
             </div>
 

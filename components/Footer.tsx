@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/dictionary-context";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 
 const socials = [
   {
@@ -114,6 +115,7 @@ function PaymentMethodLogo({ method }: { method: PaymentMethodId }) {
 
 export default function Footer() {
   const { dict, lang } = useI18n();
+  const { openResidenceDialog } = useVisitorPricing();
   const isArabic = lang === "ar";
   const phoneNumber = "+201032549630";
 
@@ -264,6 +266,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 border-t border-[#E5E7EB] pt-6 text-center">
+          <button type="button" onClick={openResidenceDialog}
+            className="mb-4 rounded-md text-sm text-[#64748b] underline decoration-slate-300 underline-offset-4 hover:text-[#0284C7] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-600">
+            {isArabic ? "تغيير بيانات الإقامة" : "Change residence details"}
+          </button>
           <p className="text-sm text-[#9CA3AF]">
             &copy; {new Date().getFullYear()} {dict.footer.brand}. {dict.footer.copyright}
           </p>

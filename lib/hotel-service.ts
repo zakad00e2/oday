@@ -1,3 +1,4 @@
+import { parsePrice } from "./visitor-pricing";
 import { DESTINATION_OPTIONS as HOTEL_DESTINATION_OPTIONS } from "./destinations";
 import {
   broadcastUnauthorizedSession,
@@ -78,6 +79,7 @@ export interface ApiHotelRoom {
   id?: string;
   capacity: string;
   price: string;
+  price_egp?: string | number | null;
   hotel_id?: string;
   is_deleted?: boolean;
   created_at?: string;
@@ -96,6 +98,7 @@ export interface ApiHotelAddonTranslation {
 export interface ApiHotelAddon {
   id?: string;
   price: string;
+  price_egp?: string | number | null;
   hotel_id?: string;
   is_deleted?: boolean;
   created_at?: string;
@@ -107,12 +110,14 @@ export interface ApiHotel {
   id: string;
   destination: HotelDestination;
   initial_price: string;
+  initial_price_egp?: string | number | null;
   meal_plan?: string | null;
   stars: HotelStarsValue;
   rating: HotelRatingValue;
   is_discounted: boolean;
   discount_percentage: string;
   original_price: string;
+  original_price_egp?: string | number | null;
   youtube_video_url?: string;
   is_deleted?: boolean;
   created_at?: string;
@@ -137,6 +142,7 @@ export interface HotelRoomRecord {
   id: string;
   capacity: number;
   price: number;
+  priceEgp?: number | null;
   nameAr: string;
   nameEn: string;
   descriptionAr: string;
@@ -146,6 +152,7 @@ export interface HotelRoomRecord {
 export interface HotelAddonRecord {
   id: string;
   price: number;
+  priceEgp?: number | null;
   nameAr: string;
   nameEn: string;
   descriptionAr: string;
@@ -171,7 +178,9 @@ export interface HotelRecord {
   mainImage: string;
   gallery: string[];
   initialPrice: number;
+  initialPriceEgp?: number | null;
   originalPrice: number | null;
+  originalPriceEgp?: number | null;
   isDiscounted: boolean;
   discountPercentage: number | null;
   stars: number;
@@ -188,6 +197,7 @@ export interface HotelRecord {
 export interface HotelMutationRoomInput {
   capacity: number;
   price: number;
+  priceEgp?: number | null;
   nameAr: string;
   nameEn: string;
   descriptionAr: string;
@@ -196,6 +206,7 @@ export interface HotelMutationRoomInput {
 
 export interface HotelMutationAddonInput {
   price: number;
+  priceEgp?: number | null;
   nameAr: string;
   nameEn: string;
   descriptionAr: string;
@@ -215,7 +226,9 @@ export interface HotelMutationInput {
   mainImage: string;
   gallery: string[];
   initialPrice: number;
+  initialPriceEgp?: number | null;
   originalPrice: number | null;
+  originalPriceEgp?: number | null;
   isDiscounted: boolean;
   discountPercentage: number | null;
   stars: HotelStarsValue;
@@ -564,8 +577,10 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     mainImages: mainImages.length > 0 ? mainImages : mainImage ? [mainImage] : [],
     mainImage,
     gallery,
-    initialPrice: parseNumber(apiHotel.initial_price),
-    originalPrice: apiHotel.original_price ? parseNumber(apiHotel.original_price) : null,
+    initialPrice: parsePrice(apiHotel.initial_price) ?? Number.NaN,
+    initialPriceEgp: parsePrice(apiHotel.initial_price_egp),
+    originalPrice: parsePrice(apiHotel.original_price),
+    originalPriceEgp: parsePrice(apiHotel.original_price_egp),
     isDiscounted: Boolean(apiHotel.is_discounted),
     discountPercentage: apiHotel.discount_percentage ? parseNumber(apiHotel.discount_percentage) : null,
     stars: hotelStarsMap[apiHotel.stars] ?? 0,
@@ -575,7 +590,8 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     rooms: (apiHotel.rooms ?? []).map((room, index) => ({
       id: room.id ?? `room-${index + 1}`,
       capacity: parseNumber(room.capacity),
-      price: parseNumber(room.price),
+      price: parsePrice(room.price) ?? Number.NaN,
+      priceEgp: parsePrice(room.price_egp),
       nameAr: repairText(
         getRoomTranslation(room.translations, "ar")?.name ||
           getRoomTranslation(room.translations, "en")?.name ||
@@ -599,7 +615,8 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     })),
     addons: (apiHotel.addons ?? []).map((addon, index) => ({
       id: addon.id ?? `addon-${index + 1}`,
-      price: parseNumber(addon.price),
+      price: parsePrice(addon.price) ?? Number.NaN,
+      priceEgp: parsePrice(addon.price_egp),
       nameAr: repairText(
         getAddonTranslation(addon.translations, "ar")?.name ||
           getAddonTranslation(addon.translations, "en")?.name ||
@@ -701,6 +718,7 @@ function buildCreateFormData(
   const rooms = input.rooms.map((room) => ({
     capacity: String(Math.max(1, room.capacity)),
     price: Math.max(0, room.price),
+    price_egp: parsePrice(room.priceEgp),
     translations: [
       {
         language: "ar",
@@ -716,6 +734,7 @@ function buildCreateFormData(
   }));
   const addons = input.addons.map((addon) => ({
     price: Math.max(0, addon.price),
+    price_egp: parsePrice(addon.priceEgp),
     translations: [
       {
         language: "ar",
@@ -734,6 +753,8 @@ function buildCreateFormData(
   formData.set("slug", enSlug);
   formData.set("destination", input.destination);
   formData.set("initial_price", String(Math.max(0, input.initialPrice)));
+  formData.set("initial_price_egp", String(parsePrice(input.initialPriceEgp) ?? ""));
+  formData.set("original_price_egp", String(parsePrice(input.originalPriceEgp) ?? ""));
   formData.set("stars", input.stars);
   formData.set("rating", input.rating);
   formData.set("is_discounted", String(input.isDiscounted));
@@ -805,7 +826,9 @@ export function toHotelMutationInput(hotel: HotelRecord): HotelMutationInput {
     mainImage: hotel.mainImages[0] || hotel.mainImage,
     gallery: hotel.gallery.filter((url) => url !== hotel.mainImage),
     initialPrice: hotel.initialPrice,
+    initialPriceEgp: hotel.initialPriceEgp,
     originalPrice: hotel.originalPrice,
+    originalPriceEgp: hotel.originalPriceEgp,
     isDiscounted: hotel.isDiscounted,
     discountPercentage: hotel.discountPercentage,
     stars: hotel.starsValue,
@@ -814,6 +837,7 @@ export function toHotelMutationInput(hotel: HotelRecord): HotelMutationInput {
     rooms: hotel.rooms.map((room) => ({
       capacity: room.capacity,
       price: room.price,
+      priceEgp: room.priceEgp,
       nameAr: room.nameAr,
       nameEn: room.nameEn,
       descriptionAr: room.descriptionAr,
@@ -821,6 +845,7 @@ export function toHotelMutationInput(hotel: HotelRecord): HotelMutationInput {
     })),
     addons: hotel.addons.map((addon) => ({
       price: addon.price,
+      priceEgp: addon.priceEgp,
       nameAr: addon.nameAr,
       nameEn: addon.nameEn,
       descriptionAr: addon.descriptionAr,

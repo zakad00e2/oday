@@ -55,7 +55,7 @@ export function calculateTripLineCost(
 
   if (hasOptions || hasAddOns) {
     const optionsTotal = (trip.selectedOptions ?? []).reduce(
-      (sum, option) => sum + option.price * (option.persons ?? 1),
+      (sum, option) => sum + (option.price > 0 ? option.price * (option.persons ?? 1) : Number.NaN),
       0,
     );
     const addOnsTotal = (trip.selectedAddOns ?? []).reduce(
@@ -63,10 +63,11 @@ export function calculateTripLineCost(
       0,
     );
 
-    return optionsTotal + addOnsTotal;
+    const baseTotal = hasOptions ? optionsTotal : trip.startingPrice > 0 ? trip.startingPrice * persons : Number.NaN;
+    return baseTotal + addOnsTotal;
   }
 
-  return trip.startingPrice > 0 ? trip.startingPrice * persons : 0;
+  return trip.startingPrice > 0 ? trip.startingPrice * persons : Number.NaN;
 }
 
 export function calculateTripQuantity(

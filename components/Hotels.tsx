@@ -10,7 +10,8 @@ import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "./ScrollReveal";
 import Skeleton from "./ui/Skeleton";
-import { formatPrice } from "@/lib/currency";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
+import { getPriceDiscount } from "@/lib/visitor-pricing";
 import { writeHotelDetailCache } from "@/lib/hotel-client-cache";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import {
@@ -131,6 +132,9 @@ function HotelCard({
   lang: "ar" | "en";
   labels: ReturnType<typeof useI18n>["dict"]["hotelsPage"];
 }) {
+  const { formatPrice, resolvePrice } = useVisitorPricing();
+  const activePrice = resolvePrice(hotel.initialPrice, hotel.initialPriceEgp);
+  const originalPrice = resolvePrice(hotel.originalPrice, hotel.originalPriceEgp);
   const [imageIndex, setImageIndex] = useState(0);
   const isAr = lang === "ar";
   const images =
@@ -144,8 +148,8 @@ function HotelCard({
   const hotelName = isAr ? hotel.nameAr : hotel.nameEn;
   const hotelCity = isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn;
   const hotelDescription = isAr ? hotel.descriptionAr : hotel.descriptionEn;
-  const hasDiscount = hasHotelDiscount(hotel);
-  const discountPercentage = hotel.discountPercentage ?? 0;
+  const discountPercentage = getPriceDiscount(activePrice, originalPrice);
+  const hasDiscount = hotel.isDiscounted && discountPercentage !== null;
   const discountLabel = hasDiscount ? `${discountPercentage}%` : "";
   const mealPlanLabel = hotel.mealPlan
     ? getHotelMealPlanLabel(hotel.mealPlan, lang)
@@ -280,15 +284,15 @@ function HotelCard({
           <div className="flex flex-col">
             <span className="mb-1 text-[11px] font-medium text-[#64748B]">{labels.startsFrom}</span>
             <div className="flex items-baseline gap-2">
-              {hasDiscount && hotel.originalPrice && hotel.originalPrice > hotel.initialPrice ? (
+              {hasDiscount && Number.isFinite(originalPrice) && originalPrice > activePrice ? (
                 <span className="relative inline-flex items-center text-sm font-medium leading-none text-[#9CA3AF]">
-                  <span>{formatPrice(hotel.originalPrice, lang)}</span>
+                  <span>{formatPrice(originalPrice, lang)}</span>
                   <span aria-hidden="true" className="absolute start-0 end-0 top-1/2 h-px -translate-y-1/2 bg-[#9CA3AF]" />
                 </span>
               ) : null}
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-bold leading-none text-[#0EA5E9]">
-                  {formatPrice(hotel.initialPrice, lang)}
+                  {formatPrice(activePrice > 0 ? activePrice : Number.NaN, lang)}
                 </span>
               </div>
               <span className="text-xs text-[#94A3B8]">{labels.perNight}</span>

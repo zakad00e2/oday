@@ -1,3 +1,4 @@
+import { parsePrice } from "./visitor-pricing";
 import {
   broadcastUnauthorizedSession,
   createAuthorizedHeaders,
@@ -48,6 +49,7 @@ export interface ApiTripOptionTranslation {
 export interface ApiTripOption {
   id?: string;
   price: string;
+  price_egp?: string | number | null;
   trip_id?: string;
   is_deleted?: boolean;
   created_at?: string;
@@ -66,6 +68,7 @@ export interface ApiTripAddonTranslation {
 export interface ApiTripAddon {
   id?: string;
   price: string;
+  price_egp?: string | number | null;
   trip_id?: string;
   is_deleted?: boolean;
   created_at?: string;
@@ -79,6 +82,7 @@ export interface ApiTrip {
   city?: string | null;
   destination?: string | null;
   price: string;
+  price_egp?: string | number | null;
   start_time: string;
   end_time: string;
   youtube_video_url?: string | null;
@@ -112,14 +116,6 @@ export type TripRecord = TripDetail & {
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function parseNumber(
-  value: string | number | null | undefined,
-  fallback = 0,
-) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 function getTranslation(
   translations: ApiTripTranslation[] | undefined,
@@ -293,12 +289,14 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
         nameEn: repairText(optEn?.name || optAr?.name),
         descriptionAr: repairText(optAr?.description || optEn?.description),
         descriptionEn: repairText(optEn?.description || optAr?.description),
-        price: parseNumber(option.price),
+        price: parsePrice(option.price) ?? Number.NaN,
+        priceEgp: parsePrice(option.price_egp),
       };
     }),
     (option) =>
       [
         option.price,
+        option.priceEgp,
         option.nameAr.trim(),
         option.nameEn.trim(),
         option.descriptionAr.trim(),
@@ -316,7 +314,8 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
         id: addon.id ?? `addon-${index}`,
         nameAr: repairText(addAr?.name || addEn?.name),
         nameEn: repairText(addEn?.name || addAr?.name),
-        price: parseNumber(addon.price),
+        price: parsePrice(addon.price) ?? Number.NaN,
+        priceEgp: parsePrice(addon.price_egp),
         descriptionAr: repairText(addAr?.description || addEn?.description),
         descriptionEn: repairText(addEn?.description || addAr?.description),
       };
@@ -324,6 +323,7 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
     (addOn) =>
       [
         addOn.price,
+        addOn.priceEgp,
         addOn.nameAr.trim(),
         addOn.nameEn.trim(),
         addOn.descriptionAr.trim(),
@@ -358,7 +358,8 @@ function createTripRecord(apiTrip: ApiTrip): TripRecord {
     essentialsEn: [],
     options,
     addOns,
-    startingPrice: parseNumber(apiTrip.price),
+    startingPrice: parsePrice(apiTrip.price) ?? Number.NaN,
+    startingPriceEgp: parsePrice(apiTrip.price_egp),
     bookingFields: ["name", "guests", "hotel", "date", "notes"],
     imageAssetIdsByUrl,
     createdAt: apiTrip.created_at ?? "",
@@ -430,6 +431,7 @@ export interface TripMutationInput {
   destination: TripDestination;
   slug: string;
   price: number;
+    priceEgp?: number | null;
   startTime: string;
   endTime: string;
   youtubeUrl: string;
@@ -445,6 +447,7 @@ export interface TripMutationInput {
   facilitiesEn: string[];
   options?: {
     price: number;
+    priceEgp?: number | null;
     nameAr: string;
     nameEn: string;
     descriptionAr: string;
@@ -452,6 +455,7 @@ export interface TripMutationInput {
   }[];
   addons?: {
     price: number;
+    priceEgp?: number | null;
     nameAr: string;
     nameEn: string;
     descriptionAr: string;
@@ -476,6 +480,7 @@ function buildTripFormData(
   formData.set("city", input.destination);
   formData.set("slug", input.slug);
   formData.set("price", String(Math.max(0, input.price)));
+  formData.set("price_egp", String(parsePrice(input.priceEgp) ?? ""));
   formData.set("start_time", input.startTime);
   formData.set("end_time", input.endTime);
   formData.set("youtube_video_url", input.youtubeUrl.trim());
@@ -504,6 +509,7 @@ function buildTripFormData(
   if (Array.isArray(input.options)) {
     const options = input.options.map((opt) => ({
       price: Math.max(0, opt.price),
+      price_egp: parsePrice(opt.priceEgp),
       translations: [
         {
           language: "ar",
@@ -524,6 +530,7 @@ function buildTripFormData(
   if (Array.isArray(input.addons)) {
     const addons = input.addons.map((addon) => ({
       price: Math.max(0, addon.price),
+      price_egp: parsePrice(addon.priceEgp),
       translations: [
         {
           language: "ar",
