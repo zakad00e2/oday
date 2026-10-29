@@ -75,15 +75,15 @@ async function main() {
   };
   const goto = async url => { await page.goto(`${baseURL}${url}`, { waitUntil: 'domcontentloaded' }); };
   const dialog = () => page.getByRole('dialog', { name: /أهلًا بك في|Welcome to/ });
-  const editResidence = () => page.getByRole('button', { name: /Change residence details|تغيير بيانات الإقامة/, exact: true });
+  const editResidence = () => page.locator('nav button[aria-label]:visible').filter({ has: page.locator('svg.lucide-map-pin') });
   const chooseCategory = async (category, target = page) => {
     const modal = target.getByRole('dialog', { name: /أهلًا بك في|Welcome to/ });
-    if (!await modal.isVisible()) await target.getByRole('button', { name: /Change residence details|تغيير بيانات الإقامة/, exact: true }).click();
+    if (!await modal.isVisible()) await target.locator('nav button[aria-label]:visible').filter({ has: target.locator('svg.lucide-map-pin') }).click();
     await modal.locator(`[data-visitor-category="${category}"]`).click(); await modal.waitFor({ state: 'hidden' });
   };
-  const noHeaderPricingControl = async () => {
+  const headerResidenceControl = async () => {
     assert.equal(await page.locator('nav select,header select,nav [data-visitor-category],header [data-visitor-category]').count(), 0);
-    assert.equal(await page.locator('nav,header').getByRole('button', { name: /pricing|visitor category|residence|currency|أسعار|فئة الزائر|الإقامة|العملة/i }).count(), 0);
+    assert.equal(await page.locator('nav button[aria-label]:visible').filter({ has: page.locator('svg.lucide-map-pin') }).count(), 1);
   };
   const assertReferenceGeometry = async locale => {
     const geometry = await dialog().evaluate(element => {
@@ -169,7 +169,7 @@ async function main() {
     }
     await check('Arabic first entry automatically requires a native residence dialog, traps focus and rejects Escape/backdrop dismissal', async () => {
       await dialog().waitFor({ timeout: process.env.VISITOR_RESIDENCE_RED === '1' ? 5000 : 20000 });
-      assert.equal(await dialog().evaluate(element => element.tagName), 'DIALOG'); await noHeaderPricingControl();
+      assert.equal(await dialog().evaluate(element => element.tagName), 'DIALOG'); await headerResidenceControl();
       assert.equal(await dialog().getByRole('button').count(), 2, 'Initial choice has no dismiss control');
       for (let index = 0; index < 6; index++) { await page.keyboard.press('Tab'); assert.ok(await dialog().evaluate(element => element.contains(document.activeElement)), `Keyboard focus remains inside modal after Tab ${index + 1}; active=${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 150))}`); }
       for (let index = 0; index < 3; index++) { await page.keyboard.press('Shift+Tab'); assert.ok(await dialog().evaluate(element => element.contains(document.activeElement)), 'Reverse keyboard focus remains inside modal'); }
@@ -179,17 +179,17 @@ async function main() {
       await chooseCategory('egyptian-resident'); assert.equal(await page.evaluate(key => localStorage.getItem(key), key), 'egyptian-resident');
     });
     if (process.env.VISITOR_RESIDENCE_RED === '1') { assert.deepEqual(failures, [], 'RED: first-entry residence modal contract is not implemented'); return; }
-    await check('Saved residence persists across reload/locale; footer editing can cancel; header has no pricing control', async () => {
-      await page.reload({ waitUntil: 'domcontentloaded' }); await editResidence().waitFor(); assert.equal(await dialog().isVisible(), false); assert.deepEqual(await page.evaluate(() => window.__residenceOpenEvents), [], 'Saved choice never flashes an automatic modal'); await noHeaderPricingControl();
+    await check('Saved residence persists across reload/locale; header editing can cancel', async () => {
+      await page.reload({ waitUntil: 'domcontentloaded' }); await editResidence().waitFor(); assert.equal(await dialog().isVisible(), false); assert.deepEqual(await page.evaluate(() => window.__residenceOpenEvents), [], 'Saved choice never flashes an automatic modal'); await headerResidenceControl();
       await editResidence().click(); await dialog().waitFor(); await page.keyboard.press('Escape'); await dialog().waitFor({ state: 'hidden' }); assert.equal(await page.evaluate(key => localStorage.getItem(key), key), 'egyptian-resident');
-      await goto('/en/trips/verification-trip'); await page.getByRole('heading', { name: 'Verification Trip', level: 1, exact: true }).waitFor(); assert.equal(await dialog().isVisible(), false); assert.match(await text(), /EGP 999\.5/); await noHeaderPricingControl();
+      await goto('/en/trips/verification-trip'); await page.getByRole('heading', { name: 'Verification Trip', level: 1, exact: true }).waitFor(); assert.equal(await dialog().isVisible(), false); assert.match(await text(), /EGP 999\.5/); await headerResidenceControl();
       await editResidence().click(); await dialog().waitFor(); await page.screenshot({ path: path.join(output, 'residence-english-desktop.png') }); const closeButton = dialog().getByRole('button', { name: 'Cancel residence change', exact: true }); assert.equal(await closeButton.evaluate(element => getComputedStyle(element).cursor), 'pointer', 'Close button uses a pointer cursor'); await closeButton.click(); await dialog().waitFor({ state: 'hidden' }); assert.equal(await page.evaluate(key => localStorage.getItem(key), key), 'egyptian-resident');
       await page.evaluate(key => localStorage.removeItem(key), key); await goto('/en/hotels'); await dialog().waitFor(); await assertReferenceGeometry('en'); await page.screenshot({ path: path.join(output, 'residence-reference-en-desktop.png') }); await chooseCategory('egyptian-resident');
-      await page.setViewportSize({ width: 390, height: 844 }); await chooseCategory('other'); await noHeaderPricingControl(); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-      await page.evaluate(key => localStorage.removeItem(key), key); await goto('/en/trips'); await dialog().waitFor(); await noHeaderPricingControl(); await assertReferenceGeometry('en'); await page.screenshot({ path: path.join(output, 'residence-first-entry-en-mobile.png') });
+      await page.setViewportSize({ width: 390, height: 844 }); await chooseCategory('other'); await headerResidenceControl(); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.evaluate(key => localStorage.removeItem(key), key); await goto('/en/trips'); await dialog().waitFor(); await headerResidenceControl(); await assertReferenceGeometry('en'); await page.screenshot({ path: path.join(output, 'residence-first-entry-en-mobile.png') });
       await page.setViewportSize({ width: 320, height: 780 }); await assertReferenceGeometry('en'); await page.screenshot({ path: path.join(output, 'residence-reference-en-320.png') }); await page.setViewportSize({ width: 390, height: 844 }); await chooseCategory('other');
       await goto('/en/trips/verification-trip'); await page.getByRole('heading', { name: 'Verification Trip', level: 1, exact: true }).waitFor(); assert.equal(await dialog().isVisible(), false); assert.match(await text(), /\$80\.25/);
-      await page.evaluate(key => localStorage.removeItem(key), key); await goto('/ar/trips'); await dialog().waitFor(); await noHeaderPricingControl(); await assertReferenceGeometry('ar'); await page.screenshot({ path: path.join(output, 'residence-first-entry-ar-mobile.png') });
+      await page.evaluate(key => localStorage.removeItem(key), key); await goto('/ar/trips'); await dialog().waitFor(); await headerResidenceControl(); await assertReferenceGeometry('ar'); await page.screenshot({ path: path.join(output, 'residence-first-entry-ar-mobile.png') });
       await page.setViewportSize({ width: 320, height: 780 }); await assertReferenceGeometry('ar'); await page.screenshot({ path: path.join(output, 'residence-reference-ar-320.png') }); await page.setViewportSize({ width: 390, height: 844 }); await chooseCategory('egyptian-resident');
       await page.setViewportSize({ width: 1440, height: 1000 });
     });

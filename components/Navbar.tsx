@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
+import { MapPin } from "lucide-react";
 
 export default function Navbar() {
   const { dict, lang, dir } = useI18n();
@@ -14,6 +16,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { totalItems, openCart } = useCart();
+  const { openResidenceDialog } = useVisitorPricing();
+  const residenceLabel = lang === "ar" ? "تغيير بيانات الإقامة" : "Change residence details";
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -107,6 +111,10 @@ export default function Navbar() {
             </Link>
           );
         })}
+        <button type="button" onClick={openResidenceDialog} aria-label={residenceLabel} title={residenceLabel}
+          className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${switcherClass}`}>
+          <MapPin className="h-5 w-5" aria-hidden="true" />
+        </button>
       </div>
 
       {/* ── Cart + Language Switcher (desktop) ──────── */}
@@ -136,6 +144,10 @@ export default function Navbar() {
 
       {/* ── Mobile: Cart + Language + Hamburger ──────── */}
       <div className="lg:hidden flex items-center gap-1.5">
+        <button type="button" onClick={openResidenceDialog} aria-label={residenceLabel} title={residenceLabel}
+          className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${switcherClass}`}>
+          <MapPin className="h-[18px] w-[18px]" aria-hidden="true" />
+        </button>
         <button
           onClick={openCart}
           aria-label={dict.nav.cartLabel}
