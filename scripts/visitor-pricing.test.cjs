@@ -43,6 +43,17 @@ test('currency formatting preserves cents and default security-approval USD', ()
 });
 const hotelService = require('../lib/hotel-service.ts');
 const tripService = require('../lib/trip-service.ts');
+test('trip temporary slug update sends only the slug', async (t) => {
+  let request;
+  t.mock.method(globalThis, 'fetch', async (_url, init) => { request = init; return Response.json(tripApi); });
+  await tripService.updateTripSlug('t1', 'temporary-slug');
+  assert.equal(request.method, 'PATCH');
+  assert.deepEqual([...request.body.entries()], [['slug', 'temporary-slug']]);
+});
+test('trip validation errors expose the rejected fields', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ message: 'بيانات الطلب غير صالحة', errors: [{field: 'price_egp', message: 'Invalid input'}] }, { status: 400 }));
+  await assert.rejects(tripService.updateTripSlug('t1', 'temporary-slug'), /price_egp.*Invalid input/);
+});
 const hotelApi = { id: 'h1', destination: 'CAIRO', initial_price: '100.25', initial_price_egp: '3500.75', original_price: '120', original_price_egp: '4200', stars: 'FIVE', rating: 'UNRATED', is_discounted: true, discount_percentage: '10', rooms: [{id:'r1',capacity:'2',price:'100',price_egp:'3500'}], addons:[{id:'a1',price:'0',price_egp:'0'}] };
 const tripApi = { id:'t1', slug:'test-trip',city:'CAIRO',price:'20.25',price_egp:'650.5',start_time:'08:00',end_time:'10:00',options:[{id:'o1',price:'20',price_egp:'650'}],addons:[{id:'a1',price:'0',price_egp:'0'}] };
 test('API normalization carries independent nested EGP and preserves missing EGP', async (t) => {

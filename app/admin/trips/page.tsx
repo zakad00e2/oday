@@ -19,6 +19,7 @@ import {
   listTrips,
   createTrip,
   updateTrip,
+  updateTripSlug,
   deleteTrip,
   slugifyTrip,
   type TripRecord,
@@ -795,19 +796,9 @@ export default function AdminTrips() {
 
       if (editing) {
         if (didTripCollectionsChange(editing, form)) {
-          const originalTripInput = createTripMutationInput(
-            tripRecordToForm(editing),
-            editing.slug,
-          );
           const temporarySlug = `${editing.slug || slug}-replacing-${Date.now()}`;
 
-          await updateTrip(
-            editing.id,
-            stripCollectionsFromMutationInput({
-              ...originalTripInput,
-              slug: temporarySlug,
-            }),
-          );
+          await updateTripSlug(editing.id, temporarySlug);
 
           let replacementTripId = "";
 
@@ -828,13 +819,7 @@ export default function AdminTrips() {
               await deleteTrip(replacementTripId).catch(() => undefined);
             }
 
-            await updateTrip(
-              editing.id,
-              stripCollectionsFromMutationInput({
-                ...originalTripInput,
-                slug: editing.slug,
-              }),
-            ).catch(() => undefined);
+            await updateTripSlug(editing.id, editing.slug).catch(() => undefined);
 
             throw error;
           }

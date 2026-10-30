@@ -419,7 +419,13 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
         ? payload.message
         : `Request failed with status ${response.status}`;
 
-    throw new TripServiceError(message, response.status);
+    const details = typeof payload === "object" && payload !== null && "errors" in payload && Array.isArray(payload.errors)
+      ? payload.errors.flatMap((issue: unknown) => {
+          if (typeof issue !== "object" || issue === null || !("field" in issue) || !("message" in issue) || typeof issue.field !== "string" || typeof issue.message !== "string") return [];
+          return [`${issue.field}: ${issue.message}`];
+        }).join("، ")
+      : "";
+    throw new TripServiceError(details ? `${message}: ${details}` : message, response.status);
   }
 
   return payload as T;
@@ -652,6 +658,12 @@ export async function updateTrip(
     body: buildTripFormData(input, media),
   });
   return createTripRecord(payload);
+}
+
+export async function updateTripSlug(id: string, slug: string) {
+  const body = new FormData();
+  body.set("slug", slug);
+  await requestJson<ApiTrip>(`/${id}`, { method: "PATCH", body });
 }
 
 export async function deleteTrip(id: string) {
