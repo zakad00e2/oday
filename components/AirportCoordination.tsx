@@ -261,6 +261,7 @@ export default function AirportCoordination() {
         const controller = new AbortController();
         void listNationalityPricing(controller.signal).then((records) => {
             setNatPricingMap(new Map(records.map((r) => [r.nationalityKey, r])));
+            setServiceType(null);
         }).catch(() => {
             // Silently fall back to airport-config.ts hardcoded values
         });
@@ -347,7 +348,7 @@ export default function AirportCoordination() {
         const errs: FormErrors = {};
 
         if (!nationalityId) errs.nationalityId = t("يرجى اختيار الجنسية", "Please select a nationality");
-        if (!serviceType) errs.serviceType = t("يرجى اختيار نوع الخدمة", "Please select the service type");
+        if (!serviceType || basePrice <= 0) errs.serviceType = t("يرجى اختيار نوع خدمة متاح", "Please select an available service type");
         
         if (!country.trim()) errs.country = t("يرجى إدخال بلد المغادرة", "Please enter the departure country");
         if (!airport.trim()) errs.airport = t("يرجى إدخال مطار المغادرة", "Please enter the departure airport");
@@ -366,7 +367,7 @@ export default function AirportCoordination() {
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [airlineChoice, country, customAirlineName, nationalityId, fullName, otherAirlineId, airport, serviceType, t, whatsapp, agreedToPolicies]);
+    }, [airlineChoice, basePrice, country, customAirlineName, nationalityId, fullName, otherAirlineId, airport, serviceType, t, whatsapp, agreedToPolicies]);
 
     /* ─── Submit ───────────────────────────────────────────────── */
     const handleSubmit = useCallback(
@@ -502,16 +503,17 @@ export default function AirportCoordination() {
                                     {/* 24h card */}
                                     <button
                                         type="button"
+                                        disabled={!selectedNationality || resolvedPrice24 <= 0}
                                         onClick={() => { setServiceType("24h"); setErrors((p) => ({ ...p, serviceType: undefined })); }}
-                                        className={`relative rounded-xl border-2 p-5 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${serviceType === "24h"
+                                        className={`relative rounded-xl border-2 p-5 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${serviceType === "24h" && resolvedPrice24 > 0
                                             ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm"
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
                                         <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                                            serviceType === "24h" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                            serviceType === "24h" && resolvedPrice24 > 0 ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
                                         }`}>
-                                            {serviceType === "24h" && (
+                                            {serviceType === "24h" && resolvedPrice24 > 0 && (
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                             )}
                                         </div>
@@ -535,16 +537,17 @@ export default function AirportCoordination() {
                                     {/* 72h card */}
                                     <button
                                         type="button"
+                                        disabled={!selectedNationality || resolvedPrice72 <= 0}
                                         onClick={() => { setServiceType("72h"); setErrors((p) => ({ ...p, serviceType: undefined })); }}
-                                        className={`relative rounded-xl border-2 p-5 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer ${serviceType === "72h"
+                                        className={`relative rounded-xl border-2 p-5 ${choiceTextAlignClass} transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${serviceType === "72h" && resolvedPrice72 > 0
                                             ? "border-[#0EA5E9] bg-[#F0F9FF] shadow-sm"
                                             : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
                                             }`}
                                     >
                                         <div className={`absolute top-3 ${selectedBadgeSideClass} w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                                            serviceType === "72h" ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
+                                            serviceType === "72h" && resolvedPrice72 > 0 ? "bg-[#0EA5E9] border-transparent" : "border-2 border-[#CBD5E1] bg-white"
                                         }`}>
-                                            {serviceType === "72h" && (
+                                            {serviceType === "72h" && resolvedPrice72 > 0 && (
                                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                             )}
                                         </div>
@@ -582,6 +585,7 @@ export default function AirportCoordination() {
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setNationalityId(value ? (value as NationalityId) : null);
+                                                setServiceType(null);
                                                 setErrors((p) => ({ ...p, nationalityId: undefined }));
                                             }}
                                             className={`${inputClass} appearance-none ${choiceTextAlignClass} ${isAr ? "pl-10" : "pr-10"}`}
