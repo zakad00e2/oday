@@ -1,0 +1,239 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { BedDouble, CalendarCheck } from "lucide-react";
+import type { HotelRecord } from "@/lib/hotel-service";
+import { useCart } from "@/lib/cart-context";
+import { limitHotelAddOnCounts } from "@/lib/cart-hotel";
+import { quoteHotelStay, hotelAvailabilityDemo } from "@/lib/hotel-availability-service";
+import { addStayDays, cairoToday, exactStayRequest, HotelAvailabilityError, readStayQuery, stayIssue,
+  stayMoney, type StayCriteria, type StayQuote } from "@/lib/hotel-stay";
+import { useI18n } from "@/lib/i18n/dictionary-context";
+import { useVisitorPricing } from "@/lib/visitor-pricing-context";
+import StayFields, { stayIssueMessage } from "./StayFields";
+
+const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-sky-700 px-5 py-2 font-semibold text-white hover:bg-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600";
+
+function useQuote({ hotelId, criteria, category, selection, attempt }: {
+  hotelId: string; criteria: StayCriteria; category: NonNullable<ReturnType<typeof useVisitorPricing>["category"]>;
+  selection?: Parameters<typeof quoteHotelStay>[3]; attempt: number;
+}) {
+  const key = JSON.stringify([hotelId, criteria, category, selection, attempt]);
+  const [response, setResponse] = useState<{ key: string; quote?: StayQuote; unavailable?: boolean }>();
+  useEffect(() => {
+    const controller = new AbortController();
+    quoteHotelStay(hotelId, criteria, category, selection, controller.signal).then(quote => {
+      if (!controller.signal.aborted) setResponse({ key, quote });
+    }).catch(error => {
+      if (!controller.signal.aborted) setResponse({ key, unavailable: error instanceof HotelAvailabilityError && error.code === "STAY_UNAVAILABLE" });
+    });
+    return () => controller.abort();
+  }, [hotelId, criteria, category, selection, key]);
+  return response?.key === key ? response : undefined;
+}
+
+function QuoteError({ unavailable, ar, retry }: { unavailable?: boolean; ar: boolean; retry: () => void }) {
+  return <div role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-slate-900">
+    <p>{unavailable
+      ? (ar ? "الغرف المختارة غير متاحة طوال الإقامة. جرّب تعديل الغرف أو التواريخ." : "These rooms are not available for the full stay. Try different rooms or dates.")
+      : (ar ? "تعذّر التحقق من الإقامة الآن." : "The stay could not be checked right now.")}</p>
+    <button className="mt-2 min-h-9 font-semibold text-sky-900 underline" type="button" onClick={retry}>
+      {ar ? "إعادة التحقق" : "Check again"}
+    </button>
+  </div>;
+}
+
+type BookingProps = { hotel: HotelRecord; criteria: StayCriteria; category: NonNullable<ReturnType<typeof useVisitorPricing>["category"]> };
+
+function BookingOptions({ hotel, criteria, category }: BookingProps) {
+  const { lang } = useI18n();
+  const ar = lang === "ar";
+  const [attempt, setAttempt] = useState(0);
+  const result = useQuote({ hotelId: hotel.id, criteria, category, attempt });
+  if (!result) return <p className="mt-5 text-slate-600" role="status">{ar ? "جاري التحقق من التوافر…" : "Checking room availability…"}</p>;
+  if (!result.quote) return <QuoteError ar={ar} unavailable={result.unavailable} retry={() => setAttempt(n => n + 1)} />;
+  return <RoomSelection key={attempt} hotel={hotel} criteria={criteria} category={category} initial={result.quote}
+    reload={() => setAttempt(n => n + 1)} />;
+}
+
+function ExactQuote({ hotel, criteria, category, selection, reload }: BookingProps & {
+  selection: NonNullable<Parameters<typeof quoteHotelStay>[3]>; reload: () => void;
+}) {
+  const { lang } = useI18n();
+  const ar = lang === "ar";
+  const { formatPrice } = useVisitorPricing();
+  const { setHotel, openCart, setNights } = useCart();
+  const response = useQuote({ hotelId: hotel.id, criteria, category, selection, attempt: 0 });
+  if (!response) return <p className="mt-5 text-slate-600" role="status">{ar ? "جاري تحديث السعر…" : "Updating the stay price…"}</p>;
+  if (!response.quote) return <QuoteError ar={ar} unavailable={response.unavailable} retry={reload} />;
+  const quote = response.quote;
+  const roomName = (id: string) => {
+    const room = hotel.rooms.find(r => r.id === id);
+    return room ? (ar ? room.nameAr || room.nameEn : room.nameEn || room.nameAr) : id;
+  };
+
+  function addToPlan() {
+    const name = ar ? hotel.nameAr || hotel.nameEn : hotel.nameEn || hotel.nameAr;
+    setHotel({
+      id: hotel.id, slug: hotel.slug, slugAr: hotel.slugAr, slugEn: hotel.slugEn, name, nameAr: hotel.nameAr, nameEn: hotel.nameEn,
+      city: ar ? hotel.destinationLabelAr : hotel.destinationLabelEn, cityAr: hotel.destinationLabelAr,
+      cityEn: hotel.destinationLabelEn, image: hotel.mainImage, stars: hotel.stars,
+      pricePerNight: 0, checkIn: quote.check_in, checkOut: quote.check_out, demoStay: hotelAvailabilityDemo,
+      stayGuests: { adults: quote.adults, children: quote.children }, stayQuote: quote,
+      roomsCount: quote.rooms.reduce((sum, room) => sum + room.quantity, 0),
+      selectedRooms: quote.rooms.map(room => {
+        const catalog = hotel.rooms.find(r => r.id === room.room_id);
+        return { id: room.room_id, count: room.quantity, name: roomName(room.room_id), nameAr: catalog?.nameAr,
+          nameEn: catalog?.nameEn, pricePerNight: 0 };
+      }),
+      selectedAddOns: quote.addons.map(addon => {
+        const catalog = hotel.addons.find(a => a.id === addon.addon_id);
+        return { id: addon.addon_id, count: addon.quantity, price: 0, nameAr: catalog?.nameAr, nameEn: catalog?.nameEn,
+          name: catalog ? (ar ? catalog.nameAr || catalog.nameEn : catalog.nameEn || catalog.nameAr) : addon.addon_id };
+      }),
+    });
+    if (!hotelAvailabilityDemo) window.tatheer?.("add_to_cart", {
+      ...(quote.total === null ? {} : { value: stayMoney(quote.total) }), currency: quote.currency, content_type: "hotel", content_id: hotel.id,
+    });
+    setNights(quote.nights);
+    openCart();
+  }
+
+  return <div className="mt-6 rounded-2xl bg-slate-50 p-4 sm:p-5">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p className="text-sm text-slate-600">{ar ? "إجمالي الإقامة · الليالي: " : "Stay total · Nights: "}{quote.nights}</p>
+        <p className="text-2xl font-bold text-slate-950" aria-live="polite">{formatPrice(stayMoney(quote.total), lang)}</p>
+      </div>
+      <button type="button" className={button} onClick={addToPlan}>{ar ? "أضف لبرنامجك" : "Add to your plan"}</button>
+    </div>
+    <details className="mt-3 border-t border-slate-200 pt-2">
+      <summary className="min-h-9 cursor-pointer py-1 text-sm font-semibold text-sky-900">{ar ? "تفاصيل السعر لكل ليلة" : "Nightly price breakdown"}</summary>
+      <div className="mt-2 grid gap-4 text-sm text-slate-700">
+        {quote.rooms.map(room => <div key={room.room_id}>
+          <p className="font-semibold">{roomName(room.room_id)} × {room.quantity}</p>
+          <ul className="mt-1 space-y-1">
+            {room.nightly_rates.map(night => <li key={night.date} className="flex justify-between gap-2">
+              <time dateTime={night.date} dir="ltr">{night.date}</time><span>{formatPrice(stayMoney(night.unit_rate), lang)}</span>
+            </li>)}
+          </ul>
+        </div>)}
+        {quote.addons.length > 0 && <p>{ar ? "إجمالي الترقيات: " : "Upgrades total: "}{formatPrice(stayMoney(quote.addons_total), lang)}</p>}
+      </div>
+    </details>
+  </div>;
+}
+
+function RoomSelection({ hotel, criteria, category, initial, reload }: BookingProps & { initial: StayQuote; reload: () => void }) {
+  const { lang } = useI18n();
+  const ar = lang === "ar";
+  const { formatPrice } = useVisitorPricing();
+  const { cart } = useCart();
+  const guests = criteria.adults + criteria.children;
+  const allowedRooms = initial.available_room_types.filter(r => hotel.rooms.some(room => room.id === r.room_id && !room.idIsSynthetic));
+  const availableAddons = hotel.addons.filter(addon => !addon.idIsSynthetic);
+  const [restored] = useState(() => {
+    if (cart.hotel?.id !== hotel.id) return null;
+    const saved = exactStayRequest(cart.hotel);
+    if (!saved || saved.check_in !== criteria.check_in || saved.check_out !== criteria.check_out ||
+        saved.adults !== criteria.adults || saved.children !== criteria.children) return null;
+    return saved;
+  });
+  const [roomCounts, setRoomCounts] = useState<Record<string, number>>(() => Object.fromEntries(
+    (restored?.rooms ?? initial.rooms).filter(room => allowedRooms.some(r => r.room_id === room.room_id && room.quantity <= r.max_quantity))
+      .map(room => [room.room_id, room.quantity]),
+  ));
+  const [addonCounts, setAddonCounts] = useState<Record<string, number>>(() =>
+    Object.fromEntries((restored?.addons ?? []).filter(addon => availableAddons.some(a => a.id === addon.addon_id))
+      .map(addon => [addon.addon_id, addon.quantity])));
+  const count = Object.values(roomCounts).reduce((sum, n) => sum + n, 0);
+  const upgrades = Object.values(addonCounts).reduce((sum, n) => sum + n, 0);
+  const capacity = allowedRooms.reduce((sum, room) => sum + room.capacity * (roomCounts[room.room_id] ?? 0), 0);
+  const selection = useMemo(() => ({
+    rooms: Object.entries(roomCounts).filter(([, quantity]) => quantity > 0).map(([room_id, quantity]) => ({ room_id, quantity })),
+    addons: Object.entries(addonCounts).filter(([, quantity]) => quantity > 0).map(([addon_id, quantity]) => ({ addon_id, quantity })),
+  }), [roomCounts, addonCounts]);
+
+  return <div className="mt-6">
+    <h3 className="flex items-center gap-2 font-bold text-slate-950"><BedDouble size={19} aria-hidden />{ar ? "أنواع الغرف المتاحة" : "Available room types"}</h3>
+    <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200">
+      {allowedRooms.map(room => {
+        const record = hotel.rooms.find(r => r.id === room.room_id)!;
+        const name = ar ? record.nameAr || record.nameEn : record.nameEn || record.nameAr;
+        const current = roomCounts[room.room_id] ?? 0;
+        const max = Math.min(room.max_quantity, guests - count + current);
+        return <label className="flex items-center justify-between gap-3 p-3" key={room.room_id}>
+          <span>
+            <span className="block font-semibold text-slate-950">{name}</span>
+            <span className="block text-xs text-slate-600">{ar ? "السعة: " : "Capacity: "}{room.capacity} · {formatPrice(stayMoney(room.unit_stay_total), lang)} {ar ? "للغرفة طوال الإقامة" : "per room for the stay"}</span>
+          </span>
+          <select aria-label={(ar ? "عدد غرف " : "Rooms: ") + name} className="rounded-lg border border-slate-300 bg-white px-3 py-2" value={current}
+            onChange={event => {
+              const value = Number(event.target.value);
+              setRoomCounts({ ...roomCounts, [room.room_id]: value });
+              setAddonCounts(limitHotelAddOnCounts(addonCounts, count - current + value));
+            }}>
+            {Array.from({ length: Math.max(max, current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
+          </select>
+        </label>;
+      })}
+    </div>
+    {allowedRooms.length === 0 && <QuoteError ar={ar} retry={reload} />}
+    {availableAddons.length > 0 && count > 0 && <fieldset className="mt-5">
+      <legend className="font-semibold text-slate-900">{ar ? "ترقيات الغرف (اختياري)" : "Room upgrades (optional)"}</legend>
+      {availableAddons.map(addon => {
+        const name = ar ? addon.nameAr || addon.nameEn : addon.nameEn || addon.nameAr;
+        const current = addonCounts[addon.id] ?? 0;
+        return <label key={addon.id} className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm">
+          {name}
+          <select aria-label={name} className="rounded-lg border border-slate-300 bg-white px-3 py-2" value={current}
+            onChange={event => setAddonCounts({ ...addonCounts, [addon.id]: Number(event.target.value) })}>
+            {Array.from({ length: Math.max(0, count - upgrades + current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
+          </select>
+        </label>;
+      })}
+    </fieldset>}
+    {count > 0 && capacity >= guests && count <= guests && upgrades <= count
+      ? <ExactQuote key={JSON.stringify(selection)} hotel={hotel} criteria={criteria} category={category} selection={selection} reload={reload} />
+      : <p className="mt-4 text-sm text-slate-700" role="status">{ar ? "اختر غرفًا تكفي عدد الضيوف." : "Select enough rooms for your group."}</p>}
+  </div>;
+}
+
+function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecord; initial: StayCriteria; today: string; applied: boolean }) {
+  const { lang } = useI18n();
+  const ar = lang === "ar";
+  const { category } = useVisitorPricing();
+  const [draft, setDraft] = useState(initial);
+  const [criteria, setCriteria] = useState<StayCriteria | null>(applied ? initial : null);
+  const [attempt, setAttempt] = useState(0);
+  const [error, setError] = useState("");
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const issue = stayIssue(draft, today);
+    setError(issue ? stayIssueMessage(issue, ar) : "");
+    if (!issue) { setCriteria(draft); setAttempt(n => n + 1); }
+  }
+  return <section aria-labelledby="stay-booking-heading" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-7">
+    <h2 id="stay-booking-heading" className="flex items-center gap-2 text-xl font-bold text-slate-950">
+      <CalendarCheck size={22} aria-hidden />{ar ? "تحقّق من غرف إقامتك" : "Check rooms for your stay"}
+    </h2>
+    <p className="mt-1 text-sm text-slate-600">{ar ? "اختر التواريخ وعدد الضيوف لعرض السعر حسب الليلة." : "Choose dates and guests to see the rates for each night."}</p>
+    <form className="relative z-20 mt-4 grid gap-2.5 lg:grid-cols-[1.55fr_1fr_auto]" onSubmit={submit}>
+      <StayFields stay={draft} setStay={next => { setDraft(next); setCriteria(null); setError(""); }} today={today} ar={ar} />
+      <button className={button} type="submit">{ar ? "تحقّق من التوافر" : "Check availability"}</button>
+    </form>
+    {error && <p className="mt-3 text-sm text-red-700" role="alert">{error}</p>}
+    {criteria && category && <BookingOptions key={attempt + ":" + category} hotel={hotel} criteria={criteria} category={category} />}
+    {criteria && !category && <p className="mt-4 text-sm text-slate-700" role="status">{ar ? "اختر فئة التسعير لعرض السعر." : "Choose your pricing category to see a quote."}</p>}
+  </section>;
+}
+
+export default function HotelStayBooking({ hotel }: { hotel: HotelRecord }) {
+  const query = useSearchParams();
+  const [today] = useState(cairoToday);
+  const linkStay = readStayQuery(query);
+  const applied = !stayIssue(linkStay, today);
+  return <StayBookingForm key={hotel.id + ":" + query.toString()} hotel={hotel} today={today} applied={applied}
+    initial={applied ? linkStay : { check_in: today, check_out: addStayDays(today, 1), adults: 2, children: 0 }} />;
+}

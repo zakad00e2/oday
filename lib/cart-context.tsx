@@ -21,6 +21,10 @@ import type {
 
 import { useVisitorPricing } from "./visitor-pricing-context";
 import type { PricePair } from "./visitor-pricing";
+import type { StayGuests, StayQuote } from "./hotel-stay";
+import { hotelAvailabilityDemo } from "./hotel-availability-service";
+
+const cartStorageKey = hotelAvailabilityDemo ? "oday-cart-hotel-demo-v1" : "oday-cart";
 import { resolveCartPrices } from "./cart-visitor-pricing";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -28,6 +32,13 @@ import { resolveCartPrices } from "./cart-visitor-pricing";
 export interface CartHotel {
   id: string | number;
   slug: string;
+  slugAr?: string;
+  slugEn?: string;
+  stayGuests?: StayGuests;
+  stayQuote?: StayQuote;
+  stayQuoteCurrent?: boolean;
+  requiresStayQuote?: boolean;
+  demoStay?: boolean;
   name: string;
   nameAr?: string;
   nameEn?: string;
@@ -115,7 +126,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Load from localStorage after hydration
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("oday-cart");
+      const saved = localStorage.getItem(cartStorageKey);
       if (saved) {
         const parsed = JSON.parse(saved) as CartState;
         // Drop hotel if missing slug (old data format)
@@ -135,7 +146,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isInitialized) return;
     try {
-      localStorage.setItem("oday-cart", JSON.stringify(rawCart));
+      localStorage.setItem(cartStorageKey, JSON.stringify(rawCart));
     } catch {
       // ignore
     }
@@ -185,7 +196,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setCart(defaultCart);
     try {
-      localStorage.removeItem("oday-cart");
+      localStorage.removeItem(cartStorageKey);
     } catch {
       // ignore
     }

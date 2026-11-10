@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
 import { getHotelBySlug } from "@/lib/hotel-service";
+import { getAvailabilityDemoHotel, hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 import { buildPageMetadata, SITE_URL, SITE_NAME } from "@/lib/seo";
 import HotelDetailClient from "@/components/hotels/HotelDetailClient";
 import JsonLd from "@/components/JsonLd";
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   let hotel;
   try {
-    hotel = await getHotelBySlug(slug);
+    hotel = await getAvailabilityDemoHotel(slug) ?? await getHotelBySlug(slug);
   } catch {
     hotel = null;
   }
@@ -69,7 +70,7 @@ export default async function HotelDetailPage({ params }: Props) {
 
   let hotel;
   try {
-    hotel = await getHotelBySlug(slug);
+    hotel = await getAvailabilityDemoHotel(slug) ?? await getHotelBySlug(slug);
   } catch {
     hotel = null;
   }
@@ -106,7 +107,7 @@ export default async function HotelDetailPage({ params }: Props) {
           description: isAr
             ? room.descriptionAr
             : (room.descriptionEn || room.descriptionAr),
-          offers: room.price > 0
+          offers: !hotelAvailabilityEnabled && room.price > 0
             ? {
               "@type": "Offer",
               price: room.price,

@@ -1,4 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import HotelDiscovery from "@/components/hotels/HotelDiscovery";
+import { hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 import Hotels from "@/components/Hotels";
 import HotelsHero from "@/components/HotelsHero";
 import { i18n, isValidLocale, type Locale } from "@/lib/i18n/config";
@@ -29,7 +32,7 @@ export default function HotelsPage() {
   return (
     <main>
       <HotelsHero />
-      <Hotels />
+      {hotelAvailabilityEnabled ? <Suspense fallback={null}><HotelDiscovery /></Suspense> : <Hotels />}
     </main>
   );
 }

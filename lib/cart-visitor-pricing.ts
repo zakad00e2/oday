@@ -1,4 +1,5 @@
 import type { CartState } from "./cart-context";
+import { hotelAvailabilityEnabled } from "./hotel-availability-service";
 import { resolveVisitorPrice, type PricePair, type PricingCurrency } from "./visitor-pricing";
 
 function activePrice(value: number, prices: PricePair | undefined, currency: PricingCurrency | null) {
@@ -12,6 +13,8 @@ export function resolveCartPrices(cart: CartState, currency: PricingCurrency | n
     ...cart,
     hotel: cart.hotel ? {
       ...cart.hotel,
+      requiresStayQuote: hotelAvailabilityEnabled,
+      stayQuoteCurrent: Boolean(cart.hotel.stayQuote && cart.hotel.stayQuote.currency === currency),
       pricePerNight: activePrice(cart.hotel.pricePerNight, cart.hotel.prices, currency),
       selectedRooms: cart.hotel.selectedRooms?.map(room => ({
         ...room, pricePerNight: activePrice(room.pricePerNight, room.prices, currency),

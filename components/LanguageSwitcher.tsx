@@ -16,7 +16,8 @@ export default function LanguageSwitcher({ className = "" }: { className?: strin
   const switchLanguage = () => {
     const pathWithoutLocale = stripLocale(pathname);
     const newPath = `/${targetLang}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`;
-    router.push(newPath);
+    const keepStay = pathWithoutLocale === "/hotels" || pathWithoutLocale.startsWith("/hotels/");
+    router.push(keepStay ? newPath + window.location.search + window.location.hash : newPath);
   };
 
   return (

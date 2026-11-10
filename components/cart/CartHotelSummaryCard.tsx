@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import type { CartHotel } from "@/lib/cart-context";
+import { getCartHotelRoomPrice, getCartHotelUpgradeTotal, hasDatedHotelPrice } from "@/lib/cart-hotel-stay";
 import {
   getCartHotelAddOnCount,
   getCartHotelSelectedRoomName,
@@ -72,6 +73,8 @@ export default function CartHotelSummaryCard({
             {getHotelName(hotel)}
           </p>
           <p className="mt-0.5 text-xs text-[#64748b]">{getHotelCity(hotel)}</p>
+          {hotel.stayGuests && <p className="text-xs text-slate-600">{lang === "ar" ? "ضيوف الإقامة: " : "Stay guests: "}{hotel.stayGuests.adults + hotel.stayGuests.children}</p>}
+          {hotel.checkIn && hotel.checkOut && hasDatedHotelPrice(hotel) && <p dir="ltr" className="text-start text-xs text-slate-600">{hotel.checkIn} – {hotel.checkOut}</p>}
           <p className="flex flex-wrap items-center text-xs text-[#64748b]">
             <span>
               {nights} {labels.nights}
@@ -104,7 +107,7 @@ export default function CartHotelSummaryCard({
                 </span>
               </div>
               <span className="shrink-0 text-xs font-bold text-[#0f172a]">
-                {formatPrice(room.pricePerNight, lang)}
+                {formatPrice(getCartHotelRoomPrice(hotel, room), lang)}
               </span>
             </div>
           ))}
@@ -115,7 +118,7 @@ export default function CartHotelSummaryCard({
         <div className="mx-3.5 mb-3 divide-y divide-[#FDE68A]/40 rounded-xl border border-[#FDE68A]/50 bg-[#FFFBEB]">
           {hotel.selectedAddOns.map((addOn, index) => {
             const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
-            const addOnTotal = addOn.price * nights * addOnCount;
+            const addOnTotal = getCartHotelUpgradeTotal(hotel, addOn, nights, hotelRoomCount);
 
             return (
               <div
@@ -129,7 +132,7 @@ export default function CartHotelSummaryCard({
                   </span>
                 </div>
                 <span className="shrink-0 text-xs font-bold text-[#92400E]">
-                  {addOn.price !== 0
+                  {addOnTotal !== 0
                     ? formatPriceWithSign(addOnTotal, lang)
                     : labels.free}
                 </span>
@@ -142,7 +145,9 @@ export default function CartHotelSummaryCard({
       <div className="flex items-center justify-between border-t border-[#F1F5F9] px-4 py-3">
         <span className="text-xs text-[#64748b]">{labels.estimatedTotal}</span>
         <span className="text-sm font-semibold text-[#0f172a]">
-          {formatPrice(hotelCost, lang)}
+          {hasDatedHotelPrice(hotel) && !hotel.stayQuoteCurrent
+            ? (lang === "ar" ? "يحتاج تحديث السعر" : "Needs a fresh quote")
+            : formatPrice(hotelCost, lang)}
         </span>
       </div>
 

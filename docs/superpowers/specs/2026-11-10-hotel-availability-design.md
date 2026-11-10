@@ -1,12 +1,12 @@
 # Hotel availability and nightly pricing
 
-Status: proposal for review. Room-type calendars are confirmed; the defaults and API below are proposed for the first release.
+Status: implemented in the frontend, with local demo and staged rollout flags. The backend service is pending implementation and staging verification.
 
 ## Outcome
 
 A guest can choose a destination, check-in and checkout dates, and a party size on `/ar/hotels` or `/en/hotels`. Search lists hotels only when a group of rooms can accommodate the party and stay available for every night. An admin can open or close nights and set a different rate for any room type. The guest carries the same dates and party into the hotel page, the plan, and the existing WhatsApp inquiry.
 
-The user will implement the frontend. [The backend handoff](../../../HOTEL_AVAILABILITY_BACKEND_HANDOFF.md) specifies the proposed service contract, migration, and acceptance cases. Confirm the contract with the backend developer before connecting the production UI. This release does not confirm reservations, hold rooms, take payments, or define age-based child rates.
+[The backend handoff](../../../HOTEL_AVAILABILITY_BACKEND_HANDOFF.md) specifies the implemented frontend's service contract, migration, and acceptance cases. Verify the contract with the backend developer before connecting the production UI. This release does not confirm reservations, hold rooms, take payments, or define age-based child rates.
 
 ## Approaches
 

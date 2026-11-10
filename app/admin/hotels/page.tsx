@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import DualPriceInputs from "@/components/admin/DualPriceInputs";
+import HotelRoomCalendar from "@/components/admin/HotelRoomCalendar";
+import { hotelCalendarEnabled as calendarEnabled } from "@/lib/hotel-availability-service";
 import { isValidPriceInput, hasRetainedEgpPrices } from "@/lib/visitor-pricing";
 import { formatPrice } from "@/lib/currency";
 import {
@@ -24,6 +26,8 @@ import {
 } from "@/lib/hotel-service";
 
 interface Room {
+  id?: string;
+  capacity?: number;
   nameAr: string;
   nameEn: string;
   price: number;
@@ -237,6 +241,7 @@ const emptyAmenityInput: Amenity = {
 };
 
 const emptyRoomInput: Room = {
+  capacity: 2,
   nameAr: "",
   nameEn: "",
   price: Number.NaN,
@@ -374,6 +379,8 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
       labelEn: hotel.facilitiesEn[index] ?? "",
     })),
     rooms: hotel.rooms.map((room) => ({
+      id: room.idIsSynthetic ? undefined : room.id,
+      capacity: room.capacity,
       nameAr: room.nameAr,
       nameEn: room.nameEn,
       price: room.price,
@@ -474,7 +481,8 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
             : "UNRATED",
     youtubeVideoUrl: hotel.youtubeUrl.trim(),
     rooms: hotel.rooms.map((room) => ({
-      capacity: extractCapacity(room.descriptionAr, room.descriptionEn),
+      id: room.id,
+      capacity: room.capacity ?? extractCapacity(room.descriptionAr, room.descriptionEn),
       price: Math.max(0, room.price),
       priceEgp: room.priceEgp,
       nameAr: room.nameAr.trim(),
@@ -502,7 +510,8 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function AdminHotels() {
-  const [hotels, setHotels] = useState<Hotel[]>(mockHotels);
+  const [hotels, setHotels] = useState<Hotel[]>(calendarEnabled ? [] : mockHotels);
+  const [calendarHotel, setCalendarHotel] = useState<Hotel | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Hotel | null>(null);
   const [form, setForm] = useState<Omit<Hotel, "id">>(cloneHotel(emptyHotel));
@@ -606,7 +615,11 @@ export default function AdminHotels() {
   const addRoom = () => {
     if (!isValidPriceInput(roomInput.price) || !isValidPriceInput(roomInput.priceEgp)) { setModalError("أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة."); return; }
     if (!roomInput.nameAr.trim()) return;
+    if (!Number.isSafeInteger(roomInput.capacity) || roomInput.capacity! < 1) { setModalError("أدخل سعة صحيحة لا تقل عن ضيف واحد."); return; }
+    setModalError(null);
     const newRoom = {
+      id: roomInput.id,
+      capacity: roomInput.capacity,
       nameAr: roomInput.nameAr.trim(),
       nameEn: roomInput.nameEn.trim(),
       price: roomInput.price,
@@ -628,6 +641,12 @@ export default function AdminHotels() {
       }));
     }
     setRoomInput(emptyRoomInput);
+  };
+
+  const removeRoom = (index: number) => {
+    if (editingRoomIndex === index) cancelEditRoom();
+    else if (editingRoomIndex !== null && editingRoomIndex > index) setEditingRoomIndex(editingRoomIndex - 1);
+    setForm(current => ({ ...current, rooms: current.rooms.filter((_, itemIndex) => itemIndex !== index) }));
   };
 
   const startEditRoom = (index: number) => {
@@ -785,6 +804,8 @@ export default function AdminHotels() {
         labelEn: amenity.labelEn.trim(),
       })),
       rooms: form.rooms.map((room) => ({
+        id: room.id,
+        capacity: room.capacity,
         nameAr: room.nameAr.trim(),
         nameEn: room.nameEn.trim(),
         price: room.price,
@@ -802,6 +823,14 @@ export default function AdminHotels() {
       })),
     };
 
+    if (calendarEnabled && editing?.rooms.some(room => !room.id)) {
+      setModalError("تعذّر حفظ أنواع الغرف لأن بياناتها لا تحتوي على المعرّفات المطلوبة. أعد تحميل الفندق قبل المحاولة.");
+      return;
+    }
+    if (calendarEnabled && payload.rooms.some(room => !Number.isSafeInteger(room.capacity) || room.capacity! < 1)) {
+      setModalError("راجع سعة كل نوع غرفة قبل الحفظ.");
+      return;
+    }
     const mutationInput = mapHotelToMutationInput(payload);
 
     if (!mutationInput) {
@@ -824,7 +853,9 @@ export default function AdminHotels() {
       };
 
       const savedHotel = editing
-        ? await updateHotel(editing.id, mutationInput, media)
+        ? await updateHotel(editing.id, mutationInput, media, calendarEnabled ? {
+            deleteRoomIds: editing.rooms.flatMap(room => room.id && !payload.rooms.some(next => next.id === room.id) ? [room.id] : []),
+          } : undefined)
         : await createHotel(mutationInput, media);
 
       const nextHotel = mapHotelRecordToHotel(
@@ -990,7 +1021,8 @@ export default function AdminHotels() {
                     <span className="bg-red-100 text-red-600 rounded-full px-2.5 py-0.5 text-[10px] font-medium">خصم {hotel.discount}</span>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {calendarEnabled && hotel.rooms.some(room => room.id) && <button type="button" onClick={() => setCalendarHotel(hotel)} className="flex-1 rounded-xl border border-sky-200 px-2 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-50">تقويم التوافر</button>}
                   <button onClick={() => openEdit(hotel)} className="flex-1 py-2 border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">تعديل</button>
                   <button onClick={() => setDeleteId(hotel.id)} className="py-2 px-3 border border-[#E5E7EB] rounded-xl text-[#EF4444] hover:bg-[#FEF2F2] hover:border-[#FEF2F2] transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
@@ -1001,6 +1033,10 @@ export default function AdminHotels() {
           );
         })}
       </div>
+
+      {calendarHotel && <HotelRoomCalendar key={calendarHotel.id} hotelId={calendarHotel.id} hotelName={calendarHotel.nameAr}
+        rooms={calendarHotel.rooms.flatMap(room => room.id ? [{ id: room.id, name: room.nameAr || room.nameEn }] : [])}
+        onClose={() => setCalendarHotel(null)} />}
 
       {showModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -1279,6 +1315,9 @@ export default function AdminHotels() {
                     <input value={roomInput.descriptionEn} onChange={(e) => setRoomInput({ ...roomInput, descriptionEn: e.target.value })} placeholder="Description in English" dir="ltr" className="border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#111] transition-colors" />
                   </div>
                   <div className="grid grid-cols-1 gap-2">
+                    <label className="grid max-w-xs gap-1 text-sm font-medium text-slate-700">أقصى عدد ضيوف للغرفة
+                      <input type="number" min={1} step={1} value={roomInput.capacity ?? ""} onChange={event => setRoomInput({ ...roomInput, capacity: event.target.value === "" ? undefined : Number(event.target.value) })} className="rounded-xl border border-slate-300 px-3 py-2.5" />
+                    </label>
                     <DualPriceInputs label="سعر الغرفة / ليلة" usd={roomInput.price} egp={roomInput.priceEgp} onChange={(price, priceEgp) => setRoomInput({ ...roomInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
@@ -1304,7 +1343,7 @@ export default function AdminHotels() {
                           <button type="button" onClick={() => startEditRoom(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>
-                          <button type="button" onClick={() => { if (editingRoomIndex === index) cancelEditRoom(); setForm((current) => ({ ...current, rooms: current.rooms.filter((_, itemIndex) => itemIndex !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                          <button type="button" onClick={() => removeRoom(index)} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
                         </div>
                       </div>
                       {room.descriptionAr && (

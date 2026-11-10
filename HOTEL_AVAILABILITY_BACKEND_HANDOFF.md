@@ -1,6 +1,26 @@
 # Backend handoff: hotel availability and nightly pricing
 
-Proposed integration contract, 2026-11-10. The product decision is one calendar per room type. Endpoint names, limits and migration steps below are proposed for implementation; no backend deployment or live integration is implied. See the [frontend design](docs/superpowers/specs/2026-11-10-hotel-availability-design.md).
+Frontend handoff, 2026-11-10. The bilingual dated search, stay quote and checkout recheck, and Arabic admin calendar are implemented against the contract below. The backend endpoints and database migration are still required. The frontend has a local demo; live integration must be verified on staging. See the [frontend design](docs/superpowers/specs/2026-11-10-hotel-availability-design.md).
+
+## Enablement and local preview
+
+| Value of `NEXT_PUBLIC_HOTEL_AVAILABILITY` | Behavior |
+| --- | --- |
+| Unset | Existing catalog, hotel detail, and admin behavior. No dated availability requests. |
+| `demo` | Development-only public search, sample hotel and calendar at `/ar/hotel-calendar-demo` or `/en/hotel-calendar-demo`. Select `SHARM_EL_SHEIKH` and dates from today to start. Sample stock, rates and cart persist in this browser only. Checkout verifies the quote but never opens WhatsApp. |
+| `admin` | Authenticated room calendars and ID-aware hotel PATCH are enabled; guest pages still use the existing catalog. Use this phase to configure stock and rates. |
+| `live` | Dated guest search and quoting, checkout rechecks, and the admin calendar are enabled. |
+
+Public environment variables are baked in at build time. Rebuild/redeploy when changing modes. Development preview (PowerShell):
+
+```powershell
+$env:NEXT_PUBLIC_HOTEL_AVAILABILITY = 'demo'
+npm run dev:next
+```
+
+The calendar demo exercises the same editor and date contract as `/admin/hotels`, without requiring a live admin account or writing to the hotel service. To verify frontend domain and request behavior run `npm run test:hotel-availability`.
+
+Frontend checks passed on 2026-11-10: the 41-test repo suite, lint on the changed files, and a production build in `live` mode. Browser checks used the local demo: search and room selection, add-ons and cart totals, a rate change requiring checkout confirmation, and an Arabic mobile search after closing an occupied night. The authenticated calendar against a real backend and the live inquiry flow remain staging checks.
 
 ## What to build
 
@@ -113,7 +133,7 @@ Use the same fields and rules as search, except `destination` is derived from th
 }
 ```
 
-`available_room_types` includes types with at least one unit available for every night, even if several types are needed to cover the party; `max_quantity` is capped at the guest count. Join by stable ID to the localized hotel record. `unit_stay_total` is for one room across all nights. Each subtotal is null if its required tariff is missing; use `"0.00"` for the sum of an empty upgrades list. `pricing_status` is `ON_REQUEST` if the full total is null. For a quote without explicit rooms or upgrades, the room allocation and total should match search under the same data snapshot. Prices and inventory are current as of the response; use `Cache-Control: no-store` for search and quote.
+`available_room_types` includes types with at least one unit available for every night, even if several types are needed to cover the party; `max_quantity` is capped at the guest count. Join by stable ID to the localized hotel record; both room types and selectable add-ons need stable IDs in the hotel response. `unit_stay_total` is for one room across all nights. Each subtotal is null if its required tariff is missing; use `"0.00"` for the sum of an empty upgrades list. `pricing_status` is `ON_REQUEST` if the full total is null. For a quote without explicit rooms or upgrades, the room allocation and total should match search under the same data snapshot. Prices and inventory are current as of the response; use `Cache-Control: no-store` for search and quote.
 
 Requote the exact selection before sending the inquiry. The frontend compares the new total, nightly lines and currency with what the guest accepted, including changes from priced to on-request or the reverse. A successful repricing returns the updated quote; it does not need a price-change HTTP error or a persistent quote ID. Unavailable stock returns a conflict; no room is held between quote and inquiry.
 
@@ -163,7 +183,8 @@ Return a machine-readable `code` and human-readable `message`; use `field` for v
 
 1. Ship and verify the ID-aware update contract. The current frontend extracts a number from room descriptions and falls back to two; have admins verify capacities and configure units before a hotel participates. Require stable IDs for calendar rooms and preserve them through unrelated hotel edits.
 2. Add daily calendar storage and indexing. No migration should invent stock from existing catalog rows. Keep legacy catalog access available; only configured nights qualify for dated search. Use a staging dataset with an open range, a closed night, overrides in both currencies and an unavailable tariff.
-3. Deploy the backend to staging and give the frontend developer the base URL, a test hotel/room and admin test access through the usual channel, confirmed validation limits, and example responses. Validate public and authenticated calls before enabling the frontend on production. Stage the launch so admins can fill calendars before exposing dated search to guests.
+3. Deploy the backend to staging and give the frontend developer the base URL, a test hotel/room and admin test access through the usual channel, confirmed validation limits, and example responses. Point `NEXT_PUBLIC_HOTEL_API_BASE` to the staging `/hotel` endpoint. Validate the public and authenticated calls, CORS for the frontend origin (including JSON POST and authenticated calendar GET/PATCH), and retention of room IDs on ordinary content edits.
+4. Deploy in `admin` mode first so admins can verify room capacities and seed calendars without exposing search. Then deploy in `live` mode. Recheck search, exact quote, calendar writes and an older saved cart against staging before switching production. No backend data is seeded by the frontend.
 
 ## Acceptance cases
 

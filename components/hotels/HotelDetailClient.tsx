@@ -26,6 +26,9 @@ import { pricePair, samePricePair, type PricePair } from "@/lib/visitor-pricing"
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
+import { Suspense } from "react";
+import HotelStayBooking from "./HotelStayBooking";
+import { getAvailabilityDemoHotel, hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 
 interface LocalizedHotelRoom {
     id: string;
@@ -640,7 +643,8 @@ export default function HotelDetailClient() {
                 setIsLoading(true);
             }
             setError(null);
-            const hotel = await getHotelBySlug(slug, signal);
+            const hotel = await getAvailabilityDemoHotel(slug) ?? await getHotelBySlug(slug, signal);
+            if (signal?.aborted) return;
             writeHotelDetailCache(hotel);
             setHotelData(hotel);
         } catch (loadError) {
@@ -890,6 +894,7 @@ export default function HotelDetailClient() {
                 </div>
 
                 <div id="booking" className="scroll-mt-24 py-10 md:py-14" dir={isAr ? "rtl" : "ltr"}>
+                    {hotelAvailabilityEnabled && hotelData ? <Suspense fallback={null}><HotelStayBooking hotel={hotelData} /></Suspense> : (
                     <div className="overflow-visible rounded-3xl border border-[#e2e8f0] bg-white shadow-sm">
                         <div className="flex items-center gap-3 border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 md:px-8">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0EA5E9]/10 text-[#0EA5E9]">
@@ -1251,6 +1256,7 @@ export default function HotelDetailClient() {
                             </button>
                         </div>
                     </div>
+                    )}
                 </div>
 
                 <HotelGallery

@@ -10,6 +10,8 @@ import {
   getCartHotelSelectedRooms,
 } from "@/lib/cart-hotel";
 import { useCart } from "@/lib/cart-context";
+import { cartHotelEditHref, getCartHotelNights, getCartHotelRoomPrice, getCartHotelUpgradeTotal, hasDatedHotelPrice } from "@/lib/cart-hotel-stay";
+import { hotelAvailabilityDemo } from "@/lib/hotel-availability-service";
 import {
   calculateHotelLineCost,
   calculateTripLineCost,
@@ -63,7 +65,7 @@ export default function CartDrawer() {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || hotelAvailabilityDemo) {
       wasOpenRef.current = false;
       return;
     }
@@ -82,7 +84,8 @@ export default function CartDrawer() {
   const guestsTotal = cart.guests.adults + cart.guests.children;
   const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];
   const hotelRoomCount = cart.hotel ? getCartHotelRoomCount(cart.hotel) : 0;
-  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
+  const hotelNights = getCartHotelNights(cart.hotel, cart.nights);
+  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, hotelNights) : 0;
   const getTripAddOnQuantity = (
     trip: typeof cart.trips[number],
     addOn: NonNullable<typeof cart.trips[number]["selectedAddOns"]>[number],
@@ -110,7 +113,7 @@ export default function CartDrawer() {
       if (cart.hotel.selectedAddOns && cart.hotel.selectedAddOns.length > 0) {
         msg += `*${wa.addOns}* ${cart.hotel.selectedAddOns.map((a) => `${getHotelAddOnName(a)} ×${getCartHotelAddOnCount(a, hotelRoomCount)}`).join(isAr ? "، " : ", ")}\n`;
       }
-      msg += `${wa.nightsLabel} ${cart.nights}\n`;
+      msg += `${wa.nightsLabel} ${hotelNights}\n`;
       msg += `${wa.stayCost} ${formatPrice(hotelCost, lang)}\n\n`;
     }
     if (cart.trips.length > 0) {
@@ -247,7 +250,7 @@ export default function CartDrawer() {
                             {getHotelName(cart.hotel)}
                           </h4>
                           <p className="mt-1 text-[11px] text-[#64748B] truncate">
-                            {[getHotelCity(cart.hotel), `${cart.nights} ${d.nights}`]
+                            {[getHotelCity(cart.hotel), `${hotelNights} ${d.nights}`]
                               .filter(Boolean)
                               .join(" • ")}
                           </p>
@@ -278,7 +281,7 @@ export default function CartDrawer() {
                             )}
                           </div>
                           <span className="text-xs font-bold text-[#0F172A] shrink-0 ms-2">
-                            {formatPrice(room.pricePerNight, lang)}
+                            {formatPrice(getCartHotelRoomPrice(cart.hotel, room), lang)}
                           </span>
                         </div>
                       ))}
@@ -289,7 +292,7 @@ export default function CartDrawer() {
                     <div className="mx-3.5 mb-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A]/50 divide-y divide-[#FDE68A]/40">
                       {cart.hotel.selectedAddOns.map((addOn, index) => {
                         const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
-                        const addOnTotal = addOn.price * cart.nights * addOnCount;
+                        const addOnTotal = getCartHotelUpgradeTotal(cart.hotel, addOn, hotelNights, hotelRoomCount);
 
                         return (
                           <div
@@ -306,7 +309,7 @@ export default function CartDrawer() {
                               </span>
                             </div>
                             <span className="text-xs font-bold text-[#92400E] shrink-0 ms-2">
-                              {addOn.price !== 0
+                              {addOnTotal !== 0
                                 ? formatPriceWithSign(addOnTotal, lang)
                                 : d.free}
                             </span>
@@ -320,12 +323,13 @@ export default function CartDrawer() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-[#64748B]">{d.total}</span>
                       <span className="text-base font-extrabold text-[#0F172A]">
-                        {formatPrice(hotelCost, lang)}
+                        {hasDatedHotelPrice(cart.hotel) && !cart.hotel.stayQuoteCurrent
+                          ? (isAr ? "يحتاج تحديث السعر" : "Needs a fresh quote") : formatPrice(hotelCost, lang)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/${lang}/hotels/${cart.hotel.slug}#booking`}
+                        href={cartHotelEditHref(cart.hotel, lang)}
                         onClick={closeCart}
                         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#EFF6FF] px-3 py-2 text-xs font-bold text-[#2563EB] transition-colors hover:bg-[#DBEAFE]"
                       >
@@ -519,7 +523,7 @@ export default function CartDrawer() {
 
             {/* CTA */}
             <Link
-              href={`/${lang}/checkout?wa=${encodeURIComponent(buildWhatsAppMsg())}`}
+              href={hasDatedHotelPrice(cart.hotel) ? `/${lang}/checkout` : `/${lang}/checkout?wa=${encodeURIComponent(buildWhatsAppMsg())}`}
               onClick={closeCart}
               className="block w-full bg-gradient-to-l from-[#2563EB] to-[#3B82F6] hover:from-[#1D4ED8] hover:to-[#2563EB] text-white font-bold py-3.5 rounded-xl text-center text-sm transition-all shadow-md shadow-[#2563EB]/20 active:scale-[0.98]"
             >

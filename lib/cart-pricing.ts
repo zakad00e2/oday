@@ -7,12 +7,18 @@ import {
   getCartHotelBaseCost,
 } from "./cart-hotel";
 
+import { getCartStayTotal, hasDatedHotelPrice } from "./cart-hotel-stay";
+import type { StayQuote } from "./hotel-stay";
+
 export interface CartPricingGuests {
   adults: number;
   children: number;
 }
 
 export interface CartPricingHotel {
+  stayQuote?: StayQuote;
+  stayQuoteCurrent?: boolean;
+  requiresStayQuote?: boolean;
   pricePerNight: number;
   roomsCount?: number;
   roomName?: string;
@@ -42,6 +48,7 @@ export function calculateHotelLineCost(
   hotel: CartPricingHotel,
   nights: number,
 ): number {
+  if (hasDatedHotelPrice(hotel)) return getCartStayTotal(hotel);
   return getCartHotelBaseCost(hotel, nights) + getCartHotelAddOnsCost(hotel, nights);
 }
 

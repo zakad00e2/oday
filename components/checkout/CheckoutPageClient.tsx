@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FlexibleImage from "@/components/FlexibleImage";
 import CartHotelSummaryCard from "@/components/cart/CartHotelSummaryCard";
@@ -11,6 +11,9 @@ import {
   getCartHotelSelectedRooms,
 } from "@/lib/cart-hotel";
 import { useCart } from "@/lib/cart-context";
+import { cartHotelEditHref, getCartHotelNights, getCartHotelRoomPrice, getCartHotelUpgradeTotal, hasDatedHotelPrice } from "@/lib/cart-hotel-stay";
+import { hotelAvailabilityDemo, quoteHotelStay } from "@/lib/hotel-availability-service";
+import { exactStayRequest, HotelAvailabilityError, sameStayQuote, stayMoney, type StayQuote } from "@/lib/hotel-stay";
 import {
   calculateGuestTotal,
   calculateHotelLineCost,
@@ -22,8 +25,8 @@ import { openExternalUrl } from "@/lib/external-links";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
 export default function CheckoutPageClient() {
-  const { formatPrice, formatPriceWithSign, currency, inquiryPricing } = useVisitorPricing();
-  const { cart, totalPrice, totalItems, clearCart, setGuests } = useCart();
+  const { formatPrice, formatPriceWithSign, currency, category, inquiryPricing } = useVisitorPricing();
+  const { cart, totalPrice, totalItems, clearCart, setGuests, setHotel } = useCart();
   const { lang } = useI18n();
   const isAr = lang === "ar";
 
@@ -35,13 +38,22 @@ export default function CheckoutPageClient() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [quoteNotice, setQuoteNotice] = useState("");
+  const [reviewQuote, setReviewQuote] = useState<StayQuote>();
+  const [needsRoomEdit, setNeedsRoomEdit] = useState(false);
+  const submission = useRef<AbortController | null>(null);
+  useEffect(() => () => submission.current?.abort(), [cart, category]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
   const guestsTotal = calculateGuestTotal(cart.guests);
   const hotelSelectedRooms = cart.hotel ? getCartHotelSelectedRooms(cart.hotel) : [];
   const hotelRoomCount = cart.hotel ? getCartHotelRoomCount(cart.hotel) : 0;
-  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, cart.nights) : 0;
+  const hotelNights = getCartHotelNights(cart.hotel, cart.nights);
+  const datedHotel = hasDatedHotelPrice(cart.hotel);
+  const showTripGuestControls = !datedHotel || cart.trips.length > 0;
+  const tripGuestsLabel = isAr ? "ضيوف الرحلات" : "Trip guests";
+  const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, hotelNights) : 0;
 
   const getHotelName = (hotel: NonNullable<typeof cart.hotel>) =>
     isAr ? hotel.nameAr ?? hotel.name : hotel.nameEn ?? hotel.name;
@@ -172,22 +184,72 @@ export default function CheckoutPageClient() {
     return nextErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (submission.current) return;
 
     setSubmitError("");
+    setNeedsRoomEdit(false);
 
     const nextErrors = validate();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    const dated = datedHotel;
+    let inquiryHotel = cart.hotel;
+    let inquiryHotelCost = hotelCost;
+    let inquiryTotal = totalPrice;
+    if (cart.hotel && dated) {
+      const request = exactStayRequest(cart.hotel);
+      if (!request || !category || (cart.hotel.demoStay && !hotelAvailabilityDemo)) {
+        setNeedsRoomEdit(true);
+        setSubmitError(isAr ? "حدّث تفاصيل الإقامة وفئة التسعير قبل إرسال الطلب." : "Update your stay details and pricing category before sending the inquiry.");
+        return;
+      }
+      const controller = new AbortController();
+      submission.current = controller;
+      setIsSubmitting(true);
+      try {
+        const quote = await quoteHotelStay(String(cart.hotel.id), request, category, { rooms: request.rooms, addons: request.addons }, controller.signal);
+        if (controller.signal.aborted) return;
+        const alreadyAccepted = sameStayQuote(cart.hotel.stayQuote, quote);
+        if (!alreadyAccepted && !sameStayQuote(reviewQuote, quote)) {
+          setReviewQuote(quote);
+          setQuoteNotice((isAr ? "تغيّر عرض الإقامة. الإجمالي المحدّث: " : "The stay quote changed. Updated total: ") + formatPrice(stayMoney(quote.total), lang));
+          return;
+        }
+        inquiryHotel = { ...cart.hotel, stayQuote: quote, stayQuoteCurrent: true };
+        inquiryHotelCost = stayMoney(quote.total);
+        inquiryTotal = inquiryHotelCost + cart.trips.reduce((sum, trip) => sum + calculateTripLineCost(trip, guestsTotal), 0);
+        if (!alreadyAccepted) setHotel(inquiryHotel);
+        setReviewQuote(undefined);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const unavailable = error instanceof HotelAvailabilityError && (error.code === "STAY_UNAVAILABLE" || error.status === 404);
+        setNeedsRoomEdit(unavailable);
+        setSubmitError(unavailable
+          ? (isAr ? "الغرف المختارة لم تعد متاحة. حدّث اختيارك للمتابعة." : "Your selected rooms are no longer available. Update your stay to continue.")
+          : (isAr ? "تعذّر التحقق من الإقامة. جرّب مرة أخرى." : "Your stay could not be checked. Try again."));
+        return;
+      } finally {
+        submission.current = null;
+        setIsSubmitting(false);
+      }
+    }
+    if (hotelAvailabilityDemo) {
+      setQuoteNotice(isAr ? "تم التحقق من عرض الإقامة التجريبي. لم يُرسل أي طلب." : "Demo stay verified. No inquiry was sent.");
+      return;
+    }
+
     let msg = `*${t.whatsapp.header}*\n\n${inquiryPricing(lang)}\n`;
     msg += `${t.whatsapp.name}: ${name}\n`;
     msg += `${t.whatsapp.phone}: ${phone}\n`;
     if (email.trim()) msg += `${t.whatsapp.email}: ${email}\n`;
-    msg += `${t.whatsapp.adults}: ${cart.guests.adults}\n`;
-    msg += `${t.whatsapp.children}: ${cart.guests.children}\n`;
+    if (showTripGuestControls) {
+      if (dated) msg += `${tripGuestsLabel}:\n`;
+      msg += `${t.whatsapp.adults}: ${cart.guests.adults}\n`;
+      msg += `${t.whatsapp.children}: ${cart.guests.children}\n`;
+    }
     if (cart.travelDate) msg += `${t.whatsapp.travelDate}: ${cart.travelDate}\n`;
     msg += "\n";
 
@@ -195,13 +257,15 @@ export default function CheckoutPageClient() {
       msg += `*${t.whatsapp.hotel}:* ${getHotelName(cart.hotel)} - ${getHotelCity(cart.hotel)}\n`;
       if (cart.hotel.checkIn) msg += `${t.whatsapp.checkIn}: ${cart.hotel.checkIn}\n`;
       if (cart.hotel.checkOut) msg += `${t.whatsapp.checkOut}: ${cart.hotel.checkOut}\n`;
+      if (cart.hotel.stayGuests) msg += `${isAr ? "ضيوف الإقامة" : "Stay guests"}: ${t.whatsapp.adults} ${cart.hotel.stayGuests.adults}, ${t.whatsapp.children} ${cart.hotel.stayGuests.children}\n`;
 
       if (hotelSelectedRooms.length > 0) {
         msg += `${t.whatsapp.room}:\n`;
         hotelSelectedRooms.forEach((room) => {
           msg += `- ${getCartHotelSelectedRoomName(room, lang)} x${room.count}`;
-          if (room.pricePerNight !== 0) {
-            msg += ` (${formatPrice(room.pricePerNight, lang)})`;
+          const price = getCartHotelRoomPrice(inquiryHotel, room);
+          if (price !== 0) {
+            msg += ` (${formatPrice(price, lang)})`;
           }
           msg += "\n";
         });
@@ -211,15 +275,15 @@ export default function CheckoutPageClient() {
         msg += `${t.whatsapp.addOns}: ${cart.hotel.selectedAddOns
           .map((addOn) => {
             const addOnCount = getCartHotelAddOnCount(addOn, hotelRoomCount);
-            const addOnTotal = addOn.price * cart.nights * addOnCount;
+            const addOnTotal = getCartHotelUpgradeTotal(inquiryHotel, addOn, hotelNights, hotelRoomCount);
             return `${getHotelAddOnName(addOn)} x${addOnCount}${
-              addOn.price !== 0 ? ` (${formatPriceWithSign(addOnTotal, lang)})` : ""
+              addOnTotal !== 0 ? ` (${formatPriceWithSign(addOnTotal, lang)})` : ""
             }`;
           })
           .join(isAr ? "، " : ", ")}\n`;
       }
 
-      msg += `${t.whatsapp.nights}: ${cart.nights} | ${t.whatsapp.cost}: ${formatPrice(hotelCost, lang)}\n\n`;
+      msg += `${t.whatsapp.nights}: ${hotelNights} | ${t.whatsapp.cost}: ${formatPrice(inquiryHotelCost, lang)}\n\n`;
     }
 
     if (hotelName.trim() && !cart.hotel) {
@@ -266,7 +330,7 @@ export default function CheckoutPageClient() {
     }
 
     if (totalItems > 0) {
-      msg += `*${t.whatsapp.estimatedTotal}: ${formatPrice(totalPrice, lang)}*\n`;
+      msg += `*${t.whatsapp.estimatedTotal}: ${formatPrice(inquiryTotal, lang)}*\n`;
     }
     if (notes.trim()) msg += `\n${t.whatsapp.notes}: ${notes}\n`;
     msg += `\n${t.whatsapp.agreementConfirmed}\n`;
@@ -274,7 +338,7 @@ export default function CheckoutPageClient() {
     const whatsappUrl = `https://wa.me/201032549630?text=${encodeURIComponent(msg)}`;
     setIsSubmitting(true);
     window.tatheer?.("purchase", {
-      ...(Number.isFinite(totalPrice) && currency ? { value: totalPrice, currency } : {}),
+      ...(Number.isFinite(inquiryTotal) && currency ? { value: inquiryTotal, currency } : {}),
       ...(cart.hotel
         ? {
             content_type: "hotel",
@@ -284,7 +348,13 @@ export default function CheckoutPageClient() {
       items_count: totalItems,
     });
 
+    if (dated) {
+      // The network recheck may outlast transient user activation; navigate the current tab.
+      window.location.assign(whatsappUrl);
+      return;
+    }
     if (!openExternalUrl(whatsappUrl)) {
+      setIsSubmitting(false);
       setSubmitError(
         isAr
           ? "تعذر فتح واتساب. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى."
@@ -365,8 +435,8 @@ export default function CheckoutPageClient() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.fullName}</label>
-                <input
+                <label htmlFor="inquiry-name" className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.fullName}</label>
+                <input id="inquiry-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -377,8 +447,8 @@ export default function CheckoutPageClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.phone}</label>
-                <input
+                <label htmlFor="inquiry-phone" className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.phone}</label>
+                <input id="inquiry-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -389,8 +459,8 @@ export default function CheckoutPageClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.email}</label>
-                <input
+                <label htmlFor="inquiry-email" className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.email}</label>
+                <input id="inquiry-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -399,9 +469,13 @@ export default function CheckoutPageClient() {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <p className="mb-2 px-1 text-sm font-bold text-[#0f172a]">{t.form.guestsSection}</p>
-                {/* <div className="rounded-2xl border  bg-[#ffffff] p-4"> */}
+              {datedHotel && cart.hotel && <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                <p className="font-bold text-slate-950">{isAr ? "ضيوف الإقامة" : "Stay guests"}</p>
+                {cart.hotel.stayGuests && <p className="mt-1 text-slate-700">{t.form.adults}: {cart.hotel.stayGuests.adults} · {t.form.children}: {cart.hotel.stayGuests.children}</p>}
+                <Link className="mt-2 inline-block font-semibold text-sky-800 underline" href={cartHotelEditHref(cart.hotel, lang)}>{isAr ? "تعديل الإقامة" : "Edit stay"}</Link>
+              </div>}
+              {showTripGuestControls && <div className="md:col-span-2">
+                <p className="mb-2 px-1 text-sm font-bold text-[#0f172a]">{datedHotel ? tripGuestsLabel : t.form.guestsSection}</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
@@ -466,7 +540,7 @@ export default function CheckoutPageClient() {
                       </div>
                     </div>
                   </div>
-              </div>
+              </div>}
 
               {!cart.hotel && (
                 <div className="md:col-span-2">
@@ -482,8 +556,8 @@ export default function CheckoutPageClient() {
               )}
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.notes}</label>
-                <textarea
+                <label htmlFor="inquiry-notes" className="block text-sm font-bold text-[#0f172a] mb-2">{t.form.notes}</label>
+                <textarea id="inquiry-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t.form.notesPlaceholder}
@@ -547,14 +621,18 @@ export default function CheckoutPageClient() {
                   : "bg-gray-400 cursor-not-allowed"
               } text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-base transition-all active:scale-[0.98]`}
             >
-              {t.form.submit}
+              {isSubmitting ? (isAr ? "جاري التحقق…" : "Checking…")
+                : reviewQuote && !submitError ? (isAr ? "قبول السعر والمتابعة" : "Accept quote and continue")
+                : hotelAvailabilityDemo ? (isAr ? "اختبر الاستفسار" : "Test inquiry") : t.form.submit}
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.527 5.862L.06 23.854l6.143-1.438C7.869 23.456 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.93 0-3.76-.514-5.352-1.442l-.384-.228-3.644.854.893-3.546-.252-.399A9.773 9.773 0 012.18 12c0-5.423 4.397-9.82 9.82-9.82 5.423 0 9.82 4.397 9.82 9.82 0 5.423-4.397 9.82-9.82 9.82z" />
               </svg>
             </button>
 
-            {submitError && <p className="mt-3 text-sm font-medium text-red-500">{submitError}</p>}
+            {submitError && <p role="alert" className="mt-3 text-sm font-medium text-red-700">{submitError}</p>}
+            {quoteNotice && !submitError && <p role="status" className="mt-3 text-sm font-semibold text-sky-900">{quoteNotice}</p>}
+            {needsRoomEdit && cart.hotel && <Link href={cartHotelEditHref(cart.hotel, lang)} className="mt-2 inline-block text-sm font-semibold text-sky-800 underline">{isAr ? "تعديل الإقامة" : "Update your stay"}</Link>}
           </form>
 
           <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-sm overflow-hidden lg:sticky lg:top-28">
@@ -570,7 +648,7 @@ export default function CheckoutPageClient() {
                 <CartHotelSummaryCard
                   hotel={cart.hotel}
                   lang={lang}
-                  nights={cart.nights}
+                  nights={hotelNights}
                   hotelRoomCount={hotelRoomCount}
                   hotelSelectedRooms={hotelSelectedRooms}
                   hotelCost={hotelCost}
@@ -674,12 +752,12 @@ export default function CheckoutPageClient() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#64748b]">{t.summary.travelers}</span>
+              {showTripGuestControls && <div className="flex items-center justify-between text-sm">
+                <span className="text-[#64748b]">{datedHotel ? tripGuestsLabel : t.summary.travelers}</span>
                 <span className="font-semibold text-[#0f172a]">
                   {cart.guests.adults} {t.summary.adults} / {cart.guests.children} {t.summary.children}
                 </span>
-              </div>
+              </div>}
             </div>
 
             <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-4 flex items-center justify-between">

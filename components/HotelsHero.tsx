@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 import ScrollReveal from "./ScrollReveal";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 
@@ -9,8 +10,9 @@ export default function HotelsHero() {
     const d = dict.hotelsPage;
 
     return (
-        <section id="hero" className="w-full px-3 md:px-5 pt-20 pb-10">
-            <div className="relative overflow-hidden rounded-[2rem] h-[75vh] sm:h-[70vh] md:h-[85vh] flex flex-col items-center justify-center mx-auto max-w-[1600px] shadow-2xl">
+        <section id="hero" className={"w-full px-3 pt-20 md:px-5 " + (hotelAvailabilityEnabled ? "pb-5" : "pb-10")}>
+            <div className={"relative mx-auto flex max-w-[1600px] flex-col items-center justify-center overflow-hidden rounded-[2rem] shadow-2xl " +
+                (hotelAvailabilityEnabled ? "min-h-[300px] md:min-h-[380px] lg:min-h-[440px]" : "h-[75vh] sm:h-[70vh] md:h-[85vh]")}>
 
                 <Image
                     src="/images/hotels-hero-sea-room.png"
@@ -18,14 +20,13 @@ export default function HotelsHero() {
                     fill
                     priority
                     sizes="100vw"
-                    quality={100}
                     unoptimized
                     className="object-cover"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/75" />
 
-                <div className="relative z-10 flex flex-col items-center text-center px-6 md:px-16 py-20 max-w-4xl mx-auto">
+                <div className={"relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 text-center md:px-16 " + (hotelAvailabilityEnabled ? "py-10" : "py-20")}>
                  
 
                     <ScrollReveal delay={100}>
@@ -46,7 +47,7 @@ export default function HotelsHero() {
                     </ScrollReveal>
                 </div>
 
-                <a
+                {!hotelAvailabilityEnabled && <a
                     href="#hotels"
                     className="absolute bottom-8 left-1/2 z-10 inline-flex -translate-x-1/2 text-sm font-semibold text-[#9CA3AF] transition-all duration-300 hover:text-white group"
                 >
@@ -57,7 +58,7 @@ export default function HotelsHero() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 26l6 6 6-6" />
                         </svg>
                     </span>
-                </a>
+                </a>}
             </div>
         </section>
     );

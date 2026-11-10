@@ -140,6 +140,7 @@ export interface ApiHotelListResponse {
 
 export interface HotelRoomRecord {
   id: string;
+  idIsSynthetic?: boolean;
   capacity: number;
   price: number;
   priceEgp?: number | null;
@@ -151,6 +152,7 @@ export interface HotelRoomRecord {
 
 export interface HotelAddonRecord {
   id: string;
+  idIsSynthetic?: boolean;
   price: number;
   priceEgp?: number | null;
   nameAr: string;
@@ -195,6 +197,7 @@ export interface HotelRecord {
 }
 
 export interface HotelMutationRoomInput {
+  id?: string;
   capacity: number;
   price: number;
   priceEgp?: number | null;
@@ -523,7 +526,7 @@ function isGalleryHotelAsset(asset: ApiHotelAsset) {
   return asset.kind === "HOTEL_GALLERY_IMAGE" || asset.kind === "GALLERY";
 }
 
-function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
+export function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
   const ar = getTranslation(apiHotel.translations, "ar");
   const en = getTranslation(apiHotel.translations, "en");
   const assets = apiHotel.assets ?? [];
@@ -589,6 +592,7 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     youtubeVideoUrl: apiHotel.youtube_video_url ?? "",
     rooms: (apiHotel.rooms ?? []).map((room, index) => ({
       id: room.id ?? `room-${index + 1}`,
+      idIsSynthetic: !room.id,
       capacity: parseNumber(room.capacity),
       price: parsePrice(room.price) ?? Number.NaN,
       priceEgp: parsePrice(room.price_egp),
@@ -615,6 +619,7 @@ function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
     })),
     addons: (apiHotel.addons ?? []).map((addon, index) => ({
       id: addon.id ?? `addon-${index + 1}`,
+      idIsSynthetic: !addon.id,
       price: parsePrice(addon.price) ?? Number.NaN,
       priceEgp: parsePrice(addon.price_egp),
       nameAr: repairText(
@@ -693,6 +698,7 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
 function buildCreateFormData(
   input: HotelMutationInput,
   media?: HotelCreateMediaInput,
+  roomUpdate?: { deleteRoomIds: string[] },
 ) {
   const baseSlug = slugifyHotel(input.slug || input.nameEn || input.nameAr);
   const enSlug = baseSlug;
@@ -716,6 +722,7 @@ function buildCreateFormData(
     },
   ];
   const rooms = input.rooms.map((room) => ({
+    ...(roomUpdate && room.id ? { id: room.id } : {}),
     capacity: String(Math.max(1, room.capacity)),
     price: Math.max(0, room.price),
     price_egp: parsePrice(room.priceEgp),
@@ -769,6 +776,10 @@ function buildCreateFormData(
   formData.set("youtube_video_url", input.youtubeVideoUrl.trim());
   formData.set("translations", JSON.stringify(translations));
   formData.set("rooms", JSON.stringify(rooms));
+  if (roomUpdate) {
+    formData.set("rooms_write_mode", "by_id");
+    formData.set("delete_room_ids", JSON.stringify(roomUpdate.deleteRoomIds));
+  }
   formData.set("addons", JSON.stringify(addons));
 
   for (const file of media?.mainImageFiles ?? []) {
@@ -925,10 +936,11 @@ export async function updateHotel(
   id: string,
   input: HotelMutationInput,
   media?: HotelCreateMediaInput,
+  roomUpdate?: { deleteRoomIds: string[] },
 ) {
   const payload = await requestJson<ApiHotel>(`/${id}`, {
     method: "PATCH",
-    body: buildCreateFormData(input, media),
+    body: buildCreateFormData(input, media, roomUpdate),
   });
 
   const hotel = createHotelRecord(payload);
