@@ -1054,7 +1054,14 @@ export default function AdminHotels() {
       </div>
 
       {calendarHotel && <HotelRoomCalendar key={calendarHotel.id} hotelId={calendarHotel.id} hotelName={calendarHotel.nameAr}
-        rooms={calendarHotel.rooms.flatMap(room => room.id ? [{ id: room.id, name: room.nameAr || room.nameEn }] : [])}
+        rooms={calendarHotel.rooms.flatMap(room => room.id ? [{ id: room.id, name: room.nameAr || room.nameEn, capacity: room.capacity }] : [])}
+        onCapacitySaved={(roomId, capacity) => {
+          const updateCapacity = (hotel: Hotel) => hotel.id === calendarHotel.id
+            ? { ...hotel, rooms: hotel.rooms.map(room => room.id === roomId ? { ...room, capacity } : room) }
+            : hotel;
+          setHotels(current => current.map(updateCapacity));
+          setCalendarHotel(current => current && updateCapacity(current));
+        }}
         onClose={() => setCalendarHotel(null)} />}
 
       {showModal && (

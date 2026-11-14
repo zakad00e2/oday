@@ -77,7 +77,7 @@ export interface ApiHotelRoomTranslation {
 
 export interface ApiHotelRoom {
   id?: string;
-  capacity: string;
+  capacity: string | number | null;
   price: string;
   price_egp?: string | number | null;
   hotel_id?: string;
@@ -977,6 +977,28 @@ export async function updateHotel(
   clearHotelClientCache();
   writeHotelDetailCache(hotel);
   return hotel;
+}
+
+export const MAX_HOTEL_ROOM_CAPACITY = 50;
+
+export async function updateHotelRoomCapacity(hotelId: string, roomId: string, capacity: number) {
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_HOTEL_ROOM_CAPACITY) {
+    throw new HotelServiceError("أدخل سعة من ١ إلى ٥٠ ضيفًا للغرفة.", 400);
+  }
+
+  const body = new FormData();
+  body.set("rooms_write_mode", "by_id");
+  body.set("rooms", JSON.stringify([{ id: roomId, capacity }]));
+  await requestJson<unknown>(`/${encodeURIComponent(hotelId)}`, { method: "PATCH", body });
+  clearHotelClientCache();
+
+  const hotel = await getHotelById(hotelId);
+  const savedCapacity = hotel.rooms.find(room => room.id === roomId)?.capacity;
+  if (savedCapacity !== capacity) {
+    throw new HotelServiceError("لم يؤكد الخادم حفظ سعة الغرفة. أعد تحميل بيانات الفندق قبل المحاولة.", 409);
+  }
+  writeHotelDetailCache(hotel);
+  return savedCapacity;
 }
 
 export async function deleteHotel(id: string) {

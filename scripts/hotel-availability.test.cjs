@@ -160,3 +160,26 @@ test("calendar-aware edits omit untouched addons and send only addon upserts and
   );
   assert.equal(fetchMock.mock.callCount(), 3);
 });
+
+test("setting a room capacity sends only the room ID and capacity, and confirms it was saved", async t => {
+  const { updateHotelRoomCapacity } = require("../lib/hotel-service.ts");
+  const requests = [];
+  const hotel = structuredClone(demoHotel);
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    requests.push({ pathname: new URL(url).pathname, method: init.method, body: init.body });
+    if (init.method === "PATCH") return Response.json({ id: hotel.id });
+    return Response.json(hotel);
+  });
+
+  await assert.rejects(updateHotelRoomCapacity(demoHotel.id, "demo-double", 51), { status: 400 });
+  assert.equal(requests.length, 0);
+  await assert.rejects(updateHotelRoomCapacity(demoHotel.id, "demo-double", 3), { status: 409 });
+  hotel.rooms[0].capacity = 3;
+  assert.equal(await updateHotelRoomCapacity(demoHotel.id, "demo-double", 3), 3);
+  const patch = requests[2];
+  assert.equal(patch.pathname, "/hotel/demo-coast");
+  assert.equal(patch.method, "PATCH");
+  assert.deepEqual([...patch.body.keys()].sort(), ["rooms", "rooms_write_mode"]);
+  assert.equal(patch.body.get("rooms_write_mode"), "by_id");
+  assert.deepEqual(JSON.parse(patch.body.get("rooms")), [{ id: "demo-double", capacity: 3 }]);
+});

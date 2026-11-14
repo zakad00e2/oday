@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, X } from "lucide-react";
 import { getHotelRoomCalendar, saveHotelRoomCalendar } from "@/lib/hotel-availability-service";
+import { MAX_HOTEL_ROOM_CAPACITY, updateHotelRoomCapacity } from "@/lib/hotel-service";
 import { addStayDays, cairoToday, HotelAvailabilityError, STAY_HORIZON, stayNights,
   type CalendarChange, type RatePair, type RoomCalendar } from "@/lib/hotel-stay";
 
-type Room = { id: string; name: string };
+type Room = { id: string; name: string; capacity?: number };
 type Draft = {
   from: string; through: string; units: string;
   USD: { mode: "keep" | "set" | "clear"; value: string };
@@ -27,8 +28,9 @@ function monthStart(today: string, offset: number) {
   return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 10);
 }
 
-export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }: {
+export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, onCapacitySaved }: {
   hotelId: string; hotelName: string; rooms: Room[]; onClose?: () => void;
+  onCapacitySaved?: (roomId: string, capacity: number) => void;
 }) {
   const [today] = useState(cairoToday);
   const [roomId, setRoomId] = useState(rooms[0]?.id ?? "");
@@ -36,6 +38,9 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
   const [attempt, setAttempt] = useState(0);
   const [draft, setDraft] = useState(() => emptyDraft(today));
   const [isSaving, setIsSaving] = useState(false);
+  const [capacityDraft, setCapacityDraft] = useState("");
+  const [isSavingCapacity, setIsSavingCapacity] = useState(false);
+  const [capacityMessage, setCapacityMessage] = useState<{ error?: boolean; text: string }>();
   const [message, setMessage] = useState<{ error?: boolean; text: string }>();
   const [response, setResponse] = useState<{ key: string; calendar?: RoomCalendar }>();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -48,6 +53,8 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
   const visible = response?.key === key ? response : undefined;
   const calendar = visible?.calendar;
   const selectedDay = calendar?.days.find(day => day.date === draft.from);
+  const roomCapacity = rooms.find(room => room.id === roomId)?.capacity ?? 0;
+  const isBusy = isSaving || isSavingCapacity;
   const dirty = Boolean(draft.units || draft.USD.mode !== "keep" || draft.EGP.mode !== "keep");
   const arCount = new Intl.NumberFormat("ar-EG");
 
@@ -64,13 +71,15 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
   }, [hotelId, roomId, from, to, key]);
 
   function discard() {
-    return !isSaving && (!dirty || window.confirm("لديك تغييرات غير محفوظة. هل تريد تجاهلها؟"));
+    return !isBusy && (!dirty || window.confirm("لديك تغييرات غير محفوظة. هل تريد تجاهلها؟"));
   }
   function changeRoom(nextRoom: string) {
     if (!discard()) return;
     setRoomId(nextRoom);
     setDraft(emptyDraft(from));
     setMessage(undefined);
+    setCapacityDraft("");
+    setCapacityMessage(undefined);
   }
   function changeMonth(nextOffset: number) {
     if (!discard()) return;
@@ -83,9 +92,26 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
     if (discard()) onClose?.();
   }
 
+  async function saveCapacity(event: FormEvent) {
+    event.preventDefault();
+    if (!onCapacitySaved || !roomId || !capacityDraft || isBusy) return;
+    setIsSavingCapacity(true);
+    setCapacityMessage(undefined);
+    try {
+      const capacity = await updateHotelRoomCapacity(hotelId, roomId, Number(capacityDraft));
+      onCapacitySaved(roomId, capacity);
+      setCapacityDraft("");
+      setCapacityMessage({ text: "تم حفظ سعة الغرفة." });
+    } catch (error) {
+      setCapacityMessage({ error: true, text: error instanceof Error ? error.message : "تعذّر حفظ سعة الغرفة." });
+    } finally {
+      setIsSavingCapacity(false);
+    }
+  }
+
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (isSaving || !calendar || !dirty) return;
+    if (isBusy || !calendar || !dirty) return;
     const change: CalendarChange = { from: draft.from, to: addStayDays(draft.through, 1) };
     if (draft.from < today || change.to > horizon || !(stayNights(change.from, change.to) > 0)) {
       setMessage({ error: true, text: "اختر نطاقًا صالحًا من اليوم وحتى نهاية فترة الحجز." });
@@ -138,12 +164,12 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
         <h2 id="room-calendar-heading" className="flex items-center gap-2 text-lg font-bold"><CalendarDays size={20} aria-hidden />تقويم التوافر والأسعار</h2>
         <p className="mt-1 text-sm text-slate-600">{hotelName}</p>
       </div>
-      {onClose && <button type="button" aria-label="إغلاق التقويم" className={secondary} onClick={close} disabled={isSaving}><X size={18} aria-hidden /></button>}
+      {onClose && <button type="button" aria-label="إغلاق التقويم" className={secondary} onClick={close} disabled={isBusy}><X size={18} aria-hidden /></button>}
     </div>
     {!roomId ? <p className="py-4 text-slate-700">احفظ نوع غرفة أولًا لإدارة تقويمه.</p> : <>
       <div className="my-4 grid gap-3 sm:grid-cols-2 sm:items-end">
         <label className="grid gap-1 text-sm font-semibold">نوع الغرفة
-          <select className={field} value={roomId} onChange={event => changeRoom(event.target.value)} disabled={isSaving}>
+          <select className={field} value={roomId} onChange={event => changeRoom(event.target.value)} disabled={isBusy}>
             {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
           </select>
         </label>
@@ -153,6 +179,22 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
           <button type="button" className={secondary} onClick={() => changeMonth(offset + 1)} disabled={isSaving || followingMonth >= horizon}>التالي</button>
         </div>
       </div>
+      {onCapacitySaved && roomCapacity < 1 && (
+        <form onSubmit={saveCapacity} className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 sm:p-4">
+          <p className="text-sm text-amber-950" role="status">سعة هذا النوع غير محددة، لذلك لن يظهر في نتائج البحث حتى لو فتحت الليالي.</p>
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <label className="grid w-full max-w-48 gap-1 text-sm font-semibold">أقصى عدد ضيوف للغرفة
+              <input type="number" min={1} max={MAX_HOTEL_ROOM_CAPACITY} step={1} required className={field}
+                disabled={isBusy} value={capacityDraft} onChange={event => setCapacityDraft(event.target.value)} />
+            </label>
+            <button type="submit" disabled={isBusy || !capacityDraft} className={secondary}>
+              {isSavingCapacity ? "جاري حفظ السعة…" : "حفظ سعة الغرفة"}
+            </button>
+          </div>
+        </form>
+      )}
+      {capacityMessage && <p role={capacityMessage.error ? "alert" : "status"}
+        className={`mb-4 text-sm font-semibold ${capacityMessage.error ? "text-red-700" : "text-emerald-800"}`}>{capacityMessage.text}</p>}
       {!visible ? <p className="py-4 text-slate-600" role="status">جاري تحميل التقويم…</p>
         : !calendar ? <div className="rounded-xl bg-red-50 p-4 text-red-800" role="alert">
           تعذّر تحميل التقويم. <button type="button" className="font-semibold underline" onClick={() => setAttempt(n => n + 1)}>إعادة المحاولة</button>
@@ -186,7 +228,7 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose }
           </p>}
         </>}
       <form className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4" onSubmit={save}>
-        <fieldset disabled={isSaving || !calendar} className="min-w-0 space-y-3">
+        <fieldset disabled={isBusy || !calendar} className="min-w-0 space-y-3">
           <legend className="pb-2 font-bold">تعديل ليلة أو عدة ليالٍ</legend>
           <div className="grid gap-2.5 sm:grid-cols-3">
             <label className="grid gap-1 text-sm">أول ليلة
