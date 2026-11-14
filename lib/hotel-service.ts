@@ -208,6 +208,7 @@ export interface HotelMutationRoomInput {
 }
 
 export interface HotelMutationAddonInput {
+  id?: string;
   price: number;
   priceEgp?: number | null;
   nameAr: string;
@@ -695,10 +696,55 @@ async function requestJson<T>(path = "", init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
+type HotelUpdateOptions = {
+  deleteRoomIds: string[];
+  previousAddons?: HotelMutationAddonInput[];
+};
+
+function serializeAddon(addon: HotelMutationAddonInput, byId = false) {
+  return {
+    ...(byId && addon.id ? { id: addon.id } : {}),
+    price: Math.max(0, addon.price),
+    price_egp: parsePrice(addon.priceEgp),
+    translations: [
+      { language: "ar", name: addon.nameAr.trim(), description: addon.descriptionAr.trim() },
+      { language: "en", name: addon.nameEn.trim(), description: addon.descriptionEn.trim() },
+    ],
+  };
+}
+
+function setAddonFormFields(formData: FormData, addons: HotelMutationAddonInput[], previous?: HotelMutationAddonInput[]) {
+  if (!previous) {
+    formData.set("addons", JSON.stringify(addons.map(addon => serializeAddon(addon))));
+    return;
+  }
+
+  const unchanged = previous.length === addons.length && previous.every((addon, index) =>
+    JSON.stringify(serializeAddon(addon, true)) === JSON.stringify(serializeAddon(addons[index], true)),
+  );
+  if (unchanged) return;
+
+  if (previous.some(addon => !addon.id)) {
+    throw new HotelServiceError("تعذّر تعديل الترقيات لأن بعض معرّفاتها غير موجودة. أعد تحميل الفندق قبل المحاولة.", 400);
+  }
+
+  const previousById = new Map(previous.map(addon => [addon.id, JSON.stringify(serializeAddon(addon, true))]));
+  const currentIds = new Set(addons.map(addon => addon.id));
+  const updates = addons.map(addon => serializeAddon(addon, true)).filter(addon =>
+    !addon.id || previousById.get(addon.id) !== JSON.stringify(addon),
+  );
+  const deletions = previous.filter(addon => !currentIds.has(addon.id)).map(addon => addon.id);
+  if (!updates.length && !deletions.length) return;
+
+  formData.set("addons_write_mode", "by_id");
+  if (updates.length) formData.set("addons", JSON.stringify(updates));
+  if (deletions.length) formData.set("delete_addon_ids", JSON.stringify(deletions));
+}
+
 function buildCreateFormData(
   input: HotelMutationInput,
   media?: HotelCreateMediaInput,
-  roomUpdate?: { deleteRoomIds: string[] },
+  roomUpdate?: HotelUpdateOptions,
 ) {
   const baseSlug = slugifyHotel(input.slug || input.nameEn || input.nameAr);
   const enSlug = baseSlug;
@@ -739,22 +785,6 @@ function buildCreateFormData(
       },
     ],
   }));
-  const addons = input.addons.map((addon) => ({
-    price: Math.max(0, addon.price),
-    price_egp: parsePrice(addon.priceEgp),
-    translations: [
-      {
-        language: "ar",
-        name: addon.nameAr.trim(),
-        description: addon.descriptionAr.trim(),
-      },
-      {
-        language: "en",
-        name: addon.nameEn.trim(),
-        description: addon.descriptionEn.trim(),
-      },
-    ],
-  }));
   const formData = new FormData();
 
   formData.set("slug", enSlug);
@@ -780,7 +810,7 @@ function buildCreateFormData(
     formData.set("rooms_write_mode", "by_id");
     formData.set("delete_room_ids", JSON.stringify(roomUpdate.deleteRoomIds));
   }
-  formData.set("addons", JSON.stringify(addons));
+  setAddonFormFields(formData, input.addons, roomUpdate?.previousAddons);
 
   for (const file of media?.mainImageFiles ?? []) {
     formData.append("mainImages", file, file.name);
@@ -936,7 +966,7 @@ export async function updateHotel(
   id: string,
   input: HotelMutationInput,
   media?: HotelCreateMediaInput,
-  roomUpdate?: { deleteRoomIds: string[] },
+  roomUpdate?: HotelUpdateOptions,
 ) {
   const payload = await requestJson<ApiHotel>(`/${id}`, {
     method: "PATCH",

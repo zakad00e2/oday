@@ -128,3 +128,35 @@ test("public search and quote send exact criteria without admin credentials; cal
   assert.deepEqual(seen.map(({ init }) => new Headers(init.headers).get("Authorization")),
     [null, null, "Bearer test-calendar-token", "Bearer test-calendar-token"]);
 });
+
+test("calendar-aware edits omit untouched addons and send only addon upserts and explicit archives", async t => {
+  const { updateHotel, createEmptyHotelInput } = require("../lib/hotel-service.ts");
+  const addon = { id: "saved-addon", price: 20, priceEgp: 900, nameAr: "إطلالة", nameEn: "View", descriptionAr: "", descriptionEn: "" };
+  const original = [addon, { ...addon, id: "unchanged-addon" }, { ...addon, id: "removed-addon" }];
+  const input = createEmptyHotelInput();
+  let body;
+  const fetchMock = t.mock.method(globalThis, "fetch", async (_, init) => { body = init.body; return Response.json(demoHotel); });
+  const options = { deleteRoomIds: [], previousAddons: original };
+
+  await updateHotel(demoHotel.id, { ...input, addons: original }, undefined, options);
+  assert.equal(body.has("addons"), false);
+  assert.equal(body.has("addons_write_mode"), false);
+
+  await updateHotel(demoHotel.id, { ...input, addons: [
+    { ...addon, priceEgp: 950 }, original[1], { ...addon, id: undefined, nameEn: "New upgrade" },
+  ] }, undefined, options);
+  assert.equal(body.get("addons_write_mode"), "by_id");
+  assert.deepEqual(JSON.parse(body.get("addons")).map(line => [line.id, line.price_egp, line.translations[1].name]),
+    [["saved-addon", 950, "View"], [undefined, 900, "New upgrade"]]);
+  assert.deepEqual(JSON.parse(body.get("delete_addon_ids")), ["removed-addon"]);
+
+  await updateHotel(demoHotel.id, { ...input, addons: [] }, undefined, options);
+  assert.equal(body.has("addons"), false);
+  assert.deepEqual(JSON.parse(body.get("delete_addon_ids")), ["saved-addon", "unchanged-addon", "removed-addon"]);
+
+  await assert.rejects(
+    updateHotel(demoHotel.id, { ...input, addons: [] }, undefined, { deleteRoomIds: [], previousAddons: [{ ...addon, id: undefined }] }),
+    { status: 400 },
+  );
+  assert.equal(fetchMock.mock.callCount(), 3);
+});

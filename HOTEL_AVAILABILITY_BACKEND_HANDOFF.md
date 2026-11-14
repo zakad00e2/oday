@@ -175,6 +175,12 @@ The current frontend's multipart `rooms` array does not send room IDs. Extend `P
 
 Retain legacy writes for hotels that have not enabled calendar management. Once a hotel has received its first successful calendar write, reject legacy requests that attempt room replacement without `rooms_write_mode=by_id`; return `409 ROOM_IDS_REQUIRED` before modifying the hotel. Legacy updates that omit room changes remain compatible. The server must never match existing room types by translated name, position, capacity or price. Deploy the ID-aware admin before enabling calendar management.
 
+### Preserve IDs when editing room upgrades
+
+In `admin` and `live` modes, hotel edits omit the upgrade fields when there are no changes. When an upgrade changes, the frontend sends `addons_write_mode=by_id` and puts the changed or new rows in the multipart `addons` JSON array. Existing rows carry their original `id`. New rows omit it. Removed upgrades are listed separately in `delete_addon_ids` for archival. For deletion-only edits, the request omits `addons` and still includes the mode and deletion IDs.
+
+The backend rejects invalid IDs with `400 INVALID_INPUT` and legacy replacements of upgrades on calendar-managed hotels with `409 ADDON_IDS_REQUIRED`. Test an ordinary hotel save, an upgrade rename and an explicit removal on the designated pilot hotel before enabling guest search.
+
 ### Error contract
 
 Return a machine-readable `code` and human-readable `message`; use `field` for validation errors when it identifies a specific request field. `400 INVALID_INPUT` covers malformed dates or ranges, unknown destination/tariff, invalid quantities, or malformed selection IDs. `401 UNAUTHENTICATED` and `403 FORBIDDEN` apply to calendar routes. `404 NOT_FOUND` covers a missing/deleted hotel or calendar room outside the hotel. `409 STAY_UNAVAILABLE` applies when no allocation can satisfy the party or a well-formed exact selection cannot be fulfilled, including insufficient stock/capacity and room or upgrade IDs that are no longer selectable for that hotel. Use a generic selection error for unknown or foreign IDs without revealing other hotels' data. `409 CALENDAR_CONFLICT` applies to a stale admin revision; `409 ROOM_IDS_REQUIRED` applies to legacy room replacement after calendar management starts. A dependency failure returns a server error, not an empty result.

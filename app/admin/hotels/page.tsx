@@ -21,6 +21,7 @@ import {
   updateHotel,
   type HotelDestination,
   type HotelMealPlan,
+  type HotelMutationAddonInput,
   type HotelMutationInput,
   type HotelRecord,
 } from "@/lib/hotel-service";
@@ -37,6 +38,7 @@ interface Room {
 }
 
 interface RoomAddOn {
+  id?: string;
   nameAr: string;
   nameEn: string;
   price: number;
@@ -389,6 +391,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
       descriptionEn: room.descriptionEn || capacityLabel(room.capacity, "en"),
     })),
     roomAddOns: hotel.addons.map((addon) => ({
+      id: addon.idIsSynthetic ? undefined : addon.id,
       nameAr: addon.nameAr,
       nameEn: addon.nameEn,
       price: addon.price,
@@ -428,6 +431,18 @@ function collectRemovedAssetIds(
         .flatMap(([, assetIds]) => assetIds),
     ),
   );
+}
+
+function mapAddonToMutationInput(addOn: RoomAddOn): HotelMutationAddonInput {
+  return {
+    id: addOn.id,
+    price: Math.max(0, addOn.price),
+    priceEgp: addOn.priceEgp,
+    nameAr: addOn.nameAr.trim(),
+    nameEn: addOn.nameEn.trim() || addOn.nameAr.trim(),
+    descriptionAr: addOn.descriptionAr.trim(),
+    descriptionEn: addOn.descriptionEn.trim() || addOn.descriptionAr.trim(),
+  };
 }
 
 function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput | null {
@@ -490,14 +505,7 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
       descriptionAr: room.descriptionAr.trim(),
       descriptionEn: room.descriptionEn.trim() || room.descriptionAr.trim(),
     })),
-    addons: hotel.roomAddOns.map((addOn) => ({
-      price: Math.max(0, addOn.price),
-      priceEgp: addOn.priceEgp,
-      nameAr: addOn.nameAr.trim(),
-      nameEn: addOn.nameEn.trim() || addOn.nameAr.trim(),
-      descriptionAr: addOn.descriptionAr.trim(),
-      descriptionEn: addOn.descriptionEn.trim() || addOn.descriptionAr.trim(),
-    })),
+    addons: hotel.roomAddOns.map(mapAddonToMutationInput),
   };
 }
 
@@ -664,6 +672,7 @@ export default function AdminHotels() {
     if (!isValidPriceInput(roomAddOnInput.price) || !isValidPriceInput(roomAddOnInput.priceEgp)) { setModalError("أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة."); return; }
     if (!roomAddOnInput.nameAr.trim()) return;
     const newAddOn = {
+      id: roomAddOnInput.id,
       nameAr: roomAddOnInput.nameAr.trim(),
       nameEn: roomAddOnInput.nameEn.trim(),
       price: roomAddOnInput.price,
@@ -696,6 +705,14 @@ export default function AdminHotels() {
   const cancelEditRoomAddOn = () => {
     setRoomAddOnInput(emptyRoomAddOnInput);
     setEditingRoomAddOnIndex(null);
+  };
+
+  const removeRoomAddOn = (index: number) => {
+    if (editingRoomAddOnIndex === index) cancelEditRoomAddOn();
+    else if (editingRoomAddOnIndex !== null && editingRoomAddOnIndex > index) {
+      setEditingRoomAddOnIndex(editingRoomAddOnIndex - 1);
+    }
+    setForm(current => ({ ...current, roomAddOns: current.roomAddOns.filter((_, itemIndex) => itemIndex !== index) }));
   };
 
   const appendMainImages = (items: FileUploadItem[]) => {
@@ -814,6 +831,7 @@ export default function AdminHotels() {
         descriptionEn: room.descriptionEn.trim(),
       })),
       roomAddOns: form.roomAddOns.map((addOn) => ({
+        id: addOn.id,
         nameAr: addOn.nameAr.trim(),
         nameEn: addOn.nameEn.trim(),
         price: addOn.price,
@@ -855,6 +873,7 @@ export default function AdminHotels() {
       const savedHotel = editing
         ? await updateHotel(editing.id, mutationInput, media, calendarEnabled ? {
             deleteRoomIds: editing.rooms.flatMap(room => room.id && !payload.rooms.some(next => next.id === room.id) ? [room.id] : []),
+            previousAddons: editing.roomAddOns.map(mapAddonToMutationInput),
           } : undefined)
         : await createHotel(mutationInput, media);
 
@@ -1394,7 +1413,7 @@ export default function AdminHotels() {
                           <button type="button" onClick={() => startEditRoomAddOn(index)} className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#2563EB] transition-colors" title="تعديل">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
                           </button>
-                          <button type="button" onClick={() => { if (editingRoomAddOnIndex === index) cancelEditRoomAddOn(); setForm((current) => ({ ...current, roomAddOns: current.roomAddOns.filter((_, itemIndex) => itemIndex !== index) })); }} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
+                          <button type="button" onClick={() => removeRoomAddOn(index)} className="p-1 rounded-md text-[#9CA3AF] hover:bg-white hover:text-[#EF4444] transition-colors" title="حذف">×</button>
                         </div>
                       </div>
                       {addOn.descriptionAr && (
