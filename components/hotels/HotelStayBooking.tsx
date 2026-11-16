@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BedDouble, CalendarCheck } from "lucide-react";
+import { BedDouble, CalendarCheck, ChevronDown } from "lucide-react";
 import type { HotelRecord } from "@/lib/hotel-service";
 import { useCart } from "@/lib/cart-context";
 import { limitHotelAddOnCounts } from "@/lib/cart-hotel";
@@ -12,6 +12,7 @@ import { addStayDays, cairoToday, exactStayRequest, HotelAvailabilityError, read
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import StayFields, { stayIssueMessage } from "./StayFields";
+import HotelDatePicker from "./HotelDatePicker";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-sky-700 px-5 py-2 font-semibold text-white hover:bg-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600";
 
@@ -128,7 +129,7 @@ function ExactQuote({ hotel, criteria, category, selection, reload }: BookingPro
 function RoomSelection({ hotel, criteria, category, initial, reload }: BookingProps & { initial: StayQuote; reload: () => void }) {
   const { lang } = useI18n();
   const ar = lang === "ar";
-  const { formatPrice } = useVisitorPricing();
+  const { formatPrice, resolvePrice } = useVisitorPricing();
   const { cart } = useCart();
   const guests = criteria.adults + criteria.children;
   const allowedRooms = initial.available_room_types.filter(r => hotel.rooms.some(room => room.id === r.room_id && !room.idIsSynthetic));
@@ -168,7 +169,8 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
             <span className="block font-semibold text-slate-950">{name}</span>
             <span className="block text-xs text-slate-600">{ar ? "السعة: " : "Capacity: "}{room.capacity} · {formatPrice(stayMoney(room.unit_stay_total), lang)} {ar ? "للغرفة طوال الإقامة" : "per room for the stay"}</span>
           </span>
-          <select aria-label={(ar ? "عدد غرف " : "Rooms: ") + name} className="rounded-lg border border-slate-300 bg-white px-3 py-2" value={current}
+          <span className="relative inline-flex shrink-0">
+          <select dir="ltr" aria-label={(ar ? "عدد غرف " : "Rooms: ") + name} className="min-h-11 min-w-11 appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-5 pr-2 text-right" value={current}
             onChange={event => {
               const value = Number(event.target.value);
               setRoomCounts({ ...roomCounts, [room.room_id]: value });
@@ -176,6 +178,8 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
             }}>
             {Array.from({ length: Math.max(max, current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
           </select>
+          <ChevronDown aria-hidden size={14} className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-600" />
+          </span>
         </label>;
       })}
     </div>
@@ -186,11 +190,17 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
         const name = ar ? addon.nameAr || addon.nameEn : addon.nameEn || addon.nameAr;
         const current = addonCounts[addon.id] ?? 0;
         return <label key={addon.id} className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm">
-          {name}
-          <select aria-label={name} className="rounded-lg border border-slate-300 bg-white px-3 py-2" value={current}
+          <span>
+            <span className="block">{name}</span>
+            <span className="block text-xs text-slate-600">{formatPrice(resolvePrice(addon.price, addon.priceEgp), lang)} {ar ? "للغرفة في الليلة" : "per room per night"}</span>
+          </span>
+          <span className="relative inline-flex shrink-0">
+          <select dir="ltr" aria-label={name} className="min-h-11 min-w-11 appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-5 pr-2 text-right" value={current}
             onChange={event => setAddonCounts({ ...addonCounts, [addon.id]: Number(event.target.value) })}>
             {Array.from({ length: Math.max(0, count - upgrades + current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
           </select>
+          <ChevronDown aria-hidden size={14} className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-600" />
+          </span>
         </label>;
       })}
     </fieldset>}
@@ -203,7 +213,7 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
 function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecord; initial: StayCriteria; today: string; applied: boolean }) {
   const { lang } = useI18n();
   const ar = lang === "ar";
-  const { category } = useVisitorPricing();
+  const { category, resolvePrice } = useVisitorPricing();
   const [draft, setDraft] = useState(initial);
   const [criteria, setCriteria] = useState<StayCriteria | null>(applied ? initial : null);
   const [attempt, setAttempt] = useState(0);
@@ -214,13 +224,20 @@ function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecor
     setError(issue ? stayIssueMessage(issue, ar) : "");
     if (!issue) { setCriteria(draft); setAttempt(n => n + 1); }
   }
+  function updateDraft(next: StayCriteria) {
+    setDraft(next);
+    setCriteria(null);
+    setError("");
+  }
   return <section aria-labelledby="stay-booking-heading" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-7">
     <h2 id="stay-booking-heading" className="flex items-center gap-2 text-xl font-bold text-slate-950">
       <CalendarCheck size={22} aria-hidden />{ar ? "تحقّق من غرف إقامتك" : "Check rooms for your stay"}
     </h2>
     <p className="mt-1 text-sm text-slate-600">{ar ? "اختر التواريخ وعدد الضيوف لعرض السعر حسب الليلة." : "Choose dates and guests to see the rates for each night."}</p>
     <form className="relative z-20 mt-4 grid gap-2.5 lg:grid-cols-[1.55fr_1fr_auto]" onSubmit={submit}>
-      <StayFields stay={draft} setStay={next => { setDraft(next); setCriteria(null); setError(""); }} today={today} ar={ar} />
+      <StayFields stay={draft} setStay={updateDraft} today={today} ar={ar}
+        datePicker={<HotelDatePicker hotelId={hotel.id} basePrice={resolvePrice(hotel.initialPrice, hotel.initialPriceEgp)}
+          stay={draft} setStay={updateDraft} today={today} ar={ar} />} />
       <button className={button} type="submit">{ar ? "تحقّق من التوافر" : "Check availability"}</button>
     </form>
     {error && <p className="mt-3 text-sm text-red-700" role="alert">{error}</p>}

@@ -30,6 +30,24 @@ The frontend currently uses `NEXT_PUBLIC_HOTEL_API_BASE` (ends in `/hotel`), `GE
 
 ## Domain rules
 
+### Availability policy update — open by default
+
+Within the booking window, a configured room type is open unless the admin explicitly closes that night. The dashboard lets the admin open or close one night or a date range. Keep room capacity for guest allocation. Apply the same availability policy to the admin calendar, hotel search, guest calendar, and stay quote.
+
+Keep the existing calendar wire fields for compatibility. Interpret `available_units: 0` as closed and positive values as open. When there is no saved row, return `1` for an eligible room type in the booking window. The dashboard sends `1` for open and `0` for closed. Preserve existing explicit closures and price overrides. A price-only change inherits the effective status, and reopening retains any price override.
+
+For room allocation, any closed occupied night excludes that room type from the stay. Otherwise, allow the quantity needed to accommodate the selected party up to its guest count. Keep returning `max_quantity` in quote responses so the current room selector can enforce that bound. Until this policy is deployed, the legacy inventory rules below describe production behavior. In that version, opening via the updated dashboard sets the legacy available quantity to one.
+
+Verify that a room type with valid capacity and no calendar rows appears in dated search and can be quoted. Close one occupied night and verify the type is excluded for the stay. Reopen it and verify search and quotes work again. Verify that a price-only change preserves the state of both a default-open night and an explicitly closed night.
+
+#### Reproduced production gap: six guests need two rooms of one type
+
+On 2026-11-15, a public `POST /hotel/01c84873-20ea-4319-b33e-f4ce01d24bb6/stay-quote` for Tanoak Resort Ain Sokhna, `2026-11-16` to `2026-11-17`, with `visitor_category: other` returned a capacity-3 room with `max_quantity: 1` for two adults. The same request for six adults returned `409 STAY_UNAVAILABLE`. This is the legacy stock interpretation of an open day. The frontend cannot show two of that room type when the quote API caps it at one; the dated search and guest calendar use the same backend allocation.
+
+After the open/closed policy is deployed, an open capacity-3 room type must permit `quantity: 2` for six guests, even when its effective `available_units` is `1`. Return `max_quantity >= 2`, make the hotel eligible in `GET /hotel/search`, accept `rooms: [{ room_id, quantity: 2 }]` in `POST /hotel/:id/stay-quote`, and mark the night available in `GET /hotel/:id/stay-calendar`. A closed night (`available_units: 0`) must still exclude it. Test this with an isolated fixture or explicit test dates; do not alter the Tanoak production calendar solely to run the check.
+
+### Existing service rules
+
 - Persist per-night overrides and stock using a unique `(room_id, stay_date)` key. Store `stay_date` as a date without a time and optional USD/EGP override amounts as exact decimals. `available_units` is the number of rooms of that type the business is willing to sell on that night. `0` or no row means closed. An admin can set more than one unit; a positive count does not imply a reservation or automatic deduction.
 - Only active hotels and active room types with stable IDs and verified positive integer capacities qualify. Never use a room index or name as an ID. On ordinary hotel edits, keep IDs and calendar entries for unchanged and edited room types. Archive or invalidate calendar rows for deleted types, and never attach them to a newly created type.
 - A stay is `[check_in, check_out)` in the hotel's local calendar (`Africa/Cairo` for the current destinations). For a Nov 20–22 stay, check and charge the nights of Nov 20 and Nov 21 only. Use `YYYY-MM-DD`; reject invalid dates, dates before local today and stays with checkout on or before check-in. Proposed bounds: 1–30 nights, every night within a rolling 365-day window starting today, and 1–20 total guests including at least one adult. Share the final limits with the frontend. Admin range reads and writes use the same exclusive end convention.
@@ -138,6 +156,28 @@ Use the same fields and rules as search, except `destination` is derived from th
 Requote the exact selection before sending the inquiry. The frontend compares the new total, nightly lines and currency with what the guest accepted, including changes from priced to on-request or the reverse. A successful repricing returns the updated quote; it does not need a price-change HTTP error or a persistent quote ID. Unavailable stock returns a conflict; no room is held between quote and inquiry.
 
 For old saved cart lines without a dated quote, the frontend requests a new exact quote if the inputs and stable IDs are known and shows it for confirmation. If the selection is missing inputs or a stored ID was synthetic or stale, it asks the guest to reselect. Legacy catalog rates never count as an accepted quote.
+
+### Guest date picker — `GET /hotel/:hotelId/stay-calendar`
+
+The hotel detail calendar displays prices below the dates before a guest selects the stay. It needs an unauthenticated, read-only endpoint that returns up to 62 nights in one request. Keep the admin room calendars authenticated.
+
+```http
+GET /hotel/h_123/stay-calendar?from=2026-11-20&to=2026-11-22&adults=2&children=0&visitor_category=egyptian-resident
+```
+
+```json
+{
+  "currency": "EGP",
+  "days": [
+    { "date": "2026-11-20", "available": true, "total": "5000.00" },
+    { "date": "2026-11-21", "available": false, "total": null }
+  ]
+}
+```
+
+Use Cairo calendar dates and an exclusive `to`. Apply the same booking horizon, party limits, visitor tariff and room allocation rules as the stay quote. For each date, evaluate it as a separate one-night stay for the whole party, excluding optional upgrades. Use the cheapest fully priced allocation. If only unpriced allocations are possible, return `available: true` and `total: null`. If no allocation fits, return `available: false` and `total: null`. Include each date exactly once. Respond with `Cache-Control: no-store`. The stay quote still checks whether the same allocation works across every occupied night after the range is selected. The frontend displays a message if calendar rates cannot be loaded and allows the guest to request a regular stay quote.
+
+For every available night, return the same total as a one-night stay quote for the selected party, using room base rates and any admin overrides. The hotel starting rate is not the party total. Return `null` for an available night when no feasible allocation has a complete price. Before receiving calendar data, the frontend may display the hotel's starting rate as a clearly labelled estimate. The multi-night stay quote determines the final total.
 
 ## Admin API
 

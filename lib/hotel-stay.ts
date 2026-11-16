@@ -11,6 +11,7 @@ export type StayCriteria = StayGuests & { check_in: string; check_out: string };
 export type StayRoom = { room_id: string; quantity: number };
 export type StayAddon = { addon_id: string; quantity: number };
 export type StayAmount = string | null;
+export type StayCalendarPrice = { date: string; available: boolean; total: StayAmount };
 export type StayOffer = {
   nights: number; currency: PricingCurrency; pricing_status: "PRICED" | "ON_REQUEST";
   total: StayAmount; rooms: StayRoom[];

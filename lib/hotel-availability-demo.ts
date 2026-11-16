@@ -57,7 +57,7 @@ function defaultDay(date: string, roomId: string, today: string): CalendarDay {
   const offset = stayNights(today, date);
   return {
     date,
-    available_units: offset < 0 || offset >= 60 || offset === 10 ? 0 : (roomId === "demo-double" && offset % 7 === 0 ? 2 : 1),
+    available_units: offset >= 0 && offset < STAY_HORIZON ? 1 : 0,
     rate_override: roomId === "demo-double" && offset % 7 === 4 ? { USD: "140.00", EGP: "7000.00" } : { USD: null, EGP: null },
   };
 }
@@ -113,7 +113,7 @@ export function demoQuote(hotelId: string, stay: StayCriteria, category: Visitor
   const choices = demoHotel.rooms!.flatMap(r => {
     const room_id = r.id!;
     const c = getDemoCalendar(room_id, stay.check_in, stay.check_out, storage, today);
-    const max_quantity = Math.min(guests, ...c.days.map(d => d.available_units));
+    const max_quantity = c.days.every(day => day.available_units > 0) ? guests : 0;
     const nightly_rates = c.days.map(d => ({ date: d.date, unit_rate: d.rate_override[currency] ?? c.base_rates[currency] }));
     return max_quantity ? [{ room_id, capacity: Number(r.capacity), max_quantity, nightly_rates,
       unit_stay_total: total(nightly_rates.map(d => d.unit_rate)) }] : [];

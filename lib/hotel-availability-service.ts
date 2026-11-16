@@ -1,8 +1,8 @@
 import { broadcastUnauthorizedSession, createAuthorizedHeaders } from "./auth-service";
 import { createHotelRecord, HOTEL_API_BASE, type ApiHotel, type ApiHotelListResponse } from "./hotel-service";
-import { HotelAvailabilityError, stayQuery, type CalendarChange, type RoomCalendar,
+import { addStayDays, HotelAvailabilityError, stayNights, stayQuery, type CalendarChange, type RoomCalendar, type StayCalendarPrice, type StayGuests,
   type StayAddon, type StayCriteria, type StayOffer, type StayQuote, type StayRoom } from "./hotel-stay";
-import type { VisitorCategory } from "./visitor-pricing";
+import { getVisitorCurrency, type VisitorCategory } from "./visitor-pricing";
 
 export const hotelAvailabilityDemo = process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "demo";
@@ -52,6 +52,31 @@ export async function quoteHotelStay(
 }
 
 const calendarPath = (hotelId: string, roomId: string) => "/" + encodeURIComponent(hotelId) + "/rooms/" + encodeURIComponent(roomId) + "/calendar";
+
+export async function getHotelStayCalendar(hotelId: string, from: string, to: string, guests: StayGuests, category: VisitorCategory, signal?: AbortSignal) {
+  const currency = getVisitorCurrency(category);
+  if (hotelAvailabilityDemo) {
+    const { demoQuote } = await import("./hotel-availability-demo");
+    return Array.from({ length: stayNights(from, to) }, (_, i): StayCalendarPrice => {
+      const date = addStayDays(from, i);
+      try {
+        const quote = demoQuote(hotelId, { ...guests, check_in: date, check_out: addStayDays(date, 1) }, category);
+        return { date, available: true, total: quote.total };
+      } catch (error) {
+        if (!(error instanceof HotelAvailabilityError) || error.code !== "STAY_UNAVAILABLE") throw error;
+        return { date, available: false, total: null };
+      }
+    });
+  }
+  const query = new URLSearchParams({ from, to, adults: String(guests.adults), children: String(guests.children), visitor_category: category });
+  const result = await request<{ currency: string; days: StayCalendarPrice[] }>(
+    "/" + encodeURIComponent(hotelId) + "/stay-calendar?" + query, { signal },
+  );
+  if (result.currency !== currency || !Array.isArray(result.days)) {
+    throw new HotelAvailabilityError("Invalid stay calendar", 502, "SERVICE_ERROR");
+  }
+  return result.days;
+}
 
 export async function getHotelRoomCalendar(hotelId: string, roomId: string, from: string, to: string, signal?: AbortSignal): Promise<RoomCalendar> {
   if (hotelAvailabilityDemo) return (await import("./hotel-availability-demo")).getDemoCalendar(roomId, from, to);

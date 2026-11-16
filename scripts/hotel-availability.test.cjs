@@ -40,13 +40,38 @@ test("demo search excludes a stay when just one occupied night closes and prices
     { from: "2026-11-21", to: "2026-11-22", rate_override: { EGP: "7000.00" } },
     { from: "2026-11-22", to: "2026-11-23", available_units: 0 },
   ], storage, today);
+  saveDemoCalendar("demo-family", 0, [{ from: "2026-11-22", to: "2026-11-23", available_units: 0 }], storage, today);
   const results = demoSearch("SHARM_EL_SHEIKH", stay, category, 1, storage, today);
   assert.equal(results.data[0].stay_offer.total, "26400.00");
   assert.equal(demoSearch("SHARM_EL_SHEIKH", stay, "other", 1, storage, today).data[0].stay_offer.total, "500.00");
   assert.equal(demoSearch("SHARM_EL_SHEIKH", { ...stay, check_out: "2026-11-23" }, category, 1, storage, today).meta.total, 0);
   const quoted = demoQuote(demoHotel.id, stay, category, results.data[0].stay_offer.rooms, [{ addon_id: "demo-upgrade", quantity: 1 }], storage, today);
   assert.equal(quoted.total, "28200.00");
-  assert.equal(quoted.available_room_types.find(r => r.room_id === "demo-double").max_quantity, 1);
+  assert.equal(quoted.available_room_types.find(r => r.room_id === "demo-double").max_quantity, 5);
+});
+
+test("demo nights are open by default and reopening retains the nightly price override", () => {
+  const storage = new Map();
+  const night = { from: "2027-02-15", to: "2027-02-16" };
+  const readNight = () => getDemoCalendar("demo-double", night.from, night.to, storage, today).days[0];
+  assert.equal(readNight().available_units, 1);
+  saveDemoCalendar("demo-double", 0, [{ ...night, available_units: 0 }], storage, today);
+  saveDemoCalendar("demo-double", 1, [{ ...night, rate_override: { EGP: "7300.00" } }], storage, today);
+  assert.equal(readNight().available_units, 0);
+  saveDemoCalendar("demo-double", 2, [{ ...night, available_units: 1 }], storage, today);
+  assert.equal(readNight().available_units, 1);
+  assert.equal(readNight().rate_override.EGP, "7300.00");
+});
+
+test("six guests can use two open rooms with capacity three", () => {
+  const storage = new Map();
+  const party = { check_in: "2026-11-20", check_out: "2026-11-21", adults: 6, children: 0 };
+  const results = demoSearch("SHARM_EL_SHEIKH", party, category, 1, storage, today);
+  assert.equal(results.meta.total, 1);
+  assert.deepEqual(results.data[0].stay_offer.rooms, [{ room_id: "demo-family", quantity: 2 }]);
+  const quote = demoQuote(demoHotel.id, party, category, undefined, [], storage, today);
+  assert.equal(quote.available_room_types.find(r => r.room_id === "demo-family").max_quantity, 6);
+  assert.equal(quote.total, "14400.00");
 });
 
 test("calendar partial override updates and clears one currency and stale saves are atomic", () => {

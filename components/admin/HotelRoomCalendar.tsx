@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CalendarDays, X } from "lucide-react";
+import { CalendarDays, LockKeyhole, X } from "lucide-react";
 import { getHotelRoomCalendar, saveHotelRoomCalendar } from "@/lib/hotel-availability-service";
 import { MAX_HOTEL_ROOM_CAPACITY, updateHotelRoomCapacity } from "@/lib/hotel-service";
 import { addStayDays, cairoToday, HotelAvailabilityError, STAY_HORIZON, stayNights,
@@ -9,13 +9,13 @@ import { addStayDays, cairoToday, HotelAvailabilityError, STAY_HORIZON, stayNigh
 
 type Room = { id: string; name: string; capacity?: number };
 type Draft = {
-  from: string; through: string; units: string;
+  from: string; through: string; availability: "keep" | "open" | "closed";
   USD: { mode: "keep" | "set" | "clear"; value: string };
   EGP: { mode: "keep" | "set" | "clear"; value: string };
 };
 
 const emptyDraft = (date: string): Draft => ({
-  from: date, through: date, units: "", USD: { mode: "keep", value: "" }, EGP: { mode: "keep", value: "" },
+  from: date, through: date, availability: "keep", USD: { mode: "keep", value: "" }, EGP: { mode: "keep", value: "" },
 });
 const field = "min-h-10 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-950 focus-visible:outline-2 focus-visible:outline-sky-700";
 const secondary = "min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-40";
@@ -55,8 +55,7 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, 
   const selectedDay = calendar?.days.find(day => day.date === draft.from);
   const roomCapacity = rooms.find(room => room.id === roomId)?.capacity ?? 0;
   const isBusy = isSaving || isSavingCapacity;
-  const dirty = Boolean(draft.units || draft.USD.mode !== "keep" || draft.EGP.mode !== "keep");
-  const arCount = new Intl.NumberFormat("ar-EG");
+  const dirty = draft.availability !== "keep" || draft.USD.mode !== "keep" || draft.EGP.mode !== "keep";
 
   useEffect(() => { dialog.current?.showModal(); }, []);
   useEffect(() => {
@@ -117,12 +116,8 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, 
       setMessage({ error: true, text: "اختر نطاقًا صالحًا من اليوم وحتى نهاية فترة الحجز." });
       return;
     }
-    if (draft.units !== "") {
-      if (!/^\d+$/.test(draft.units) || !Number.isSafeInteger(Number(draft.units))) {
-        setMessage({ error: true, text: "أدخل عدد غرف صحيحًا، أو صفرًا لإغلاق الليالي." });
-        return;
-      }
-      change.available_units = Number(draft.units);
+    if (draft.availability !== "keep") {
+      change.available_units = draft.availability === "open" ? 1 : 0;
     }
     const rates: Partial<RatePair> = {};
     for (const currency of ["USD", "EGP"] as const) {
@@ -207,22 +202,25 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, 
             {calendar.days.map(day => {
               const open = day.available_units > 0;
               const special = day.rate_override.USD !== null || day.rate_override.EGP !== null;
+              const usd = day.rate_override.USD ?? calendar.base_rates.USD;
+              const egp = day.rate_override.EGP ?? calendar.base_rates.EGP;
               const picked = day.date >= draft.from && day.date <= draft.through;
               return <button key={day.date} type="button" aria-pressed={picked} disabled={isSaving}
-                aria-label={day.date + (open ? "، الغرف المتاحة: " + day.available_units : "، مغلق") +
-                  (special ? "، سعر خاص: " + (day.rate_override.USD ?? "—") + " USD، " + (day.rate_override.EGP ?? "—") + " EGP" : "")}
+                aria-label={day.date + (open ? "، مفتوح" : "، مغلق") +
+                  "، سعر الليلة: " + (usd ?? "غير محدد") + " USD، " + (egp ?? "غير محدد") + " EGP" + (special ? "، يتضمن سعرًا خاصًا" : "")}
                 onClick={() => setDraft({ ...draft, from: day.date, through: day.date })}
-                className={"flex min-h-12 min-w-0 flex-col items-center justify-center rounded-md border text-xs focus-visible:outline-2 focus-visible:outline-sky-700 " +
+                className={"flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 py-1 text-xs focus-visible:outline-2 focus-visible:outline-sky-700 " +
                   (open ? "border-emerald-200 bg-emerald-50 text-emerald-900 " : "border-slate-200 bg-slate-100 text-slate-600 ") +
                   (picked ? "ring-2 ring-inset ring-sky-700" : "")}>
-                <span className="font-bold">{arCount.format(Number(day.date.slice(8)))}</span>
-                <span className="text-[10px]">{open ? arCount.format(day.available_units) : "مغلق"}{special ? " · ★" : ""}</span>
+                <span className="flex items-center justify-center gap-1 font-bold">{Number(day.date.slice(8))}{!open && <LockKeyhole size={12} aria-hidden />}{special && <span aria-hidden>★</span>}</span>
+                <span dir="ltr" className="max-w-full break-all text-center text-[10px] leading-tight">${usd ?? "—"}</span>
+                <span dir="ltr" className="max-w-full break-all text-center text-[10px] leading-tight">{egp ?? "—"} EGP</span>
               </button>;
             })}
           </div>
-          <p className="mt-2 text-xs text-slate-600">الرقم يوضح عدد الغرف المتاحة. ★ تعني أن لهذه الليلة سعرًا خاصًا.</p>
+          <p className="mt-2 text-xs text-slate-600">★ تعني أن لهذه الليلة سعرًا خاصًا.</p>
           {selectedDay && <p className="mt-2 rounded-lg bg-sky-50 px-3 py-2 text-sm text-slate-800">
-            <bdi>{selectedDay.date}</bdi> · {selectedDay.available_units ? "الغرف المتاحة: " + arCount.format(selectedDay.available_units) : "مغلق"} · سعر الليلة:{" "}
+            <bdi>{selectedDay.date}</bdi> · {selectedDay.available_units > 0 ? "مفتوح" : "مغلق"} · سعر الليلة:{" "}
             <bdi>USD {selectedDay.rate_override.USD ?? calendar.base_rates.USD ?? "—"}</bdi> ·{" "}
             <bdi>EGP {selectedDay.rate_override.EGP ?? calendar.base_rates.EGP ?? "—"}</bdi>
           </p>}
@@ -239,9 +237,13 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, 
               <input type="date" className={field} min={draft.from || today} max={addStayDays(horizon, -1)} value={draft.through} required
                 onChange={event => setDraft({ ...draft, through: event.target.value })} />
             </label>
-            <label className="grid gap-1 text-sm">عدد الغرف المتاحة
-              <input type="number" className={field} min={0} step={1} placeholder="بدون تغيير" value={draft.units}
-                onChange={event => setDraft({ ...draft, units: event.target.value })} />
+            <label className="grid gap-1 text-sm">حالة التوافر
+              <select className={field} value={draft.availability}
+                onChange={event => setDraft({ ...draft, availability: event.target.value as Draft["availability"] })}>
+                <option value="keep">بدون تغيير</option>
+                <option value="open">مفتوح</option>
+                <option value="closed">مغلق</option>
+              </select>
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -262,7 +264,6 @@ export default function HotelRoomCalendar({ hotelId, hotelName, rooms, onClose, 
               </label>}
             </div>)}
           </div>
-          <p className="text-xs text-slate-600">اكتب صفرًا لإغلاق الليالي. اترك العدد فارغًا عند تغيير السعر فقط.</p>
           <button type="submit" disabled={!dirty || isSaving} className="min-h-11 rounded-xl bg-sky-800 px-5 py-2 text-sm font-bold text-white hover:bg-sky-900 disabled:bg-slate-300 disabled:text-slate-700">
             {isSaving ? "جاري الحفظ…" : "حفظ تغييرات التقويم"}
           </button>
