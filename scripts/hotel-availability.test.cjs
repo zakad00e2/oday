@@ -11,11 +11,19 @@ require.extensions[".ts"] = (module, filename) => {
   module._compile(outputText, filename);
 };
 
-const { addStayDays, cairoToday, readStayQuery, stayIssue, stayQuery, sameStayQuote, exactStayRequest } = require("../lib/hotel-stay.ts");
+const { addStayDays, cairoToday, missingChildAges, readStayQuery, stayIssue, stayQuery, stayNights, formatStayNights, sameStayQuote, exactStayRequest } = require("../lib/hotel-stay.ts");
 const { getDemoCalendar, saveDemoCalendar, demoSearch, demoQuote, demoHotel } = require("../lib/hotel-availability-demo.ts");
 const stay = { check_in: "2026-11-20", check_out: "2026-11-22", adults: 4, children: 1 };
 const category = "egyptian-resident";
 const today = "2026-11-20";
+
+test("stay duration excludes checkout across months and uses natural labels", () => {
+  assert.equal(stayNights("2026-11-16", "2026-11-20"), 4);
+  assert.equal(stayNights("2026-11-16", "2026-11-22"), 6);
+  assert.equal(stayNights("2026-12-30", "2027-01-02"), 3);
+  assert.deepEqual([1, 2, 3, 4, 11].map(n => formatStayNights(n, true)), ["ليلة واحدة", "ليلتان", "3 ليالٍ", "4 ليالٍ", "11 ليلة"]);
+  assert.equal(formatStayNights(2, false), "2 nights");
+});
 
 test("Cairo midnight and a leap day do not shift calendar dates", () => {
   assert.equal(cairoToday(new Date("2026-11-19T22:01:00Z")), today);
@@ -31,6 +39,19 @@ test("a shared result URL preserves the exact stay and rejects malformed quantit
   assert.deepEqual(readStayQuery(query), stay);
   query.set("adults", "2e0");
   assert.equal(readStayQuery(query).adults, -1);
+});
+
+test("child ages survive a stay link including an unselected age", () => {
+  const family = { ...stay, children: 2, child_ages: [5, null] };
+  assert.deepEqual(readStayQuery(stayQuery(family)), family);
+  assert.deepEqual(readStayQuery(new URLSearchParams("children=2&child_ages=12,13")).child_ages, [12, null]);
+});
+
+test("each child needs an age from zero through twelve", () => {
+  assert.equal(missingChildAges({ adults: 2, children: 2, child_ages: [0, 12] }), false);
+  assert.equal(missingChildAges({ adults: 2, children: 2, child_ages: [0, null] }), true);
+  assert.equal(missingChildAges({ adults: 2, children: 1, child_ages: [13] }), true);
+  assert.equal(missingChildAges({ adults: 2, children: 1 }), true);
 });
 
 test("demo search excludes a stay when just one occupied night closes and prices independent tariffs", () => {
@@ -152,6 +173,43 @@ test("public search and quote send exact criteria without admin credentials; cal
   assert.equal(seen[2].path.searchParams.get("to"), stay.check_out);
   assert.deepEqual(seen.map(({ init }) => new Headers(init.headers).get("Authorization")),
     [null, null, "Bearer test-calendar-token", "Bearer test-calendar-token"]);
+});
+
+test("demo mode keeps the demo calendar local and routes real hotels to the server", async t => {
+  const servicePath = require.resolve("../lib/hotel-availability-service.ts");
+  const previous = { nodeEnv: process.env.NODE_ENV, mode: process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY, window: globalThis.window, storage: globalThis.localStorage };
+  process.env.NODE_ENV = "development";
+  process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY = "demo";
+  delete require.cache[servicePath];
+  const service = require(servicePath);
+  const saved = new Map();
+  globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) } };
+  globalThis.localStorage = { getItem: () => "test-calendar-token" };
+  t.after(() => {
+    if (previous.nodeEnv === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous.nodeEnv;
+    if (previous.mode === undefined) delete process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY; else process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY = previous.mode;
+    globalThis.window = previous.window; globalThis.localStorage = previous.storage; delete require.cache[servicePath];
+  });
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    calls.push({ url, init });
+    return Response.json(init.method === "PATCH" ? { revision: 1 } : { hotel_id: "real-hotel", room_id: "real-room", revision: 0, base_rates: { USD: "10", EGP: "500" }, days: [] });
+  });
+  assert.equal(service.hotelCalendarEnabled, true);
+  const current = cairoToday();
+  const end = addStayDays(current, 1);
+  const local = await service.getHotelRoomCalendar(demoHotel.id, "demo-double", current, end);
+  await service.saveHotelRoomCalendar(demoHotel.id, "demo-double", local.revision, [{ from: current, to: end, available_units: 0 }]);
+  assert.equal((await service.getHotelRoomCalendar(demoHotel.id, "demo-double", current, end)).days[0].available_units, 0);
+  const family = await service.getHotelRoomCalendar(demoHotel.id, "demo-family", current, end);
+  await service.saveHotelRoomCalendar(demoHotel.id, "demo-family", family.revision, [{ from: current, to: end, available_units: 0 }]);
+  assert.equal((await service.searchHotelStays("SHARM_EL_SHEIKH", { check_in: current, check_out: end, adults: 2, children: 0 }, category, 1)).items.length, 0);
+  assert.equal(calls.length, 0);
+  assert.equal((await service.getHotelRoomCalendar("real-hotel", "real-room", current, end)).hotel_id, "real-hotel");
+  await service.saveHotelRoomCalendar("real-hotel", "real-room", 0, [{ from: current, to: end, available_units: 0 }]);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].init.method, "PATCH");
+  assert.equal(new Headers(calls[1].init.headers).get("Authorization"), "Bearer test-calendar-token");
 });
 
 test("calendar-aware edits omit untouched addons and send only addon upserts and explicit archives", async t => {

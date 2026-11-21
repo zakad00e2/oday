@@ -2,12 +2,12 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BedDouble, CalendarCheck, ChevronDown } from "lucide-react";
+import { BedDouble, CalendarCheck } from "lucide-react";
 import type { HotelRecord } from "@/lib/hotel-service";
 import { useCart } from "@/lib/cart-context";
 import { limitHotelAddOnCounts } from "@/lib/cart-hotel";
 import { quoteHotelStay, hotelAvailabilityDemo } from "@/lib/hotel-availability-service";
-import { addStayDays, cairoToday, exactStayRequest, HotelAvailabilityError, readStayQuery, stayIssue,
+import { addStayDays, cairoToday, exactStayRequest, HotelAvailabilityError, missingChildAges, readStayQuery, stayIssue,
   stayMoney, type StayCriteria, type StayQuote } from "@/lib/hotel-stay";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
@@ -81,7 +81,7 @@ function ExactQuote({ hotel, criteria, category, selection, reload }: BookingPro
       city: ar ? hotel.destinationLabelAr : hotel.destinationLabelEn, cityAr: hotel.destinationLabelAr,
       cityEn: hotel.destinationLabelEn, image: hotel.mainImage, stars: hotel.stars,
       pricePerNight: 0, checkIn: quote.check_in, checkOut: quote.check_out, demoStay: hotelAvailabilityDemo,
-      stayGuests: { adults: quote.adults, children: quote.children }, stayQuote: quote,
+      stayGuests: { adults: quote.adults, children: quote.children, ...(criteria.child_ages ? { child_ages: criteria.child_ages } : {}) }, stayQuote: quote,
       roomsCount: quote.rooms.reduce((sum, room) => sum + room.quantity, 0),
       selectedRooms: quote.rooms.map(room => {
         const catalog = hotel.rooms.find(r => r.id === room.room_id);
@@ -138,7 +138,8 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
     if (cart.hotel?.id !== hotel.id) return null;
     const saved = exactStayRequest(cart.hotel);
     if (!saved || saved.check_in !== criteria.check_in || saved.check_out !== criteria.check_out ||
-        saved.adults !== criteria.adults || saved.children !== criteria.children) return null;
+        saved.adults !== criteria.adults || saved.children !== criteria.children ||
+        JSON.stringify(saved.child_ages ?? []) !== JSON.stringify(criteria.child_ages ?? [])) return null;
     return saved;
   });
   const [roomCounts, setRoomCounts] = useState<Record<string, number>>(() => Object.fromEntries(
@@ -158,50 +159,78 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
 
   return <div className="mt-6">
     <h3 className="flex items-center gap-2 font-bold text-slate-950"><BedDouble size={19} aria-hidden />{ar ? "أنواع الغرف المتاحة" : "Available room types"}</h3>
-    <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200">
+    <div className="mt-3 flex flex-col gap-3">
       {allowedRooms.map(room => {
         const record = hotel.rooms.find(r => r.id === room.room_id)!;
         const name = ar ? record.nameAr || record.nameEn : record.nameEn || record.nameAr;
+        const description = ar ? record.descriptionAr || record.descriptionEn : record.descriptionEn || record.descriptionAr;
         const current = roomCounts[room.room_id] ?? 0;
         const max = Math.min(room.max_quantity, guests - count + current);
-        return <label className="flex items-center justify-between gap-3 p-3" key={room.room_id}>
-          <span>
-            <span className="block font-semibold text-slate-950">{name}</span>
-            <span className="block text-xs text-slate-600">{ar ? "السعة: " : "Capacity: "}{room.capacity} · {formatPrice(stayMoney(room.unit_stay_total), lang)} {ar ? "للغرفة طوال الإقامة" : "per room for the stay"}</span>
-          </span>
-          <span className="relative inline-flex shrink-0">
-          <select dir="ltr" aria-label={(ar ? "عدد غرف " : "Rooms: ") + name} className="min-h-11 min-w-11 appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-5 pr-2 text-right" value={current}
-            onChange={event => {
-              const value = Number(event.target.value);
-              setRoomCounts({ ...roomCounts, [room.room_id]: value });
-              setAddonCounts(limitHotelAddOnCounts(addonCounts, count - current + value));
-            }}>
-            {Array.from({ length: Math.max(max, current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
-          </select>
-          <ChevronDown aria-hidden size={14} className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-600" />
-          </span>
-        </label>;
+        const selected = current > 0;
+        const setCount = (value: number) => {
+          setRoomCounts(previous => ({ ...previous, [room.room_id]: value }));
+          setAddonCounts(previous => limitHotelAddOnCounts(previous, count - current + value));
+        };
+        return <div key={room.room_id} role="group" aria-label={name} className={`relative rounded-2xl border-2 p-5 text-start transition-all ${selected ? "border-[#0EA5E9] bg-[#0EA5E9]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"}`}>
+          <button type="button" aria-label={name} aria-pressed={selected} disabled={!selected && max < 1}
+            onClick={() => setCount(selected ? 0 : 1)}
+            className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0EA5E9] disabled:cursor-not-allowed" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-start gap-2.5">
+              <span aria-hidden className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1] bg-white"}`}>
+                {selected ? <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : <span className="h-2 w-2 rounded-full bg-[#cbd5e1]" />}
+              </span>
+              <span><span className="block text-sm font-bold leading-tight text-[#0f172a]">{name}</span>{description && <span className="mt-0.5 block text-xs text-[#64748b]">{description}</span>}<span className="mt-0.5 block text-xs text-[#64748b]">{ar ? "السعة: " : "Capacity: "}{room.capacity}</span></span>
+            </div>
+            <span className={`shrink-0 text-end font-semibold ${selected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>{formatPrice(stayMoney(room.unit_stay_total), lang)}</span>
+          </div>
+          <div className={`mt-3 flex items-center justify-between border-t pt-3 ${selected ? "border-[#0EA5E9]/20" : "border-[#e2e8f0]"}`}>
+            <span className="text-xs font-medium text-[#64748b]">{ar ? "عدد الغرف" : "Rooms"}</span>
+            <div className="relative z-20 flex items-center gap-2">
+              <button type="button" aria-label={ar ? `تقليل عدد غرف ${name}` : `Decrease rooms for ${name}`} disabled={!selected} onClick={() => setCount(current - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] hover:bg-[#0EA5E9]/20 disabled:cursor-not-allowed disabled:opacity-40">−</button>
+              <span className="w-5 text-center text-sm font-bold text-[#0f172a]" aria-live="polite">{current}</span>
+              <button type="button" aria-label={ar ? `زيادة عدد غرف ${name}` : `Increase rooms for ${name}`} disabled={current >= max} onClick={() => setCount(current + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0EA5E9]/10 text-base font-bold leading-none text-[#0EA5E9] hover:bg-[#0EA5E9]/20 disabled:cursor-not-allowed disabled:opacity-40">+</button>
+            </div>
+          </div>
+        </div>;
       })}
     </div>
     {allowedRooms.length === 0 && <QuoteError ar={ar} retry={reload} />}
     {availableAddons.length > 0 && count > 0 && <fieldset className="mt-5">
       <legend className="font-semibold text-slate-900">{ar ? "ترقيات الغرف (اختياري)" : "Room upgrades (optional)"}</legend>
+      <p className="mt-2 text-xs leading-relaxed text-[#64748b]" aria-live="polite">
+        {ar ? `حدد عدد الغرف لكل ترقية. الغرف المتبقية بدون ترقية: ${count - upgrades}` : `Choose rooms for each upgrade. Rooms without an upgrade: ${count - upgrades}`}
+      </p>
       {availableAddons.map(addon => {
         const name = ar ? addon.nameAr || addon.nameEn : addon.nameEn || addon.nameAr;
+        const description = ar ? addon.descriptionAr || addon.descriptionEn : addon.descriptionEn || addon.descriptionAr;
         const current = addonCounts[addon.id] ?? 0;
-        return <label key={addon.id} className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm">
-          <span>
-            <span className="block">{name}</span>
-            <span className="block text-xs text-slate-600">{formatPrice(resolvePrice(addon.price, addon.priceEgp), lang)} {ar ? "للغرفة في الليلة" : "per room per night"}</span>
-          </span>
-          <span className="relative inline-flex shrink-0">
-          <select dir="ltr" aria-label={name} className="min-h-11 min-w-11 appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-5 pr-2 text-right" value={current}
-            onChange={event => setAddonCounts({ ...addonCounts, [addon.id]: Number(event.target.value) })}>
-            {Array.from({ length: Math.max(0, count - upgrades + current) + 1 }, (_, n) => <option key={n}>{n}</option>)}
-          </select>
-          <ChevronDown aria-hidden size={14} className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-600" />
-          </span>
-        </label>;
+        const selected = current > 0;
+        const price = resolvePrice(addon.price, addon.priceEgp);
+        const setCount = (value: number) => setAddonCounts(previous => ({ ...previous, [addon.id]: value }));
+        return <div key={addon.id} role="group" aria-label={name} className={`relative mt-3 rounded-2xl border-2 p-4 text-start transition-all ${selected ? "border-[#F59E0B] bg-[#F59E0B]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"}`}>
+          <button type="button" aria-label={name} aria-pressed={selected} disabled={!selected && upgrades >= count}
+            onClick={() => setCount(selected ? 0 : 1)}
+            className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F59E0B] disabled:cursor-not-allowed" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <span aria-hidden className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"}`}>
+                {selected && <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+              </span>
+              <span><span className="block text-sm font-bold text-[#0f172a]">{name}</span>{description && <span className="mt-1 block text-xs leading-tight text-[#64748b]">{description}</span>}</span>
+            </div>
+            <span className={`shrink-0 font-semibold ${selected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>{Number.isFinite(price) && price > 0 ? "+" : ""}{formatPrice(price, lang)}</span>
+          </div>
+          <p className="mt-2 text-xs text-[#64748b]">{ar ? "السعر لكل غرفة في الليلة" : "Price per room per night"}</p>
+          <div className="mt-3 flex items-center justify-between border-t border-[#e2e8f0] pt-3">
+            <span className="text-xs font-medium text-[#64748b]">{ar ? "عدد الغرف" : "Rooms"}</span>
+            <div className="relative z-20 flex items-center gap-2">
+              <button type="button" aria-label={ar ? `تقليل غرف ترقية ${name}` : `Decrease rooms for ${name}`} disabled={current === 0} onClick={() => setCount(current - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F59E0B]/10 font-bold text-[#92400E] hover:bg-[#F59E0B]/20 disabled:cursor-not-allowed disabled:opacity-40">−</button>
+              <span className="w-5 text-center text-sm font-bold text-[#0f172a]" aria-live="polite">{current}</span>
+              <button type="button" aria-label={ar ? `زيادة غرف ترقية ${name}` : `Increase rooms for ${name}`} disabled={upgrades >= count} onClick={() => setCount(current + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F59E0B]/10 font-bold text-[#92400E] hover:bg-[#F59E0B]/20 disabled:cursor-not-allowed disabled:opacity-40">+</button>
+            </div>
+          </div>
+        </div>;
       })}
     </fieldset>}
     {count > 0 && capacity >= guests && count <= guests && upgrades <= count
@@ -220,13 +249,13 @@ function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecor
   const [error, setError] = useState("");
   function submit(event: FormEvent) {
     event.preventDefault();
-    const issue = stayIssue(draft, today);
+    const issue = stayIssue(draft, today) ?? (missingChildAges(draft) ? "ages" : null);
     setError(issue ? stayIssueMessage(issue, ar) : "");
     if (!issue) { setCriteria(draft); setAttempt(n => n + 1); }
   }
   function updateDraft(next: StayCriteria) {
     setDraft(next);
-    setCriteria(null);
+    setCriteria(stayIssue(next, today) || missingChildAges(next) ? null : next);
     setError("");
   }
   return <section aria-labelledby="stay-booking-heading" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-7">
@@ -250,7 +279,7 @@ export default function HotelStayBooking({ hotel }: { hotel: HotelRecord }) {
   const query = useSearchParams();
   const [today] = useState(cairoToday);
   const linkStay = readStayQuery(query);
-  const applied = !stayIssue(linkStay, today);
+  const applied = !stayIssue(linkStay, today) && !missingChildAges(linkStay);
   return <StayBookingForm key={hotel.id + ":" + query.toString()} hotel={hotel} today={today} applied={applied}
     initial={applied ? linkStay : { check_in: today, check_out: addStayDays(today, 1), adults: 2, children: 0 }} />;
 }

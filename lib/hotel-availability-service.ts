@@ -7,7 +7,7 @@ import { getVisitorCurrency, type VisitorCategory } from "./visitor-pricing";
 export const hotelAvailabilityDemo = process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "demo";
 export const hotelAvailabilityEnabled = hotelAvailabilityDemo || process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "live";
-export const hotelCalendarEnabled = process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "admin" ||
+export const hotelCalendarEnabled = hotelAvailabilityDemo || process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "admin" ||
   process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "live";
 
 type SearchResponse = { data: { hotel: ApiHotel; stay_offer: StayOffer }[]; meta: ApiHotelListResponse["meta"] };
@@ -42,8 +42,8 @@ export async function quoteHotelStay(
   hotelId: string, stay: StayCriteria, category: VisitorCategory,
   selection?: { rooms: StayRoom[]; addons: StayAddon[] }, signal?: AbortSignal,
 ): Promise<StayQuote> {
-  const { check_in, check_out, adults, children } = stay;
-  const criteria = { check_in, check_out, adults, children };
+  const { check_in, check_out, adults, children, child_ages } = stay;
+  const criteria = { check_in, check_out, adults, children, ...(child_ages?.length ? { child_ages } : {}) };
   if (hotelAvailabilityDemo)
     return (await import("./hotel-availability-demo")).demoQuote(hotelId, criteria, category, selection?.rooms, selection?.addons);
   return request("/" + encodeURIComponent(hotelId) + "/stay-quote", {
@@ -69,6 +69,7 @@ export async function getHotelStayCalendar(hotelId: string, from: string, to: st
     });
   }
   const query = new URLSearchParams({ from, to, adults: String(guests.adults), children: String(guests.children), visitor_category: category });
+  if (guests.child_ages?.length) query.set("child_ages", guests.child_ages.map(age => age ?? "").join(","));
   const result = await request<{ currency: string; days: StayCalendarPrice[] }>(
     "/" + encodeURIComponent(hotelId) + "/stay-calendar?" + query, { signal },
   );
@@ -79,12 +80,18 @@ export async function getHotelStayCalendar(hotelId: string, from: string, to: st
 }
 
 export async function getHotelRoomCalendar(hotelId: string, roomId: string, from: string, to: string, signal?: AbortSignal): Promise<RoomCalendar> {
-  if (hotelAvailabilityDemo) return (await import("./hotel-availability-demo")).getDemoCalendar(roomId, from, to);
+  if (hotelAvailabilityDemo) {
+    const demo = await import("./hotel-availability-demo");
+    if (hotelId === demo.demoHotel.id) return demo.getDemoCalendar(roomId, from, to);
+  }
   return request(calendarPath(hotelId, roomId) + "?" + new URLSearchParams({ from, to }).toString(), { signal }, true);
 }
 
 export async function saveHotelRoomCalendar(hotelId: string, roomId: string, revision: number, changes: CalendarChange[]) {
-  if (hotelAvailabilityDemo) return (await import("./hotel-availability-demo")).saveDemoCalendar(roomId, revision, changes);
+  if (hotelAvailabilityDemo) {
+    const demo = await import("./hotel-availability-demo");
+    if (hotelId === demo.demoHotel.id) return demo.saveDemoCalendar(roomId, revision, changes);
+  }
   return request<{ revision: number }>(calendarPath(hotelId, roomId), { method: "PATCH", body: JSON.stringify({ revision, changes }) }, true);
 }
 

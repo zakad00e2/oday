@@ -10,7 +10,7 @@ import { HOTEL_DESTINATION_OPTIONS } from "@/lib/hotel-service";
 import { listDestinations } from "@/lib/destination-service";
 import { getDestinationLabels } from "@/lib/destinations";
 import { searchHotelStays, hotelAvailabilityDemo } from "@/lib/hotel-availability-service";
-import { addStayDays, cairoToday, readStayQuery, stayIssue, stayMoney, stayQuery, type StayCriteria } from "@/lib/hotel-stay";
+import { addStayDays, cairoToday, missingChildAges, readStayQuery, stayIssue, stayMoney, stayQuery, type StayCriteria } from "@/lib/hotel-stay";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import StayFields, { stayIssueMessage } from "./StayFields";
@@ -38,7 +38,7 @@ function SearchForm({ initial, destination, today, submit }: {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    const issue = stayIssue(stay, today);
+    const issue = stayIssue(stay, today) ?? (missingChildAges(stay) ? "ages" : null);
     if (!selected || issue) {
       setError(!selected ? (ar ? "اختر وجهة أولًا." : "Choose a destination first.") : stayIssueMessage(issue!, ar));
       return;
@@ -146,7 +146,7 @@ export default function HotelDiscovery() {
   const raw = query.toString();
   const rawStay = readStayQuery(query);
   const destination = query.get("destination") ?? "";
-  const valid = Boolean(destination && !stayIssue(rawStay, today));
+  const valid = Boolean(destination && !stayIssue(rawStay, today) && !missingChildAges(rawStay));
   const malformed = !valid && (query.has("destination") || query.has("check_in") || query.has("check_out"));
   const pageValue = Number(query.get("page") ?? 1);
   const page = Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;

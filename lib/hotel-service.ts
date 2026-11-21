@@ -78,6 +78,11 @@ export interface ApiHotelRoomTranslation {
 export interface ApiHotelRoom {
   id?: string;
   capacity: string | number | null;
+  adult_capacity?: number | null;
+  child_capacity?: number | null;
+  children_under_3_capacity?: number | null;
+  children_3_to_5_capacity?: number | null;
+  children_6_to_12_capacity?: number | null;
   price: string;
   price_egp?: string | number | null;
   hotel_id?: string;
@@ -142,6 +147,11 @@ export interface HotelRoomRecord {
   id: string;
   idIsSynthetic?: boolean;
   capacity: number;
+  adultCapacity?: number;
+  childCapacity?: number;
+  childrenUnder3Capacity?: number;
+  children3To5Capacity?: number;
+  children6To12Capacity?: number;
   price: number;
   priceEgp?: number | null;
   nameAr: string;
@@ -199,6 +209,11 @@ export interface HotelRecord {
 export interface HotelMutationRoomInput {
   id?: string;
   capacity: number;
+  adultCapacity?: number;
+  childCapacity?: number;
+  childrenUnder3Capacity?: number;
+  children3To5Capacity?: number;
+  children6To12Capacity?: number;
   price: number;
   priceEgp?: number | null;
   nameAr: string;
@@ -595,6 +610,11 @@ export function createHotelRecord(apiHotel: ApiHotel): HotelRecord {
       id: room.id ?? `room-${index + 1}`,
       idIsSynthetic: !room.id,
       capacity: parseNumber(room.capacity),
+      adultCapacity: room.adult_capacity ?? undefined,
+      childCapacity: room.child_capacity ?? undefined,
+      childrenUnder3Capacity: room.children_under_3_capacity ?? undefined,
+      children3To5Capacity: room.children_3_to_5_capacity ?? undefined,
+      children6To12Capacity: room.children_6_to_12_capacity ?? undefined,
       price: parsePrice(room.price) ?? Number.NaN,
       priceEgp: parsePrice(room.price_egp),
       nameAr: repairText(
@@ -770,6 +790,7 @@ function buildCreateFormData(
   const rooms = input.rooms.map((room) => ({
     ...(roomUpdate && room.id ? { id: room.id } : {}),
     capacity: String(Math.max(1, room.capacity)),
+    ...(room.adultCapacity !== undefined ? { adult_capacity: room.adultCapacity, child_capacity: room.childCapacity, children_under_3_capacity: room.childrenUnder3Capacity, children_3_to_5_capacity: room.children3To5Capacity, children_6_to_12_capacity: room.children6To12Capacity } : {}),
     price: Math.max(0, room.price),
     price_egp: parsePrice(room.priceEgp),
     translations: [
@@ -877,6 +898,8 @@ export function toHotelMutationInput(hotel: HotelRecord): HotelMutationInput {
     youtubeVideoUrl: hotel.youtubeVideoUrl,
     rooms: hotel.rooms.map((room) => ({
       capacity: room.capacity,
+      adultCapacity: room.adultCapacity, childCapacity: room.childCapacity,
+      childrenUnder3Capacity: room.childrenUnder3Capacity, children3To5Capacity: room.children3To5Capacity, children6To12Capacity: room.children6To12Capacity,
       price: room.price,
       priceEgp: room.priceEgp,
       nameAr: room.nameAr,

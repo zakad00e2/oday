@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { getHotelStayCalendar } from "@/lib/hotel-availability-service";
-import { addStayDays, stayMoney, stayNights, STAY_HORIZON, STAY_NIGHT_LIMIT, type StayCalendarPrice, type StayCriteria } from "@/lib/hotel-stay";
+import { addStayDays, formatStayNights, stayMoney, stayNights, STAY_HORIZON, STAY_NIGHT_LIMIT, type StayCalendarPrice, type StayCriteria } from "@/lib/hotel-stay";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 
 function monthStart(date: string, offset = 0) {
@@ -38,7 +38,8 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
   const monthLimit = monthStart(month, 2);
   const to = monthLimit < horizon ? monthLimit : horizon;
   const { adults, children } = stay;
-  const key = JSON.stringify([hotelId, from, to, adults, children, category]);
+  const ages = JSON.stringify(stay.child_ages ?? []);
+  const key = JSON.stringify([hotelId, from, to, adults, children, ages, category]);
   const response = result?.key === key ? result : undefined;
   const prices = new Map(response?.days?.map(day => [day.date, day]));
   const lang = ar ? "ar-EG" : "en-GB";
@@ -52,13 +53,13 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
   const hasBasePrice = Number.isFinite(basePrice) && basePrice > 0;
 
   useEffect(() => {
-    if (!visible || !category || from >= to) return;
+    if (!visible || !category || from >= to || (children > 0 && JSON.parse(ages).length !== children) || JSON.parse(ages).some((age: number | null) => age === null)) return;
     const controller = new AbortController();
-    getHotelStayCalendar(hotelId, from, to, { adults, children }, category, controller.signal)
+    getHotelStayCalendar(hotelId, from, to, { adults, children, child_ages: JSON.parse(ages) }, category, controller.signal)
       .then(days => { if (!controller.signal.aborted) setResult({ key, days }); })
       .catch(() => { if (!controller.signal.aborted) setResult({ key }); });
     return () => controller.abort();
-  }, [visible, hotelId, category, from, to, adults, children, key]);
+  }, [visible, hotelId, category, from, to, adults, children, ages, key]);
 
   useEffect(() => {
     if (!visible) return;
@@ -90,8 +91,10 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
 
   function choose(date: string) {
     if (editingEnd && start && date > start) {
+      if (dayDisabled(date)) return;
       setEnd(date);
       setEditingEnd(false);
+      setStay({ ...stay, check_in: start, check_out: date });
     } else {
       setStart(date);
       setEnd("");
@@ -157,9 +160,9 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
     );
   }
 
-  const nights = stayNights(start, end);
-  const canApply = Boolean(start && end && nights > 0 && nights <= STAY_NIGHT_LIMIT && !hasClosedNight(start, end));
+  const nights = stayNights(stay.check_in, stay.check_out);
   return <div ref={container} className="relative min-w-0">
+    {nights > 0 && <p className="mb-2 text-sm font-semibold text-slate-900" aria-live="polite">{formatStayNights(nights, ar)}</p>}
     <button type="button" ref={trigger} onClick={open} aria-haspopup="dialog" aria-expanded={visible} aria-controls="hotel-date-calendar"
       className="grid min-h-[67px] w-full min-w-0 grid-cols-2 items-center rounded-xl border border-slate-200 bg-white p-2.5 text-start focus-visible:ring-2 focus-visible:ring-sky-600">
       <span className="min-w-0 px-1">
@@ -176,6 +179,7 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
         <header className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 id="hotel-calendar-title" className="text-lg font-bold text-slate-950">{ar ? "تواريخ الإقامة" : "Stay dates"}</h2>
+            {!editingEnd && nights > 0 && <p className="text-sm font-semibold text-sky-800">{formatStayNights(nights, ar)}</p>}
             <p className="text-sm text-slate-600" aria-live="polite">{editingEnd ? (ar ? "اختر تاريخ المغادرة" : "Choose your checkout date") : (ar ? "اختر تاريخ الوصول" : "Choose your check-in date")}</p>
           </div>
           <button type="button" onClick={() => { setVisible(false); trigger.current?.focus(); }} aria-label={ar ? "إغلاق التقويم" : "Close calendar"}
@@ -207,15 +211,7 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
               : !response.days ? (ar ? "اختر التواريخ للتحقق من السعر." : "Select dates to check the price.")
               : (ar ? "الأسعار لكل ليلة للمجموعة المحددة. الأيام الرمادية غير متاحة ويظهر فيها السعر الأساسي للفندق · " : "Prices are per night for your group. Grey dates are unavailable and show the hotel base rate · ") + currency}
           </p>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-slate-900" aria-live="polite">{summary(start)} – {summary(end)}
-              {canApply && (ar ? " · الليالي: " : " · Nights: ") + dayLabel.format(nights)}</p>
-            <button type="button" disabled={!canApply}
-              onClick={() => { setStay({ ...stay, check_in: start, check_out: end }); setVisible(false); trigger.current?.focus(); }}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-bold text-white enabled:hover:bg-sky-800 disabled:bg-slate-200 disabled:text-slate-700">
-              {ar ? "تأكيد التواريخ" : "Apply dates"}
-            </button>
-          </div>
+          <p className="mt-3 text-sm font-semibold text-slate-900" aria-live="polite">{summary(start)} – {summary(end)}</p>
         </div>
     </div>}
   </div>;

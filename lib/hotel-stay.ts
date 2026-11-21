@@ -1,12 +1,13 @@
 import type { PricingCurrency, VisitorCategory } from "./visitor-pricing";
 
 export const STAY_GUEST_LIMIT = 20;
+export const STAY_CHILD_MAX_AGE = 12;
 export const STAY_NIGHT_LIMIT = 30;
 export const STAY_HORIZON = 365;
 const DAY = 86_400_000;
 const cairo = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit" });
 
-export type StayGuests = { adults: number; children: number };
+export type StayGuests = { adults: number; children: number; child_ages?: (number | null)[] };
 export type StayCriteria = StayGuests & { check_in: string; check_out: string };
 export type StayRoom = { room_id: string; quantity: number };
 export type StayAddon = { addon_id: string; quantity: number };
@@ -56,6 +57,14 @@ export function stayNights(from: string, to: string) {
   return (dayTime(to) - dayTime(from)) / DAY;
 }
 
+export function formatStayNights(nights: number, ar: boolean) {
+  if (!ar) return `${nights} ${nights === 1 ? "night" : "nights"}`;
+  if (nights === 1) return "ليلة واحدة";
+  if (nights === 2) return "ليلتان";
+  const remainder = nights % 100;
+  return `${nights} ${remainder >= 3 && remainder <= 10 ? "ليالٍ" : "ليلة"}`;
+}
+
 export function stayIssue(stay: StayCriteria, today = cairoToday()): "dates" | "duration" | "party" | null {
   const nights = stayNights(stay.check_in, stay.check_out);
   if (!(nights > 0) || stay.check_in < today) return "dates";
@@ -65,15 +74,25 @@ export function stayIssue(stay: StayCriteria, today = cairoToday()): "dates" | "
   return null;
 }
 
+export function missingChildAges(stay: StayGuests) {
+  return stay.children > 0 && (stay.child_ages?.length !== stay.children || stay.child_ages.some(age => age === null || !Number.isInteger(age) || age < 0 || age > STAY_CHILD_MAX_AGE));
+}
+
 export function stayQuery(stay: StayCriteria) {
   const { check_in, check_out, adults, children } = stay;
-  return new URLSearchParams({ check_in, check_out, adults: String(adults), children: String(children) });
+  const query = new URLSearchParams({ check_in, check_out, adults: String(adults), children: String(children) });
+  if (stay.child_ages?.length) query.set("child_ages", stay.child_ages.map(age => age ?? "").join(","));
+  return query;
 }
 
 export function readStayQuery(query: Pick<URLSearchParams, "get">): StayCriteria {
   const count = (value: string | null, fallback: number) => value === null ? fallback : /^\d+$/.test(value) ? Number(value) : -1;
+  const rawAges = query.get("child_ages");
+  const children = count(query.get("children"), 0);
+  const child_ages = rawAges === null ? undefined : rawAges.split(",").slice(0, Math.max(0, Math.min(children, STAY_GUEST_LIMIT))).map(value =>
+    /^\d+$/.test(value) && Number(value) <= STAY_CHILD_MAX_AGE ? Number(value) : null);
   return { check_in: query.get("check_in") ?? "", check_out: query.get("check_out") ?? "",
-    adults: count(query.get("adults"), 2), children: count(query.get("children"), 0) };
+    adults: count(query.get("adults"), 2), children, ...(child_ages ? { child_ages } : {}) };
 }
 
 export function stayMoney(amount: StayAmount) {

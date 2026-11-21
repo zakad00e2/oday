@@ -5,13 +5,15 @@ import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import DualPriceInputs from "@/components/admin/DualPriceInputs";
 import HotelRoomCalendar from "@/components/admin/HotelRoomCalendar";
-import { hotelCalendarEnabled as calendarEnabled } from "@/lib/hotel-availability-service";
+import { hotelAvailabilityDemo, hotelCalendarEnabled as calendarEnabled } from "@/lib/hotel-availability-service";
+import { demoHotel } from "@/lib/hotel-availability-demo";
 import { isValidPriceInput, hasRetainedEgpPrices } from "@/lib/visitor-pricing";
 import { formatPrice } from "@/lib/currency";
 import {
   HOTEL_DESTINATION_OPTIONS,
   HOTEL_MEAL_PLAN_OPTIONS,
   HotelServiceError,
+  createHotelRecord,
   createHotel,
   deleteHotel,
   getHotelMealPlanLabel,
@@ -29,6 +31,11 @@ import {
 interface Room {
   id?: string;
   capacity?: number;
+  adultCapacity?: number;
+  childCapacity?: number;
+  childrenUnder3Capacity?: number;
+  children3To5Capacity?: number;
+  children6To12Capacity?: number;
   nameAr: string;
   nameEn: string;
   price: number;
@@ -383,6 +390,8 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
     rooms: hotel.rooms.map((room) => ({
       id: room.idIsSynthetic ? undefined : room.id,
       capacity: room.capacity,
+      adultCapacity: room.adultCapacity, childCapacity: room.childCapacity,
+      childrenUnder3Capacity: room.childrenUnder3Capacity, children3To5Capacity: room.children3To5Capacity, children6To12Capacity: room.children6To12Capacity,
       nameAr: room.nameAr,
       nameEn: room.nameEn,
       price: room.price,
@@ -498,6 +507,8 @@ function mapHotelToMutationInput(hotel: Omit<Hotel, "id">): HotelMutationInput |
     rooms: hotel.rooms.map((room) => ({
       id: room.id,
       capacity: room.capacity ?? extractCapacity(room.descriptionAr, room.descriptionEn),
+      adultCapacity: room.adultCapacity, childCapacity: room.childCapacity,
+      childrenUnder3Capacity: room.childrenUnder3Capacity, children3To5Capacity: room.children3To5Capacity, children6To12Capacity: room.children6To12Capacity,
       price: Math.max(0, room.price),
       priceEgp: room.priceEgp,
       nameAr: room.nameAr.trim(),
@@ -518,7 +529,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function AdminHotels() {
-  const [hotels, setHotels] = useState<Hotel[]>(calendarEnabled ? [] : mockHotels);
+  const [hotels, setHotels] = useState<Hotel[]>(() => hotelAvailabilityDemo ? [mapHotelRecordToHotel(createHotelRecord(demoHotel))] : calendarEnabled ? [] : mockHotels);
   const [calendarHotel, setCalendarHotel] = useState<Hotel | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Hotel | null>(null);
@@ -549,7 +560,8 @@ export default function AdminHotels() {
       try {
         const response = await listHotels({ page: 1, limit: 100 });
         if (!mounted) return;
-        setHotels(response.hotels.map(mapHotelRecordToHotel));
+        const loaded = response.hotels.map(mapHotelRecordToHotel);
+        setHotels(hotelAvailabilityDemo ? [mapHotelRecordToHotel(createHotelRecord(demoHotel)), ...loaded.filter(hotel => hotel.id !== demoHotel.id)] : loaded);
       } catch (error) {
         if (!mounted) return;
         setNotice({
@@ -624,10 +636,16 @@ export default function AdminHotels() {
     if (!isValidPriceInput(roomInput.price) || !isValidPriceInput(roomInput.priceEgp)) { setModalError("أدخل سعر الدولار وسعر الجنيه بقيم صحيحة غير سالبة."); return; }
     if (!roomInput.nameAr.trim()) return;
     if (!Number.isSafeInteger(roomInput.capacity) || roomInput.capacity! < 1) { setModalError("أدخل سعة صحيحة لا تقل عن ضيف واحد."); return; }
+    const limits = [roomInput.adultCapacity, roomInput.childCapacity, roomInput.childrenUnder3Capacity, roomInput.children3To5Capacity, roomInput.children6To12Capacity];
+    if (limits.some(value => !Number.isSafeInteger(value) || value! < 0) || roomInput.adultCapacity! < 1 || roomInput.adultCapacity! > roomInput.capacity! || roomInput.childCapacity! > roomInput.capacity! || limits.slice(2).some(value => value! > roomInput.childCapacity!)) {
+      setModalError("أدخل حدود سعة صحيحة: بالغ واحد على الأقل، ولا تتجاوز السعات الحد الإجمالي أو حد الأطفال."); return;
+    }
     setModalError(null);
     const newRoom = {
       id: roomInput.id,
       capacity: roomInput.capacity,
+      adultCapacity: roomInput.adultCapacity, childCapacity: roomInput.childCapacity,
+      childrenUnder3Capacity: roomInput.childrenUnder3Capacity, children3To5Capacity: roomInput.children3To5Capacity, children6To12Capacity: roomInput.children6To12Capacity,
       nameAr: roomInput.nameAr.trim(),
       nameEn: roomInput.nameEn.trim(),
       price: roomInput.price,
@@ -823,6 +841,8 @@ export default function AdminHotels() {
       rooms: form.rooms.map((room) => ({
         id: room.id,
         capacity: room.capacity,
+        adultCapacity: room.adultCapacity, childCapacity: room.childCapacity,
+        childrenUnder3Capacity: room.childrenUnder3Capacity, children3To5Capacity: room.children3To5Capacity, children6To12Capacity: room.children6To12Capacity,
         nameAr: room.nameAr.trim(),
         nameEn: room.nameEn.trim(),
         price: room.price,
@@ -893,6 +913,13 @@ export default function AdminHotels() {
         && hasRetainedEgpPrices(payload.roomAddOns, nextHotel.roomAddOns);
       if (!pricesRetained) {
         setModalError("استقبل الخادم الطلب لكنه لم يؤكد حفظ أسعار الجنيه. يلزم تحديث الباك إند؛ احتفظ بالقيم المدخلة لحين الربط.");
+        return;
+      }
+      const capacityKeys = ["adultCapacity", "childCapacity", "childrenUnder3Capacity", "children3To5Capacity", "children6To12Capacity"] as const;
+      const capacitiesRetained = payload.rooms.every(room => room.adultCapacity === undefined || nextHotel.rooms.some(saved =>
+        (room.id ? saved.id === room.id : saved.nameAr === room.nameAr) && capacityKeys.every(key => saved[key] === room[key])));
+      if (!capacitiesRetained) {
+        setModalError("لم يؤكد الخادم حفظ حدود سعة البالغين والأطفال. يلزم تحديث الباك إند قبل اعتمادها؛ القيم ما زالت في النموذج.");
         return;
       }
       setNotice({
@@ -1042,10 +1069,10 @@ export default function AdminHotels() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {calendarEnabled && hotel.rooms.some(room => room.id) && <button type="button" onClick={() => setCalendarHotel(hotel)} className="flex-1 rounded-xl border border-sky-200 px-2 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-50">تقويم التوافر</button>}
-                  <button onClick={() => openEdit(hotel)} className="flex-1 py-2 border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">تعديل</button>
+                  {!(hotelAvailabilityDemo && hotel.id === demoHotel.id) && <><button onClick={() => openEdit(hotel)} className="flex-1 py-2 border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">تعديل</button>
                   <button onClick={() => setDeleteId(hotel.id)} className="py-2 px-3 border border-[#E5E7EB] rounded-xl text-[#EF4444] hover:bg-[#FEF2F2] hover:border-[#FEF2F2] transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-                  </button>
+                  </button></>}
                 </div>
               </div>
             </div>
@@ -1344,6 +1371,16 @@ export default function AdminHotels() {
                     <label className="grid max-w-xs gap-1 text-sm font-medium text-slate-700">أقصى عدد ضيوف للغرفة
                       <input type="number" min={1} step={1} value={roomInput.capacity ?? ""} onChange={event => setRoomInput({ ...roomInput, capacity: event.target.value === "" ? undefined : Number(event.target.value) })} className="rounded-xl border border-slate-300 px-3 py-2.5" />
                     </label>
+                    <p className="text-xs text-slate-500">الحد الإجمالي يشمل البالغين والأطفال. حدود الأعمار منفصلة، ويُطبّق حد الأطفال الإجمالي أيضًا.</p>
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                      {([
+                        ["adultCapacity", "أقصى البالغين"], ["childCapacity", "أقصى الأطفال"],
+                        ["childrenUnder3Capacity", "أطفال أقل من ٣ سنوات"], ["children3To5Capacity", "أطفال من ٣ إلى أقل من ٦"],
+                        ["children6To12Capacity", "أطفال من ٦ إلى ١٢ سنة"],
+                      ] as const).map(([key, label]) => <label key={key} className="grid gap-1 text-sm font-medium text-slate-700">{label}
+                        <input type="number" min={key === "adultCapacity" ? 1 : 0} step={1} value={roomInput[key] ?? ""} onChange={event => setRoomInput({ ...roomInput, [key]: event.target.value === "" ? undefined : Number(event.target.value) })} className="min-w-0 rounded-xl border border-slate-300 px-3 py-2.5" />
+                      </label>)}
+                    </div>
                     <DualPriceInputs label="سعر الغرفة / ليلة" usd={roomInput.price} egp={roomInput.priceEgp} onChange={(price, priceEgp) => setRoomInput({ ...roomInput, price, priceEgp })} />
                   </div>
                   <div className="flex gap-2">
@@ -1375,6 +1412,7 @@ export default function AdminHotels() {
                       {room.descriptionAr && (
                         <p className="text-xs text-[#6B7280] mt-1">{room.descriptionAr}</p>
                       )}
+                      {room.adultCapacity !== undefined && <p className="mt-1 text-xs text-slate-600">البالغون: {room.adultCapacity} · الأطفال: {room.childCapacity} · أقل من ٣: {room.childrenUnder3Capacity} · ٣–٥: {room.children3To5Capacity} · ٦–١٢: {room.children6To12Capacity}</p>}
                       {room.descriptionEn && (
                         <p className="text-xs text-[#9CA3AF] mt-0.5" dir="ltr">{room.descriptionEn}</p>
                       )}

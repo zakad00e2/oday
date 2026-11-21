@@ -14,14 +14,14 @@ export const demoHotel: ApiHotel = {
   assets: [{ kind: "HOTEL_MAIN_IMAGE", url: "/images/hotels-hero-sea-room.png" }],
   rooms: [
     { id: "demo-double", capacity: "2", price: "100", price_egp: "5000", translations: [
-      { language: "ar", name: "غرفة مزدوجة" }, { language: "en", name: "Double room" },
+      { language: "ar", name: "غرفة مزدوجة", description: "غرفة تجريبية تتسع لشخصين." }, { language: "en", name: "Double room", description: "A sample room for two guests." },
     ] },
     { id: "demo-family", capacity: "3", price: "150", price_egp: "7200", translations: [
-      { language: "ar", name: "غرفة عائلية" }, { language: "en", name: "Family room" },
+      { language: "ar", name: "غرفة عائلية", description: "غرفة تجريبية تتسع لثلاثة أشخاص." }, { language: "en", name: "Family room", description: "A sample room for three guests." },
     ] },
   ],
   addons: [{ id: "demo-upgrade", price: "20", price_egp: "900", translations: [
-    { language: "ar", name: "ترقية إطلالة البحر", description: "" }, { language: "en", name: "Sea view upgrade", description: "" },
+    { language: "ar", name: "ترقية إطلالة البحر", description: "ترقية تجريبية لإطلالة على البحر." }, { language: "en", name: "Sea view upgrade", description: "A sample upgrade to a sea view." },
   ] }],
 };
 
