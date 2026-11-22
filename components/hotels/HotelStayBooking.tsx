@@ -13,6 +13,7 @@ import { useI18n } from "@/lib/i18n/dictionary-context";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import StayFields, { stayIssueMessage } from "./StayFields";
 import HotelDatePicker from "./HotelDatePicker";
+import HotelOptionDescription from "./HotelOptionDescription";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-sky-700 px-5 py-2 font-semibold text-white hover:bg-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600";
 
@@ -180,7 +181,11 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
               <span aria-hidden className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1] bg-white"}`}>
                 {selected ? <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : <span className="h-2 w-2 rounded-full bg-[#cbd5e1]" />}
               </span>
-              <span><span className="block text-sm font-bold leading-tight text-[#0f172a]">{name}</span>{description && <span className="mt-0.5 block text-xs text-[#64748b]">{description}</span>}<span className="mt-0.5 block text-xs text-[#64748b]">{ar ? "السعة: " : "Capacity: "}{room.capacity}</span></span>
+              <div className="min-w-0">
+                <span className="block text-sm font-bold leading-tight text-[#0f172a]">{name}</span>
+                {description && <HotelOptionDescription description={description} ar={ar} />}
+                <span className="mt-0.5 block text-xs text-[#64748b]">{ar ? "السعة: " : "Capacity: "}{room.capacity}</span>
+              </div>
             </div>
             <span className={`shrink-0 text-end font-semibold ${selected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>{formatPrice(stayMoney(room.unit_stay_total), lang)}</span>
           </div>
@@ -217,7 +222,10 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
               <span aria-hidden className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"}`}>
                 {selected && <svg className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
               </span>
-              <span><span className="block text-sm font-bold text-[#0f172a]">{name}</span>{description && <span className="mt-1 block text-xs leading-tight text-[#64748b]">{description}</span>}</span>
+              <div className="min-w-0">
+                <span className="block text-sm font-bold text-[#0f172a]">{name}</span>
+                {description && <HotelOptionDescription description={description} ar={ar} />}
+              </div>
             </div>
             <span className={`shrink-0 font-semibold ${selected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>{Number.isFinite(price) && price > 0 ? "+" : ""}{formatPrice(price, lang)}</span>
           </div>

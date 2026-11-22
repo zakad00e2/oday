@@ -28,6 +28,7 @@ import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
 import { Suspense } from "react";
 import HotelStayBooking from "./HotelStayBooking";
+import HotelOptionDescription from "./HotelOptionDescription";
 import { getAvailabilityDemoHotel, hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 
 interface LocalizedHotelRoom {
@@ -922,23 +923,19 @@ export default function HotelDetailClient() {
                                             return (
                                                 <div
                                                     key={hotelRoom.id}
-                                                    role="button"
-                                                    aria-pressed={isSelected}
-                                                    tabIndex={0}
-                                                    onClick={() => {
-                                                        setRoomCounts((current) => {
-                                                            if (current[hotelRoom.id]) {
-                                                                const next = { ...current };
-                                                                delete next[hotelRoom.id];
-                                                                return next;
-                                                            }
-
-                                                            return { ...current, [hotelRoom.id]: 1 };
-                                                        });
-                                                    }}
-                                                    onKeyDown={(event) => {
-                                                        if (event.key === "Enter" || event.key === " ") {
-                                                            event.preventDefault();
+                                                    role="group"
+                                                    aria-label={hotelRoom.name}
+                                                    className={`relative rounded-2xl border-2 p-5 transition-all ${
+                                                        isSelected
+                                                            ? "border-[#0EA5E9] bg-[#0EA5E9]/5"
+                                                            : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"
+                                                    }`}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        aria-label={hotelRoom.name}
+                                                        aria-pressed={isSelected}
+                                                        onClick={() => {
                                                             setRoomCounts((current) => {
                                                                 if (current[hotelRoom.id]) {
                                                                     const next = { ...current };
@@ -948,16 +945,11 @@ export default function HotelDetailClient() {
 
                                                                 return { ...current, [hotelRoom.id]: 1 };
                                                             });
-                                                        }
-                                                    }}
-                                                    className={`cursor-pointer rounded-2xl border-2 p-5 transition-all ${
-                                                        isSelected
-                                                            ? "border-[#0EA5E9] bg-[#0EA5E9]/5"
-                                                            : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#0EA5E9]/40"
-                                                    }`}
-                                                >
+                                                        }}
+                                                        className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0EA5E9]"
+                                                    />
                                                     <div className="flex items-start justify-between gap-3">
-                                                        <div className="flex flex-1 items-start gap-2.5">
+                                                        <div className="flex min-w-0 flex-1 items-start gap-2.5">
                                                             <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                                                                 isSelected ? "border-[#0EA5E9] bg-[#0EA5E9]" : "border-[#cbd5e1] bg-white"
                                                             }`}>
@@ -969,9 +961,9 @@ export default function HotelDetailClient() {
                                                                     <div className="h-2 w-2 rounded-full bg-[#cbd5e1]" />
                                                                 )}
                                                             </div>
-                                                            <div>
+                                                            <div className="min-w-0">
                                                                 <p className="text-sm font-bold leading-tight text-[#0f172a]">{hotelRoom.name}</p>
-                                                                <p className="mt-0.5 text-xs text-[#64748b]">{hotelRoom.description}</p>
+                                                                {hotelRoom.description && <HotelOptionDescription description={hotelRoom.description} ar={isAr} />}
                                                             </div>
                                                         </div>
                                                         <span className={`shrink-0 font-semibold ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
@@ -980,10 +972,9 @@ export default function HotelDetailClient() {
                                                     </div>
 
                                                     <div
-                                                        className={`mt-3 flex items-center justify-between border-t pt-3 ${
+                                                        className={`relative z-20 mt-3 flex items-center justify-between border-t pt-3 ${
                                                             isSelected ? "border-[#0EA5E9]/20" : "border-[#e2e8f0]"
                                                         }`}
-                                                        onClick={(event) => event.stopPropagation()}
                                                     >
                                                         <span className="text-xs font-medium text-[#64748b]">{labels.roomCount}</span>
                                                         <div className="flex items-center gap-2">
@@ -1071,7 +1062,7 @@ export default function HotelDetailClient() {
                                                         className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F59E0B] disabled:cursor-not-allowed"
                                                     />
                                                     <div className="flex items-start justify-between gap-3">
-                                                        <div className="flex items-start gap-3">
+                                                        <div className="flex min-w-0 items-start gap-3">
                                                             <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                                                                 isSelected ? "border-[#F59E0B] bg-[#F59E0B]" : "border-[#cbd5e1] bg-white"
                                                             }`}>
@@ -1081,9 +1072,9 @@ export default function HotelDetailClient() {
                                                                     </svg>
                                                                 ) : null}
                                                             </div>
-                                                            <div>
+                                                            <div className="min-w-0">
                                                                 <span className="block text-sm font-bold text-[#0f172a]">{addon.name}</span>
-                                                                <span className="text-xs text-[#64748b]">{addon.description}</span>
+                                                                {addon.description && <HotelOptionDescription description={addon.description} ar={isAr} />}
                                                             </div>
                                                         </div>
                                                         <span className={`mt-0.5 shrink-0 font-semibold ${isSelected ? "text-[#F59E0B]" : "text-[#0f172a]"}`}>

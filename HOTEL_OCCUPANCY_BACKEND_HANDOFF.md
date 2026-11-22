@@ -14,14 +14,16 @@ For each room, accept and return these integer fields in hotel create/update `ro
   "adult_capacity": 2,
   "child_capacity": 2,
   "children_under_3_capacity": 1,
-  "children_3_to_5_capacity": 2,
+  "children_under_6_capacity": 2,
   "children_6_to_12_capacity": 2
 }
 ```
 
 `capacity` remains the existing total number of guests per room. The other values are independent maxima, not a sum of reserved slots. Apply the total child limit as well as each age-band limit, adult limit and overall limit. All values are non-negative integers; adult capacity is at least 1. Adult and child capacities cannot exceed total capacity; each age-band limit cannot exceed child capacity. Preserve these fields on partial updates where omitted, including `rooms_write_mode=by_id`, and return them after saving. Existing rooms need a migration or explicit configuration; do not silently interpret missing values as zero. The frontend warns if a save response does not confirm the entered values.
 
-Age bands are non-overlapping: 0–2, 3–5, and 6–12 inclusive. Age 12 remains included because the current guest selector explicitly allows 12. Confirm this boundary with the product owner if hotel policy instead requires strictly under 12.
+The under-3 and under-6 limits overlap: children aged 0–2 count toward both limits, and children aged 3–5 count toward the under-6 limit. The remaining 6–12 limit is inclusive. Age 12 remains included because the current guest selector explicitly allows 12. Confirm this boundary with the product owner if hotel policy instead requires strictly under 12.
+
+This replaces the earlier proposed `children_3_to_5_capacity` field. If the old contract has already been implemented, coordinate a migration: its values cannot be assumed to represent the new overlapping under-6 limit.
 
 ## Availability requests
 
