@@ -271,8 +271,9 @@ function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecor
       <CalendarCheck size={22} aria-hidden />{ar ? "تحقّق من غرف إقامتك" : "Check rooms for your stay"}
     </h2>
     <p className="mt-1 text-sm text-slate-600">{ar ? "اختر التواريخ وعدد الضيوف لعرض السعر حسب الليلة." : "Choose dates and guests to see the rates for each night."}</p>
+    {missingChildAges(draft) && error === "" && <p className="mt-2 text-sm font-medium text-slate-700">{stayIssueMessage("ages", ar)}</p>}
     <form className="relative z-20 mt-4 grid gap-2.5 lg:grid-cols-[1.55fr_1fr_auto]" onSubmit={submit}>
-      <StayFields stay={draft} setStay={updateDraft} today={today} ar={ar}
+      <StayFields stay={draft} setStay={updateDraft} today={today} ar={ar} initiallyOpen={missingChildAges(initial)}
         datePicker={<HotelDatePicker hotelId={hotel.id} basePrice={resolvePrice(hotel.initialPrice, hotel.initialPriceEgp)}
           stay={draft} setStay={updateDraft} today={today} ar={ar} />} />
       <button className={button} type="submit">{ar ? "تحقّق من التوافر" : "Check availability"}</button>
@@ -287,7 +288,11 @@ export default function HotelStayBooking({ hotel }: { hotel: HotelRecord }) {
   const query = useSearchParams();
   const [today] = useState(cairoToday);
   const linkStay = readStayQuery(query);
-  const applied = !stayIssue(linkStay, today) && !missingChildAges(linkStay);
+  const defaultDates = { check_in: today, check_out: addStayDays(today, 1) };
+  const linkedPartyWithDefaultDates = { ...linkStay, ...defaultDates };
+  const linkIsValid = !stayIssue(linkStay, today);
+  const fallback = stayIssue(linkedPartyWithDefaultDates, today) ? { ...defaultDates, adults: 2, children: 0 } : linkedPartyWithDefaultDates;
+  const applied = linkIsValid && !missingChildAges(linkStay);
   return <StayBookingForm key={hotel.id + ":" + query.toString()} hotel={hotel} today={today} applied={applied}
-    initial={applied ? linkStay : { check_in: today, check_out: addStayDays(today, 1), adults: 2, children: 0 }} />;
+    initial={linkIsValid ? linkStay : fallback} />;
 }

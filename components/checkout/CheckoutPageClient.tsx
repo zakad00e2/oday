@@ -13,7 +13,7 @@ import {
 import { useCart } from "@/lib/cart-context";
 import { cartHotelEditHref, getCartHotelNights, getCartHotelRoomPrice, getCartHotelUpgradeTotal, hasDatedHotelPrice } from "@/lib/cart-hotel-stay";
 import { hotelAvailabilityDemo, quoteHotelStay } from "@/lib/hotel-availability-service";
-import { exactStayRequest, HotelAvailabilityError, sameStayQuote, stayMoney, type StayQuote } from "@/lib/hotel-stay";
+import { exactStayRequest, HotelAvailabilityError, missingChildAges, sameStayQuote, stayMoney, type StayQuote } from "@/lib/hotel-stay";
 import {
   calculateGuestTotal,
   calculateHotelLineCost,
@@ -51,6 +51,8 @@ export default function CheckoutPageClient() {
   const hotelRoomCount = cart.hotel ? getCartHotelRoomCount(cart.hotel) : 0;
   const hotelNights = getCartHotelNights(cart.hotel, cart.nights);
   const datedHotel = hasDatedHotelPrice(cart.hotel);
+  const stayGuests = cart.hotel?.stayGuests ?? cart.hotel?.stayQuote;
+  const needsChildAges = datedHotel && Boolean(stayGuests && missingChildAges(stayGuests));
   const showTripGuestControls = !datedHotel || cart.trips.length > 0;
   const tripGuestsLabel = isAr ? "ضيوف الرحلات" : "Trip guests";
   const hotelCost = cart.hotel ? calculateHotelLineCost(cart.hotel, hotelNights) : 0;
@@ -186,7 +188,7 @@ export default function CheckoutPageClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submission.current) return;
+    if (submission.current || needsChildAges) return;
 
     setSubmitError("");
     setNeedsRoomEdit(false);
@@ -471,8 +473,11 @@ export default function CheckoutPageClient() {
 
               {datedHotel && cart.hotel && <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
                 <p className="font-bold text-slate-950">{isAr ? "ضيوف الإقامة" : "Stay guests"}</p>
-                {cart.hotel.stayGuests && <p className="mt-1 text-slate-700">{t.form.adults}: {cart.hotel.stayGuests.adults} · {t.form.children}: {cart.hotel.stayGuests.children}</p>}
-                <Link className="mt-2 inline-block font-semibold text-sky-800 underline" href={cartHotelEditHref(cart.hotel, lang)}>{isAr ? "تعديل الإقامة" : "Edit stay"}</Link>
+                {stayGuests && <p className="mt-1 text-slate-700">{t.form.adults}: {stayGuests.adults} · {t.form.children}: {stayGuests.children}</p>}
+                {needsChildAges && <p className="mt-2 text-slate-700">{isAr ? "أكمل أعمار الأطفال للتحقق من سعر الإقامة ومتابعة الطلب." : "Add each child's age to check the stay price and continue."}</p>}
+                <Link className="mt-2 inline-block font-semibold text-sky-800 underline" href={cartHotelEditHref(cart.hotel, lang)}>
+                  {needsChildAges ? (isAr ? "استكمال أعمار الأطفال" : "Add children's ages") : (isAr ? "تعديل الإقامة" : "Edit stay")}
+                </Link>
               </div>}
               {showTripGuestControls && <div className="md:col-span-2">
                 <p className="mb-2 px-1 text-sm font-bold text-[#0f172a]">{datedHotel ? tripGuestsLabel : t.form.guestsSection}</p>
@@ -614,7 +619,7 @@ export default function CheckoutPageClient() {
 
             <button
               type="submit"
-              disabled={!agreedToPolicies || isSubmitting}
+              disabled={!agreedToPolicies || isSubmitting || needsChildAges}
               className={`mt-6 w-full ${
                 agreedToPolicies && !isSubmitting
                   ? "bg-[#25D366] hover:bg-[#20BE5C] cursor-pointer"

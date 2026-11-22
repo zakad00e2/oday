@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { getHotelStayCalendar } from "@/lib/hotel-availability-service";
-import { addStayDays, formatStayNights, stayMoney, stayNights, STAY_HORIZON, STAY_NIGHT_LIMIT, type StayCalendarPrice, type StayCriteria } from "@/lib/hotel-stay";
+import { addStayDays, formatStayNights, missingChildAges, stayMoney, stayNights, STAY_HORIZON, STAY_NIGHT_LIMIT, type StayCalendarPrice, type StayCriteria } from "@/lib/hotel-stay";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 
 function monthStart(date: string, offset = 0) {
@@ -39,6 +39,7 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
   const to = monthLimit < horizon ? monthLimit : horizon;
   const { adults, children } = stay;
   const ages = JSON.stringify(stay.child_ages ?? []);
+  const needsChildAges = missingChildAges(stay);
   const key = JSON.stringify([hotelId, from, to, adults, children, ages, category]);
   const response = result?.key === key ? result : undefined;
   const prices = new Map(response?.days?.map(day => [day.date, day]));
@@ -53,13 +54,13 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
   const hasBasePrice = Number.isFinite(basePrice) && basePrice > 0;
 
   useEffect(() => {
-    if (!visible || !category || from >= to || (children > 0 && JSON.parse(ages).length !== children) || JSON.parse(ages).some((age: number | null) => age === null)) return;
+    if (!visible || !category || from >= to || needsChildAges) return;
     const controller = new AbortController();
     getHotelStayCalendar(hotelId, from, to, { adults, children, child_ages: JSON.parse(ages) }, category, controller.signal)
       .then(days => { if (!controller.signal.aborted) setResult({ key, days }); })
       .catch(() => { if (!controller.signal.aborted) setResult({ key }); });
     return () => controller.abort();
-  }, [visible, hotelId, category, from, to, adults, children, ages, key]);
+  }, [visible, hotelId, category, from, to, adults, children, ages, key, needsChildAges]);
 
   useEffect(() => {
     if (!visible) return;
@@ -203,7 +204,8 @@ export default function HotelDatePicker({ hotelId, basePrice, stay, setStay, tod
         </div>
         <div className="mt-4 border-t border-slate-200 pt-3">
           <p role="status" className="text-sm text-slate-700">
-            {!category ? (ar ? "اختر فئة التسعير لعرض الأسعار." : "Choose your pricing category to see rates.")
+            {needsChildAges ? (ar ? "حدّد أعمار الأطفال لعرض أسعار الليالي." : "Select each child's age to see nightly rates.")
+              : !category ? (ar ? "اختر فئة التسعير لعرض الأسعار." : "Choose your pricing category to see rates.")
               : !response?.days && hasBasePrice ? (ar
                 ? "السعر الأساسي للفندق لليلة · " + currency + " · تحقّق من التوافر لمعرفة السعر النهائي."
                 : "Hotel base rate per night · " + currency + " · Check availability for the final price.")

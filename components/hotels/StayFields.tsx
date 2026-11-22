@@ -13,8 +13,8 @@ export function stayIssueMessage(issue: string, ar: boolean) {
   return ar ? "اختر تاريخ وصول من اليوم ومغادرة بعده." : "Choose a check-in from today and a later checkout.";
 }
 
-export default function StayFields({ stay, setStay, today, ar, datePicker }: {
-  stay: StayCriteria; setStay: (stay: StayCriteria) => void; today: string; ar: boolean; datePicker?: ReactNode;
+export default function StayFields({ stay, setStay, today, ar, datePicker, initiallyOpen = false }: {
+  stay: StayCriteria; setStay: (stay: StayCriteria) => void; today: string; ar: boolean; datePicker?: ReactNode; initiallyOpen?: boolean;
 }) {
   const horizon = addStayDays(today, STAY_HORIZON);
   const maxCheckout = stay.check_in ? [addStayDays(stay.check_in, STAY_NIGHT_LIMIT), horizon].filter(Boolean).sort()[0] : horizon;
@@ -39,7 +39,7 @@ export default function StayFields({ stay, setStay, today, ar, datePicker }: {
             value={stay.check_out} onChange={event => setStay({ ...stay, check_out: event.target.value })} />
         </label>
       </div>}
-      <details className="group relative min-w-0 rounded-xl border border-slate-200 bg-white">
+      <details open={initiallyOpen} className="group relative min-w-0 rounded-xl border border-slate-200 bg-white">
         <summary className="flex min-h-[67px] cursor-pointer list-none items-center gap-2 rounded-xl px-3 text-start outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden">
           <UsersRound className="shrink-0 text-slate-500" size={18} aria-hidden />
           <span className="min-w-0">

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
 export default function HotelOptionDescription({ description, ar }: { description: string; ar: boolean }) {
   const id = useId();
   const text = useRef<HTMLParagraphElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  const [fullHeight, setFullHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const paragraph = text.current;
@@ -14,7 +14,8 @@ export default function HotelOptionDescription({ description, ar }: { descriptio
 
     const measure = () => {
       const lineHeight = Number.parseFloat(getComputedStyle(paragraph).lineHeight);
-      setHasMore(paragraph.scrollHeight > lineHeight * 2 + 1);
+      const height = paragraph.getBoundingClientRect().height;
+      setFullHeight(height > lineHeight * 2 + 1 ? height : null);
     };
     const observer = new ResizeObserver(measure);
     observer.observe(paragraph);
@@ -26,11 +27,16 @@ export default function HotelOptionDescription({ description, ar }: { descriptio
   }, [description]);
 
   return (
-    <div className="mt-0.5 text-xs text-[#64748b]">
-      <p id={id} ref={text} className={`leading-4 wrap-break-word ${expanded ? "" : "line-clamp-2 md:line-clamp-none"}`}>
-        {description}
-      </p>
-      {hasMore && (
+    <div className="mt-0.5 text-xs leading-4 text-[#64748b]">
+      <div
+        id={id}
+        data-expanded={expanded && fullHeight !== null}
+        style={fullHeight === null ? undefined : { "--description-height": `${fullHeight}px` } as CSSProperties}
+        className="max-h-[2lh] overflow-hidden transition-[max-height] duration-[240ms] ease-in-out data-[expanded=true]:max-h-(--description-height) motion-reduce:transition-none md:max-h-none md:overflow-visible md:transition-none md:data-[expanded=true]:max-h-none"
+      >
+        <p ref={text} className="wrap-break-word">{description}</p>
+      </div>
+      {fullHeight !== null && (
         <button
           type="button"
           aria-expanded={expanded}

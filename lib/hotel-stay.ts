@@ -103,7 +103,9 @@ export function sameStayQuote(a: StayQuote | undefined, b: StayQuote) {
   if (!a) return false;
   const normalizedAmount = (amount: StayAmount) => amount === null ? null : stayMoney(amount);
   const signature = (q: StayQuote) => JSON.stringify([
-    q.hotel_id, q.check_in, q.check_out, q.adults, q.children, q.nights, q.visitor_category, q.currency, q.pricing_status,
+    q.hotel_id, q.check_in, q.check_out, q.adults, q.children,
+    [...(q.child_ages ?? [])].sort((x, y) => (x ?? -1) - (y ?? -1)),
+    q.nights, q.visitor_category, q.currency, q.pricing_status,
     normalizedAmount(q.total),
     [...q.rooms].sort((x,y) => x.room_id.localeCompare(y.room_id)).map(r =>
       [r.room_id, r.quantity, [...r.nightly_rates].sort((x,y) => x.date.localeCompare(y.date))
@@ -120,7 +122,7 @@ export function exactStayRequest(line: {
 }, today = cairoToday()): ExactStay | null {
   if (!line.stayGuests || !line.checkIn || !line.checkOut || !line.selectedRooms?.length) return null;
   const stay = { check_in: line.checkIn, check_out: line.checkOut, ...line.stayGuests };
-  if (stayIssue(stay, today)) return null;
+  if (stayIssue(stay, today) || missingChildAges(stay)) return null;
   const valid = (id: string | undefined, count: number | undefined) => Boolean(id && id !== "legacy-room" && (line.stayQuote || !/^(room-\d+|addon-\d+)$/.test(id)) &&
     count !== undefined && Number.isInteger(count) && count > 0 && count <= STAY_GUEST_LIMIT);
   if (line.selectedRooms.some(room => !valid(room.id, room.count)) ||

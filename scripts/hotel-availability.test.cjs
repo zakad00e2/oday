@@ -116,10 +116,24 @@ test("revalidation detects a changed nightly price even when the total is unchan
 });
 
 test("cart revalidation never substitutes a synthetic legacy room ID or a missing party", () => {
-  const line = { checkIn: stay.check_in, checkOut: stay.check_out, stayGuests: { adults: 4, children: 1 }, selectedRooms: [{ id: "demo-family", count: 2 }] };
-  assert.deepEqual(exactStayRequest(line, today), { ...stay, rooms: [{ room_id: "demo-family", quantity: 2 }], addons: [] });
+  const line = { checkIn: stay.check_in, checkOut: stay.check_out, stayGuests: { adults: 4, children: 1, child_ages: [12] }, selectedRooms: [{ id: "demo-family", count: 2 }] };
+  assert.deepEqual(exactStayRequest(line, today), { ...stay, child_ages: [12], rooms: [{ room_id: "demo-family", quantity: 2 }], addons: [] });
   assert.equal(exactStayRequest({ ...line, selectedRooms: [{ id: "legacy-room", count: 1 }] }, today), null);
   assert.equal(exactStayRequest({ ...line, stayGuests: undefined }, today), null);
+  const legacy = { ...line, slug: "demo-coast", requiresStayQuote: true, stayGuests: { adults: 4, children: 1 } };
+  assert.equal(exactStayRequest(legacy, today), null);
+  const { cartHotelEditHref } = require("../lib/cart-hotel-stay.ts");
+  const editUrl = new URL(cartHotelEditHref(legacy, "ar"), "https://example.com");
+  assert.equal(editUrl.hash, "#booking");
+  assert.deepEqual(readStayQuery(editUrl.searchParams), stay);
+});
+
+test("a checkout quote with different child ages requires review even when the price is unchanged", () => {
+  const family = { ...stay, children: 2, child_ages: [0, 12] };
+  const quote = demoQuote(demoHotel.id, family, category, undefined, undefined, new Map(), today);
+  assert.equal(sameStayQuote(quote, { ...quote, child_ages: [12, 0] }), true);
+  assert.equal(sameStayQuote(quote, { ...quote, child_ages: [0, 11] }), false);
+  assert.equal(sameStayQuote(quote, { ...quote, child_ages: undefined }), false);
 });
 
 test("a calendar-aware content update sends existing room IDs and explicit deletions", async t => {
@@ -148,6 +162,7 @@ test("a dated cart uses the quote once and never uses an old rate or another cur
 
 test("public search and quote send exact criteria without admin credentials; calendar reads and saves authenticate", async t => {
   const service = require("../lib/hotel-availability-service.ts");
+  const family = { ...stay, child_ages: [7] };
   const prevWindow = globalThis.window;
   const prevStorage = globalThis.localStorage;
   globalThis.window = { dispatchEvent() {} };
@@ -157,22 +172,31 @@ test("public search and quote send exact criteria without admin credentials; cal
   t.mock.method(globalThis, "fetch", async (url, init) => {
     const path = new URL(url);
     seen.push({ path, init });
-    if (path.pathname.endsWith("/search")) return Response.json(demoSearch("SHARM_EL_SHEIKH", stay, category, 1, new Map(), today));
-    if (path.pathname.endsWith("/stay-quote")) return Response.json(demoQuote(demoHotel.id, stay, category, undefined, undefined, new Map(), today));
+    if (path.pathname.endsWith("/search")) return Response.json(demoSearch("SHARM_EL_SHEIKH", family, category, 1, new Map(), today));
+    if (path.pathname.endsWith("/stay-quote")) return Response.json(demoQuote(demoHotel.id, family, category, undefined, undefined, new Map(), today));
+    if (path.pathname.endsWith("/stay-calendar")) return Response.json({ currency: "EGP", days: [] });
     if (init.method === "PATCH") return Response.json({ code: "CALENDAR_CONFLICT", message: "Conflict" }, { status: 409 });
     return Response.json(getDemoCalendar("demo-double", today, stay.check_out, new Map(), today));
   });
-  const results = await service.searchHotelStays("SHARM_EL_SHEIKH", stay, category, 1);
-  await service.quoteHotelStay(demoHotel.id, stay, category, { rooms: results.items[0].offer.rooms, addons: [] });
+  await assert.rejects(service.searchHotelStays("SHARM_EL_SHEIKH", stay, category, 1), { code: "INVALID_INPUT" });
+  await assert.rejects(service.quoteHotelStay(demoHotel.id, stay, category), { code: "INVALID_INPUT" });
+  await assert.rejects(service.getHotelStayCalendar(demoHotel.id, today, stay.check_out, stay, category), { code: "INVALID_INPUT" });
+  assert.equal(seen.length, 0);
+  const results = await service.searchHotelStays("SHARM_EL_SHEIKH", family, category, 1);
+  const quote = await service.quoteHotelStay(demoHotel.id, family, category, { rooms: results.items[0].offer.rooms, addons: [] });
   await service.getHotelRoomCalendar(demoHotel.id, "demo-double", today, stay.check_out);
   await assert.rejects(service.saveHotelRoomCalendar(demoHotel.id, "demo-double", 0, [{ from: today, to: stay.check_out, available_units: 0 }]), { code: "CALENDAR_CONFLICT", status: 409 });
+  await service.getHotelStayCalendar(demoHotel.id, today, stay.check_out, family, category);
   assert.equal(seen[0].path.searchParams.get("destination"), "SHARM_EL_SHEIKH");
   assert.equal(seen[0].path.searchParams.get("visitor_category"), category);
   assert.equal(seen[0].path.searchParams.get("check_out"), stay.check_out);
-  assert.deepEqual(JSON.parse(seen[1].init.body), { ...stay, visitor_category: category, rooms: results.items[0].offer.rooms, addons: [] });
+  assert.equal(seen[0].path.searchParams.get("child_ages"), "7");
+  assert.deepEqual(JSON.parse(seen[1].init.body), { ...family, visitor_category: category, rooms: results.items[0].offer.rooms, addons: [] });
+  assert.deepEqual(quote.child_ages, [7]);
   assert.equal(seen[2].path.searchParams.get("to"), stay.check_out);
+  assert.equal(seen[4].path.searchParams.get("child_ages"), "7");
   assert.deepEqual(seen.map(({ init }) => new Headers(init.headers).get("Authorization")),
-    [null, null, "Bearer test-calendar-token", "Bearer test-calendar-token"]);
+    [null, null, "Bearer test-calendar-token", "Bearer test-calendar-token", null]);
 });
 
 test("demo mode keeps the demo calendar local and routes real hotels to the server", async t => {

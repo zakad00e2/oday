@@ -34,8 +34,9 @@ export function getCartHotelUpgradeTotal(hotel: QuotedHotel | null, addon: CartH
 
 export function cartHotelEditHref(hotel: CartHotel, lang: "ar" | "en") {
   const slug = (lang === "ar" ? hotel.slugAr : hotel.slugEn) || hotel.slug;
-  const query = hasDatedHotelPrice(hotel) && hotel.checkIn && hotel.checkOut
-    ? "?" + stayQuery({ check_in: hotel.checkIn, check_out: hotel.checkOut, ...(hotel.stayGuests ?? { adults: 2, children: 0 }) }).toString()
+  const guests = hotel.stayGuests ?? hotel.stayQuote ?? { adults: 2, children: 0 };
+  const query = hasDatedHotelPrice(hotel)
+    ? "?" + stayQuery({ ...guests, check_in: hotel.checkIn ?? "", check_out: hotel.checkOut ?? "" }).toString()
     : "";
   return "/" + lang + "/hotels/" + encodeURIComponent(slug) + query + "#booking";
 }

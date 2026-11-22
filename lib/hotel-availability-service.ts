@@ -1,6 +1,6 @@
 import { broadcastUnauthorizedSession, createAuthorizedHeaders } from "./auth-service";
 import { createHotelRecord, HOTEL_API_BASE, type ApiHotel, type ApiHotelListResponse } from "./hotel-service";
-import { addStayDays, HotelAvailabilityError, stayNights, stayQuery, type CalendarChange, type RoomCalendar, type StayCalendarPrice, type StayGuests,
+import { addStayDays, HotelAvailabilityError, missingChildAges, stayNights, stayQuery, type CalendarChange, type RoomCalendar, type StayCalendarPrice, type StayGuests,
   type StayAddon, type StayCriteria, type StayOffer, type StayQuote, type StayRoom } from "./hotel-stay";
 import { getVisitorCurrency, type VisitorCategory } from "./visitor-pricing";
 
@@ -11,6 +11,12 @@ export const hotelCalendarEnabled = hotelAvailabilityDemo || process.env.NEXT_PU
   process.env.NEXT_PUBLIC_HOTEL_AVAILABILITY === "live";
 
 type SearchResponse = { data: { hotel: ApiHotel; stay_offer: StayOffer }[]; meta: ApiHotelListResponse["meta"] };
+
+function requireChildAges(guests: StayGuests) {
+  if (missingChildAges(guests)) {
+    throw new HotelAvailabilityError("Select an age for each child.", 400, "INVALID_INPUT");
+  }
+}
 
 async function request<T>(path: string, init: RequestInit = {}, admin = false): Promise<T> {
   const headers = admin ? createAuthorizedHeaders(init.headers) : new Headers(init.headers);
@@ -27,7 +33,9 @@ async function request<T>(path: string, init: RequestInit = {}, admin = false): 
 }
 
 export async function searchHotelStays(destination: string, stay: StayCriteria, category: VisitorCategory, page: number, signal?: AbortSignal) {
+  requireChildAges(stay);
   const query = stayQuery(stay);
+  if (!stay.children) query.delete("child_ages");
   query.set("destination", destination);
   query.set("visitor_category", category);
   query.set("page", String(page));
@@ -42,8 +50,9 @@ export async function quoteHotelStay(
   hotelId: string, stay: StayCriteria, category: VisitorCategory,
   selection?: { rooms: StayRoom[]; addons: StayAddon[] }, signal?: AbortSignal,
 ): Promise<StayQuote> {
+  requireChildAges(stay);
   const { check_in, check_out, adults, children, child_ages } = stay;
-  const criteria = { check_in, check_out, adults, children, ...(child_ages?.length ? { child_ages } : {}) };
+  const criteria = { check_in, check_out, adults, children, ...(children > 0 ? { child_ages } : {}) };
   if (hotelAvailabilityDemo)
     return (await import("./hotel-availability-demo")).demoQuote(hotelId, criteria, category, selection?.rooms, selection?.addons);
   return request("/" + encodeURIComponent(hotelId) + "/stay-quote", {
@@ -54,6 +63,7 @@ export async function quoteHotelStay(
 const calendarPath = (hotelId: string, roomId: string) => "/" + encodeURIComponent(hotelId) + "/rooms/" + encodeURIComponent(roomId) + "/calendar";
 
 export async function getHotelStayCalendar(hotelId: string, from: string, to: string, guests: StayGuests, category: VisitorCategory, signal?: AbortSignal) {
+  requireChildAges(guests);
   const currency = getVisitorCurrency(category);
   if (hotelAvailabilityDemo) {
     const { demoQuote } = await import("./hotel-availability-demo");
@@ -69,7 +79,7 @@ export async function getHotelStayCalendar(hotelId: string, from: string, to: st
     });
   }
   const query = new URLSearchParams({ from, to, adults: String(guests.adults), children: String(guests.children), visitor_category: category });
-  if (guests.child_ages?.length) query.set("child_ages", guests.child_ages.map(age => age ?? "").join(","));
+  if (guests.children > 0 && guests.child_ages) query.set("child_ages", guests.child_ages.join(","));
   const result = await request<{ currency: string; days: StayCalendarPrice[] }>(
     "/" + encodeURIComponent(hotelId) + "/stay-calendar?" + query, { signal },
   );
