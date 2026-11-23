@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BedDouble, CalendarCheck } from "lucide-react";
+import { BedDouble, CalendarCheck, Sparkles } from "lucide-react";
 import type { HotelRecord } from "@/lib/hotel-service";
 import { formatHotelRoomCapacity } from "@/lib/hotel-room-capacity";
 import { useCart } from "@/lib/cart-context";
@@ -204,7 +204,7 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
     </div>
     {allowedRooms.length === 0 && <QuoteError ar={ar} retry={reload} />}
     {availableAddons.length > 0 && count > 0 && <fieldset className="mt-5">
-      <legend className="font-semibold text-slate-900">{ar ? "ترقيات الغرف (اختياري)" : "Room upgrades (optional)"}</legend>
+      <legend className="font-bold text-slate-950"><span className="inline-flex items-center gap-2"><Sparkles size={19} aria-hidden />{ar ? "ترقيات الغرف (اختياري)" : "Room upgrades (optional)"}</span></legend>
       <p className="mt-2 text-xs leading-relaxed text-[#64748b]" aria-live="polite">
         {ar ? `حدد عدد الغرف لكل ترقية. الغرف المتبقية بدون ترقية: ${count - upgrades}` : `Choose rooms for each upgrade. Rooms without an upgrade: ${count - upgrades}`}
       </p>
