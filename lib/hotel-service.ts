@@ -81,6 +81,7 @@ export interface ApiHotelRoom {
   adult_capacity?: number | null;
   child_capacity?: number | null;
   children_under_3_capacity?: number | null;
+  // The API field covers the independent age band from 3 through 5.
   children_under_6_capacity?: number | null;
   children_6_to_12_capacity?: number | null;
   price: string;

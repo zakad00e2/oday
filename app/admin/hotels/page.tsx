@@ -1371,11 +1371,11 @@ export default function AdminHotels() {
                     <label className="grid max-w-xs gap-1 text-sm font-medium text-slate-700">أقصى عدد ضيوف للغرفة
                       <input type="number" min={1} step={1} value={roomInput.capacity ?? ""} onChange={event => setRoomInput({ ...roomInput, capacity: event.target.value === "" ? undefined : Number(event.target.value) })} className="rounded-xl border border-slate-300 px-3 py-2.5" />
                     </label>
-                    <p className="text-xs text-slate-500">الحد الإجمالي يشمل البالغين والأطفال. الأطفال أقل من ٣ سنوات يدخلون أيضًا ضمن حد أقل من ٦ سنوات.</p>
+                    <p className="text-xs text-slate-500">الحد الإجمالي يشمل البالغين والأطفال. لكل فئة عمرية حدّ مستقل ضمن الحد الإجمالي للأطفال.</p>
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                       {([
                         ["adultCapacity", "أقصى البالغين"], ["childCapacity", "أقصى الأطفال"],
-                        ["childrenUnder3Capacity", "أطفال أقل من ٣ سنوات"], ["childrenUnder6Capacity", "أطفال أقل من ٦ سنوات"],
+                        ["childrenUnder3Capacity", "أطفال أقل من ٣ سنوات"], ["childrenUnder6Capacity", "أطفال من ٣ إلى ٥ سنوات"],
                         ["children6To12Capacity", "أطفال من ٦ إلى ١٢ سنة"],
                       ] as const).map(([key, label]) => <label key={key} className="grid gap-1 text-sm font-medium text-slate-700">{label}
                         <input type="number" min={key === "adultCapacity" ? 1 : 0} step={1} value={roomInput[key] ?? ""} onChange={event => setRoomInput({ ...roomInput, [key]: event.target.value === "" ? undefined : Number(event.target.value) })} className="min-w-0 rounded-xl border border-slate-300 px-3 py-2.5" />
@@ -1412,7 +1412,7 @@ export default function AdminHotels() {
                       {room.descriptionAr && (
                         <p className="text-xs text-[#6B7280] mt-1">{room.descriptionAr}</p>
                       )}
-                      {room.adultCapacity !== undefined && <p className="mt-1 text-xs text-slate-600">البالغون: {room.adultCapacity} · الأطفال: {room.childCapacity} · أقل من ٣: {room.childrenUnder3Capacity} · أقل من ٦: {room.childrenUnder6Capacity} · ٦–١٢: {room.children6To12Capacity}</p>}
+                      {room.adultCapacity !== undefined && <p className="mt-1 text-xs text-slate-600">البالغون: {room.adultCapacity} · الأطفال: {room.childCapacity} · أقل من ٣: {room.childrenUnder3Capacity} · ٣–٥: {room.childrenUnder6Capacity} · ٦–١٢: {room.children6To12Capacity}</p>}
                       {room.descriptionEn && (
                         <p className="text-xs text-[#9CA3AF] mt-0.5" dir="ltr">{room.descriptionEn}</p>
                       )}

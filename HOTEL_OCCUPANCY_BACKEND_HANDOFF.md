@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-The frontend has fields for room occupancy limits and sends child ages with availability requests. **The existing backend must store these fields and apply them to search, calendar and quotes.** Until then, the live system cannot be relied on to filter by age or save these limits. The local demo still uses its existing total-guest capacity rules; it does not simulate age-based allocation.
+The production API stores room occupancy limits and applies them to search, the stay calendar, and quotes. The frontend sends the selected child ages with these requests. The local demo uses total-guest capacity.
 
 ## Room data contract
 
@@ -21,9 +21,7 @@ For each room, accept and return these integer fields in hotel create/update `ro
 
 `capacity` remains the existing total number of guests per room. The other values are independent maxima, not a sum of reserved slots. Apply the total child limit as well as each age-band limit, adult limit and overall limit. All values are non-negative integers; adult capacity is at least 1. Adult and child capacities cannot exceed total capacity; each age-band limit cannot exceed child capacity. Preserve these fields on partial updates where omitted, including `rooms_write_mode=by_id`, and return them after saving. Existing rooms need a migration or explicit configuration; do not silently interpret missing values as zero. The frontend warns if a save response does not confirm the entered values.
 
-The under-3 and under-6 limits overlap: children aged 0–2 count toward both limits, and children aged 3–5 count toward the under-6 limit. The remaining 6–12 limit is inclusive. Age 12 remains included because the current guest selector explicitly allows 12. Confirm this boundary with the product owner if hotel policy instead requires strictly under 12.
-
-This replaces the earlier proposed `children_3_to_5_capacity` field. If the old contract has already been implemented, coordinate a migration: its values cannot be assumed to represent the new overlapping under-6 limit.
+Each child counts toward the total child limit and exactly one age band. `children_under_3_capacity` covers ages 0–2, `children_under_6_capacity` covers ages 3–5, and `children_6_to_12_capacity` covers ages 6–12. The API retains the existing field names.
 
 ## Availability requests
 

@@ -17,6 +17,35 @@ const stay = { check_in: "2026-11-20", check_out: "2026-11-22", adults: 4, child
 const category = "egyptian-resident";
 const today = "2026-11-20";
 
+test("room capacity distinguishes each room's adults, children, and configured ages", () => {
+  const { createHotelRecord } = require("../lib/hotel-service.ts");
+  const { formatHotelRoomCapacity } = require("../lib/hotel-room-capacity.ts");
+  const { rooms } = createHotelRecord({ ...demoHotel, rooms: [
+    { ...demoHotel.rooms[0], capacity: 4, adult_capacity: 3, child_capacity: 1,
+      children_under_3_capacity: 1, children_under_6_capacity: 0, children_6_to_12_capacity: 0 },
+    { ...demoHotel.rooms[1], capacity: 3, adult_capacity: 2, child_capacity: 1,
+      children_under_3_capacity: 0, children_under_6_capacity: 1, children_6_to_12_capacity: 0 },
+    { ...demoHotel.rooms[1], capacity: 1, adult_capacity: 1, child_capacity: 0 },
+  ] });
+
+  assert.deepEqual(rooms.map(room => formatHotelRoomCapacity(room, true)), [
+    "السعة: 3 بالغين · طفل واحد أقل من 3 سنوات",
+    "السعة: بالغان · طفل واحد من 3 إلى 5 سنوات",
+    "السعة: بالغ واحد",
+  ]);
+  assert.equal(formatHotelRoomCapacity(rooms[0], false), "Capacity: 3 adults · 1 child under 3 years");
+  assert.equal(formatHotelRoomCapacity(rooms[1], false), "Capacity: 2 adults · 1 child aged 3 to 5");
+});
+
+test("room capacity retains the overall limit and never guesses missing occupancy details", () => {
+  const { formatHotelRoomCapacity } = require("../lib/hotel-room-capacity.ts");
+  assert.equal(formatHotelRoomCapacity({ capacity: 4 }, true), "السعة: 4 ضيوف");
+  assert.equal(formatHotelRoomCapacity({ capacity: 4, adultCapacity: 3 }, false), "Capacity: 4 guests · 3 adults");
+  assert.equal(formatHotelRoomCapacity({ capacity: 4, adultCapacity: 3, childCapacity: 2,
+    childrenUnder3Capacity: 1, childrenUnder6Capacity: 2, children6To12Capacity: 1 }, false),
+    "Capacity: 4 guests · 3 adults · 2 children (under 3 years: 1, aged 3 to 5: 2, aged 6 to 12: 1)");
+});
+
 test("stay duration excludes checkout across months and uses natural labels", () => {
   assert.equal(stayNights("2026-11-16", "2026-11-20"), 4);
   assert.equal(stayNights("2026-11-16", "2026-11-22"), 6);

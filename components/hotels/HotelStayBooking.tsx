@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { BedDouble, CalendarCheck } from "lucide-react";
 import type { HotelRecord } from "@/lib/hotel-service";
+import { formatHotelRoomCapacity } from "@/lib/hotel-room-capacity";
 import { useCart } from "@/lib/cart-context";
 import { limitHotelAddOnCounts } from "@/lib/cart-hotel";
 import { quoteHotelStay, hotelAvailabilityDemo } from "@/lib/hotel-availability-service";
@@ -165,6 +166,7 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
         const record = hotel.rooms.find(r => r.id === room.room_id)!;
         const name = ar ? record.nameAr || record.nameEn : record.nameEn || record.nameAr;
         const description = ar ? record.descriptionAr || record.descriptionEn : record.descriptionEn || record.descriptionAr;
+        const capacityLabel = formatHotelRoomCapacity({ ...record, capacity: room.capacity }, ar);
         const current = roomCounts[room.room_id] ?? 0;
         const max = Math.min(room.max_quantity, guests - count + current);
         const selected = current > 0;
@@ -184,7 +186,7 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
               <div className="min-w-0">
                 <span className="block text-sm font-bold leading-tight text-[#0f172a]">{name}</span>
                 {description && <HotelOptionDescription description={description} ar={ar} />}
-                <span className="mt-0.5 block text-xs text-[#64748b]">{ar ? "السعة: " : "Capacity: "}{room.capacity}</span>
+                {capacityLabel && <p className="mt-1 text-xs leading-relaxed text-slate-700">{capacityLabel}</p>}
               </div>
             </div>
             <span className={`shrink-0 text-end font-semibold ${selected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>{formatPrice(stayMoney(room.unit_stay_total), lang)}</span>
@@ -272,11 +274,11 @@ function StayBookingForm({ hotel, initial, today, applied }: { hotel: HotelRecor
     </h2>
     <p className="mt-1 text-sm text-slate-600">{ar ? "اختر التواريخ وعدد الضيوف لعرض السعر حسب الليلة." : "Choose dates and guests to see the rates for each night."}</p>
     {missingChildAges(draft) && error === "" && <p className="mt-2 text-sm font-medium text-slate-700">{stayIssueMessage("ages", ar)}</p>}
-    <form className="relative z-20 mt-4 grid gap-2.5 lg:grid-cols-[1.55fr_1fr_auto]" onSubmit={submit}>
+    <form className="relative z-20 mt-4 grid gap-2.5 lg:grid-cols-[1.55fr_1fr_auto] lg:items-end" onSubmit={submit}>
       <StayFields stay={draft} setStay={updateDraft} today={today} ar={ar} initiallyOpen={missingChildAges(initial)}
         datePicker={<HotelDatePicker hotelId={hotel.id} basePrice={resolvePrice(hotel.initialPrice, hotel.initialPriceEgp)}
           stay={draft} setStay={updateDraft} today={today} ar={ar} />} />
-      <button className={button} type="submit">{ar ? "تحقّق من التوافر" : "Check availability"}</button>
+      <button className={`${button} lg:min-h-[69px]`} type="submit">{ar ? "تحقّق من التوافر" : "Check availability"}</button>
     </form>
     {error && <p className="mt-3 text-sm text-red-700" role="alert">{error}</p>}
     {criteria && category && <BookingOptions key={attempt + ":" + category} hotel={hotel} criteria={criteria} category={category} />}

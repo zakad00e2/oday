@@ -26,6 +26,7 @@ import { pricePair, samePricePair, type PricePair } from "@/lib/visitor-pricing"
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
 import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
+import { formatHotelRoomCapacity } from "@/lib/hotel-room-capacity";
 import { Suspense } from "react";
 import HotelStayBooking from "./HotelStayBooking";
 import HotelOptionDescription from "./HotelOptionDescription";
@@ -33,13 +34,13 @@ import { getAvailabilityDemoHotel, hotelAvailabilityEnabled } from "@/lib/hotel-
 
 interface LocalizedHotelRoom {
     id: string;
-    capacity: number;
     name: string;
     nameAr: string;
     nameEn: string;
     prices: PricePair;
     price: number;
     description: string;
+    capacityLabel: string | null;
 }
 
 interface LocalizedHotelAddon {
@@ -169,7 +170,6 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en", reso
         rooms: hotel.rooms
             .map((room) => ({
             id: room.id,
-            capacity: room.capacity,
             name: isAr ? room.nameAr : room.nameEn,
             nameAr: room.nameAr,
             nameEn: room.nameEn,
@@ -177,8 +177,8 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en", reso
             price: resolvePrice(room.price, room.priceEgp),
             description:
                 (isAr ? room.descriptionAr : room.descriptionEn) ||
-                (isAr ? room.descriptionEn : room.descriptionAr) ||
-                (isAr ? `السعة: ${room.capacity}` : `Capacity: ${room.capacity}`),
+                (isAr ? room.descriptionEn : room.descriptionAr),
+            capacityLabel: formatHotelRoomCapacity(room, isAr),
             }))
             .sort((left, right) => (Number.isFinite(left.price) ? left.price : Infinity) - (Number.isFinite(right.price) ? right.price : Infinity) || left.name.localeCompare(right.name)),
         addons: hotel.addons
@@ -964,6 +964,7 @@ export default function HotelDetailClient() {
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-bold leading-tight text-[#0f172a]">{hotelRoom.name}</p>
                                                                 {hotelRoom.description && <HotelOptionDescription description={hotelRoom.description} ar={isAr} />}
+                                                                {hotelRoom.capacityLabel && <p className="mt-1 text-xs leading-relaxed text-slate-700">{hotelRoom.capacityLabel}</p>}
                                                             </div>
                                                         </div>
                                                         <span className={`shrink-0 font-semibold ${isSelected ? "text-[#0EA5E9]" : "text-[#0f172a]"}`}>
