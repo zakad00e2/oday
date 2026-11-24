@@ -492,6 +492,10 @@ function titleCase(value: string) {
     .join(" ");
 }
 
+export function normalizeHotelSearch(value: string) {
+  return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
+}
+
 export function slugifyHotel(value: string) {
   const normalized = value
     .toLowerCase()

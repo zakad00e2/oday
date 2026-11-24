@@ -18,14 +18,11 @@ import {
   getHotelMealPlanLabel,
   type HotelRecord,
   listHotels,
+  normalizeHotelSearch,
 } from "@/lib/hotel-service";
 
 type SortKey = "default" | "MOST_BOOKED" | "TOP_RATED" | "LOWEST_PRICE";
 const DESTINATION_TRANSITION_MS = 520;
-
-function normalizeHotelSearch(value: string) {
-  return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
-}
 
 const destinationImagePositions: Record<string, string> = {
   DAHAB: "center 57%",

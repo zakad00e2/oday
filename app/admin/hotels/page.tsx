@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
 import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import DualPriceInputs from "@/components/admin/DualPriceInputs";
@@ -19,6 +20,7 @@ import {
   getHotelMealPlanLabel,
   getHotelById,
   listHotels,
+  normalizeHotelSearch,
   slugifyHotel,
   updateHotel,
   type HotelDestination,
@@ -530,6 +532,8 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function AdminHotels() {
   const [hotels, setHotels] = useState<Hotel[]>(() => hotelAvailabilityDemo ? [mapHotelRecordToHotel(createHotelRecord(demoHotel))] : calendarEnabled ? [] : mockHotels);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [calendarHotel, setCalendarHotel] = useState<Hotel | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Hotel | null>(null);
@@ -552,6 +556,14 @@ export default function AdminHotels() {
   const totalRooms = hotels.reduce((sum, hotel) => sum + hotel.rooms.length, 0);
   const totalAmenities = hotels.reduce((sum, hotel) => sum + hotel.amenities.length, 0);
   const totalRoomAddOns = hotels.reduce((sum, hotel) => sum + hotel.roomAddOns.length, 0);
+  const normalizedQuery = normalizeHotelSearch(searchQuery);
+  const visibleHotels = normalizedQuery
+    ? hotels.filter((hotel) =>
+        [hotel.nameAr, hotel.nameEn, hotel.cityAr, hotel.cityEn].some((value) =>
+          normalizeHotelSearch(value).includes(normalizedQuery),
+        ),
+      )
+    : hotels;
 
   useEffect(() => {
     let mounted = true;
@@ -1008,8 +1020,39 @@ export default function AdminHotels() {
         </div>
       </div>
 
+      <div className="relative w-full sm:max-w-md">
+        <Search aria-hidden="true" className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-[#6B7280]" />
+        <input
+          ref={searchInputRef}
+          type="search"
+          aria-label="البحث عن فندق"
+          placeholder="ابحث باسم الفندق أو المدينة"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          className="w-full rounded-xl border border-[#E5E7EB] bg-white py-2.5 ps-10 pe-12 text-sm text-[#111] placeholder:text-[#6B7280] focus:border-[#6B7280] focus:outline-2 focus:outline-offset-2 focus:outline-[#6B7280] [&::-webkit-search-cancel-button]:hidden"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            aria-label="مسح البحث"
+            onClick={() => {
+              setSearchQuery("");
+              searchInputRef.current?.focus();
+            }}
+            className="absolute end-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111] focus-visible:outline-2 focus-visible:outline-[#6B7280]"
+          >
+            <X aria-hidden="true" className="size-4" />
+          </button>
+        )}
+      </div>
+
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-        {hotels.map((hotel) => {
+        {normalizedQuery && visibleHotels.length === 0 && (
+          <p role="status" className="col-span-full rounded-2xl border border-[#F3F4F6] bg-white px-4 py-8 text-center text-sm text-[#6B7280]">
+            لا توجد فنادق تطابق البحث.
+          </p>
+        )}
+        {visibleHotels.map((hotel) => {
           const coverImage = getCoverImage(hotel);
 
           return (
