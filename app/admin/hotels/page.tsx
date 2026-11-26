@@ -6,6 +6,7 @@ import FlexibleImage from "@/components/FlexibleImage";
 import FileUpload, { type FileUploadItem } from "@/components/admin/FileUpload";
 import DualPriceInputs from "@/components/admin/DualPriceInputs";
 import HotelRoomCalendar from "@/components/admin/HotelRoomCalendar";
+import HotelRoomCapacityDialog from "@/components/admin/HotelRoomCapacityDialog";
 import { hotelAvailabilityDemo, hotelCalendarEnabled as calendarEnabled } from "@/lib/hotel-availability-service";
 import { demoHotel } from "@/lib/hotel-availability-demo";
 import { isValidPriceInput, hasRetainedEgpPrices } from "@/lib/visitor-pricing";
@@ -28,6 +29,7 @@ import {
   type HotelMutationAddonInput,
   type HotelMutationInput,
   type HotelRecord,
+  type HotelRoomRecord,
 } from "@/lib/hotel-service";
 
 interface Room {
@@ -357,6 +359,24 @@ function extractCapacity(...values: string[]) {
   return 2;
 }
 
+function mapHotelRoomRecordToRoom(room: HotelRoomRecord): Room {
+  return {
+    id: room.idIsSynthetic ? undefined : room.id,
+    capacity: room.capacity,
+    adultCapacity: room.adultCapacity,
+    childCapacity: room.childCapacity,
+    childrenUnder3Capacity: room.childrenUnder3Capacity,
+    childrenUnder6Capacity: room.childrenUnder6Capacity,
+    children6To12Capacity: room.children6To12Capacity,
+    nameAr: room.nameAr,
+    nameEn: room.nameEn,
+    price: room.price,
+    priceEgp: room.priceEgp,
+    descriptionAr: room.descriptionAr || capacityLabel(room.capacity, "ar"),
+    descriptionEn: room.descriptionEn || capacityLabel(room.capacity, "en"),
+  };
+}
+
 function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
   return {
     id: hotel.id,
@@ -389,18 +409,7 @@ function mapHotelRecordToHotel(hotel: HotelRecord): Hotel {
       labelAr,
       labelEn: hotel.facilitiesEn[index] ?? "",
     })),
-    rooms: hotel.rooms.map((room) => ({
-      id: room.idIsSynthetic ? undefined : room.id,
-      capacity: room.capacity,
-      adultCapacity: room.adultCapacity, childCapacity: room.childCapacity,
-      childrenUnder3Capacity: room.childrenUnder3Capacity, childrenUnder6Capacity: room.childrenUnder6Capacity, children6To12Capacity: room.children6To12Capacity,
-      nameAr: room.nameAr,
-      nameEn: room.nameEn,
-      price: room.price,
-      priceEgp: room.priceEgp,
-      descriptionAr: room.descriptionAr || capacityLabel(room.capacity, "ar"),
-      descriptionEn: room.descriptionEn || capacityLabel(room.capacity, "en"),
-    })),
+    rooms: hotel.rooms.map(mapHotelRoomRecordToRoom),
     roomAddOns: hotel.addons.map((addon) => ({
       id: addon.idIsSynthetic ? undefined : addon.id,
       nameAr: addon.nameAr,
@@ -535,6 +544,7 @@ export default function AdminHotels() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [calendarHotel, setCalendarHotel] = useState<Hotel | null>(null);
+  const [capacityHotelId, setCapacityHotelId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Hotel | null>(null);
   const [form, setForm] = useState<Omit<Hotel, "id">>(cloneHotel(emptyHotel));
@@ -552,6 +562,8 @@ export default function AdminHotels() {
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
+  const capacityHotel = hotels.find(hotel => hotel.id === capacityHotelId);
+  const [firstCapacityRoom, ...otherCapacityRooms] = capacityHotel?.rooms.flatMap(room => room.id ? [{ ...room, id: room.id }] : []) ?? [];
   const localizedHotels = hotels.filter((hotel) => hotel.nameEn.trim() && hotel.descriptionEn.trim()).length;
   const totalRooms = hotels.reduce((sum, hotel) => sum + hotel.rooms.length, 0);
   const totalAmenities = hotels.reduce((sum, hotel) => sum + hotel.amenities.length, 0);
@@ -1111,7 +1123,13 @@ export default function AdminHotels() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {calendarEnabled && hotel.rooms.some(room => room.id) && <button type="button" onClick={() => setCalendarHotel(hotel)} className="flex-1 rounded-xl border border-sky-200 px-2 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-50">تقويم التوافر</button>}
+                  {calendarEnabled && hotel.rooms.some(room => room.id) && <button type="button" onClick={() => setCalendarHotel(hotel)} className="flex-1 whitespace-nowrap rounded-xl border border-sky-200 px-2 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-50">تقويم التوافر</button>}
+                  {!(hotelAvailabilityDemo && hotel.id === demoHotel.id) && hotel.rooms.some(room => room.id) && (
+                    <button type="button" aria-haspopup="dialog" onClick={() => setCapacityHotelId(hotel.id)}
+                      className="flex-1 whitespace-nowrap rounded-xl border border-sky-200 px-2 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-50">
+                      السعة
+                    </button>
+                  )}
                   {!(hotelAvailabilityDemo && hotel.id === demoHotel.id) && <><button onClick={() => openEdit(hotel)} className="flex-1 py-2 border border-[#E5E7EB] rounded-xl text-xs font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">تعديل</button>
                   <button onClick={() => setDeleteId(hotel.id)} className="py-2 px-3 border border-[#E5E7EB] rounded-xl text-[#EF4444] hover:bg-[#FEF2F2] hover:border-[#FEF2F2] transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
@@ -1133,6 +1151,22 @@ export default function AdminHotels() {
           setCalendarHotel(current => current && updateCapacity(current));
         }}
         onClose={() => setCalendarHotel(null)} />}
+
+      {capacityHotel && firstCapacityRoom && (
+        <HotelRoomCapacityDialog
+          key={capacityHotel.id}
+          hotelId={capacityHotel.id}
+          hotelName={capacityHotel.nameAr || capacityHotel.nameEn}
+          rooms={[firstCapacityRoom, ...otherCapacityRooms]}
+          onClose={() => setCapacityHotelId(null)}
+          onSaved={savedRoom => {
+            const nextRoom = mapHotelRoomRecordToRoom(savedRoom);
+            setHotels(current => current.map(hotel => hotel.id === capacityHotel.id
+              ? { ...hotel, rooms: hotel.rooms.map(room => room.id === savedRoom.id ? nextRoom : room) }
+              : hotel));
+          }}
+        />
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

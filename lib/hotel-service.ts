@@ -1009,24 +1009,51 @@ export async function updateHotel(
 
 export const MAX_HOTEL_ROOM_CAPACITY = 50;
 
+const roomOccupancyApiFields = {
+  capacity: "capacity",
+  adultCapacity: "adult_capacity",
+  childCapacity: "child_capacity",
+  childrenUnder3Capacity: "children_under_3_capacity",
+  childrenUnder6Capacity: "children_under_6_capacity",
+  children6To12Capacity: "children_6_to_12_capacity",
+} as const;
+
+export type HotelRoomOccupancyChange = { capacity?: number } &
+  Partial<Record<Exclude<keyof typeof roomOccupancyApiFields, "capacity">, number | null>>;
+
+export async function updateHotelRoomOccupancy(hotelId: string, roomId: string, changes: HotelRoomOccupancyChange) {
+  const keys = Object.keys(roomOccupancyApiFields) as (keyof HotelRoomOccupancyChange)[];
+  const fields = keys.flatMap(key => {
+    const value = changes[key];
+    if (value === undefined) return [];
+    const min = key === "capacity" || key === "adultCapacity" ? 1 : 0;
+    if (value !== null && (!Number.isInteger(value) || value < min || value > MAX_HOTEL_ROOM_CAPACITY)) {
+      throw new HotelServiceError("أدخل حدود سعة صحيحة ضمن النطاق المحدد لكل حقل.", 400);
+    }
+    return [[roomOccupancyApiFields[key], value] as const];
+  });
+
+  const body = new FormData();
+  body.set("rooms_write_mode", "by_id");
+  body.set("rooms", JSON.stringify([{ id: roomId, ...Object.fromEntries(fields) }]));
+  await requestJson<unknown>(`/${encodeURIComponent(hotelId)}`, { method: "PATCH", body });
+  clearHotelClientCache();
+
+  const hotel = await getHotelById(hotelId);
+  const room = hotel.rooms.find(room => room.id === roomId && !room.idIsSynthetic);
+  if (!room || keys.some(key => changes[key] !== undefined && (room[key] ?? null) !== changes[key])) {
+    throw new HotelServiceError("لم يؤكد الخادم حفظ سعة الغرفة. أعد تحميل بيانات الفندق قبل المحاولة.", 409);
+  }
+  writeHotelDetailCache(hotel);
+  return room;
+}
+
 export async function updateHotelRoomCapacity(hotelId: string, roomId: string, capacity: number) {
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > MAX_HOTEL_ROOM_CAPACITY) {
     throw new HotelServiceError("أدخل سعة من ١ إلى ٥٠ ضيفًا للغرفة.", 400);
   }
 
-  const body = new FormData();
-  body.set("rooms_write_mode", "by_id");
-  body.set("rooms", JSON.stringify([{ id: roomId, capacity }]));
-  await requestJson<unknown>(`/${encodeURIComponent(hotelId)}`, { method: "PATCH", body });
-  clearHotelClientCache();
-
-  const hotel = await getHotelById(hotelId);
-  const savedCapacity = hotel.rooms.find(room => room.id === roomId)?.capacity;
-  if (savedCapacity !== capacity) {
-    throw new HotelServiceError("لم يؤكد الخادم حفظ سعة الغرفة. أعد تحميل بيانات الفندق قبل المحاولة.", 409);
-  }
-  writeHotelDetailCache(hotel);
-  return savedCapacity;
+  return (await updateHotelRoomOccupancy(hotelId, roomId, { capacity })).capacity;
 }
 
 export async function deleteHotel(id: string) {

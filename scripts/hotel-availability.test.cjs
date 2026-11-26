@@ -319,3 +319,29 @@ test("setting a room capacity sends only the room ID and capacity, and confirms 
   assert.equal(patch.body.get("rooms_write_mode"), "by_id");
   assert.deepEqual(JSON.parse(patch.body.get("rooms")), [{ id: "demo-double", capacity: 3 }]);
 });
+
+test("editing occupancy patches only changed room limits and verifies zero and cleared limits", async t => {
+  const { updateHotelRoomOccupancy } = require("../lib/hotel-service.ts");
+  const hotel = structuredClone(demoHotel);
+  Object.assign(hotel.rooms[0], { adult_capacity: 2, child_capacity: 1, children_under_3_capacity: 1 });
+  const writes = [];
+  t.mock.method(globalThis, "fetch", async (_url, init) => {
+    if (init.method === "PATCH") {
+      writes.push(init.body);
+      return Response.json({ id: hotel.id });
+    }
+    return Response.json(hotel);
+  });
+
+  const change = { childCapacity: 0, childrenUnder3Capacity: null };
+  await assert.rejects(updateHotelRoomOccupancy(hotel.id, "demo-double", change), { status: 409 });
+  Object.assign(hotel.rooms[0], { child_capacity: 0, children_under_3_capacity: null });
+  const room = await updateHotelRoomOccupancy(hotel.id, "demo-double", change);
+  assert.equal(room.capacity, 2);
+  assert.equal(room.adultCapacity, 2);
+  assert.equal(room.childCapacity, 0);
+  assert.equal(room.childrenUnder3Capacity, undefined);
+  assert.deepEqual([...writes[1].keys()].sort(), ["rooms", "rooms_write_mode"]);
+  assert.equal(writes[1].get("rooms_write_mode"), "by_id");
+  assert.deepEqual(JSON.parse(writes[1].get("rooms")), [{ id: "demo-double", child_capacity: 0, children_under_3_capacity: null }]);
+});
