@@ -25,11 +25,12 @@ import {
 import { pricePair, samePricePair, type PricePair } from "@/lib/visitor-pricing";
 import { useVisitorPricing } from "@/lib/visitor-pricing-context";
 import { useI18n } from "@/lib/i18n/dictionary-context";
-import { getHotelBySlug, type HotelRecord } from "@/lib/hotel-service";
+import { getHotelBySlug, getHotelMealPlanLabel, type HotelRecord } from "@/lib/hotel-service";
 import { formatHotelRoomCapacity } from "@/lib/hotel-room-capacity";
 import { Suspense } from "react";
 import HotelStayBooking from "./HotelStayBooking";
 import HotelOptionDescription from "./HotelOptionDescription";
+import HotelPhotoViewer from "./HotelPhotoViewer";
 import { getAvailabilityDemoHotel, hotelAvailabilityEnabled } from "@/lib/hotel-availability-service";
 
 interface LocalizedHotelRoom {
@@ -59,6 +60,7 @@ interface LocalizedHotelView {
     id: string;
     slug: string;
     name: string;
+    mealPlanLabel: string;
     nameAr: string;
     nameEn: string;
     city: string;
@@ -154,6 +156,7 @@ function buildLocalizedHotelView(hotel: HotelRecord, language: "ar" | "en", reso
         id: hotel.id,
         slug: hotel.slugEn || hotel.slug,
         name: isAr ? hotel.nameAr : hotel.nameEn,
+        mealPlanLabel: hotel.mealPlan ? getHotelMealPlanLabel(hotel.mealPlan, language) : "",
         nameAr: hotel.nameAr,
         nameEn: hotel.nameEn,
         city: isAr ? hotel.destinationLabelAr : hotel.destinationLabelEn,
@@ -435,6 +438,11 @@ function HotelHero({
 
                     <div className="relative z-10 w-full max-w-[900px] px-5 pt-32 pb-8 md:px-14 md:pt-48 md:pb-12">
                         <ScrollReveal delay={100}>
+                            {hotel.mealPlanLabel && (
+                                <span className="mb-3 inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
+                                    {hotel.mealPlanLabel}
+                                </span>
+                            )}
                             <h1 className="mb-2 max-w-3xl text-xl font-bold leading-tight text-white sm:text-3xl md:mb-4 md:text-5xl lg:text-6xl">
                                 {hotel.name}
                             </h1>
@@ -513,12 +521,24 @@ function HotelHero({
 
 function HotelGallery({
     hotel,
+    isAr,
     labels,
 }: {
     hotel: LocalizedHotelView;
-    labels: { hotelGallery: string; hotelVideo: string; image: string };
+    isAr: boolean;
+    labels: {
+        hotelGallery: string;
+        hotelVideo: string;
+        image: string;
+        openPhoto: string;
+        previousPhoto: string;
+        nextPhoto: string;
+        closePhotos: string;
+    };
 }) {
-    const galleryImages = [...hotel.mainImages, ...hotel.gallery];
+    const galleryImages = [...new Set([...hotel.mainImages, ...hotel.gallery])];
+    const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+    const selectedPhotoIndex = selectedPhoto === null ? -1 : galleryImages.indexOf(selectedPhoto);
     const hasGalleryContent = Boolean(hotel.youtubeUrl) || galleryImages.length > 0;
 
     return (
@@ -567,15 +587,21 @@ function HotelGallery({
 
                     {galleryImages.map((image, index) => (
                         <ScrollReveal key={`${image}-${index}`} delay={index * 40} className="h-full">
-                            <div className="relative aspect-[4/3] min-h-[260px] overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm md:h-full md:min-h-0 md:aspect-auto">
-                                <Image
+                            <button
+                                type="button"
+                                aria-label={`${labels.openPhoto} ${index + 1}`}
+                                aria-haspopup="dialog"
+                                onClick={() => setSelectedPhoto(image)}
+                                className="group relative block aspect-[4/3] min-h-[260px] w-full cursor-zoom-in overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 md:h-full md:min-h-0 md:aspect-auto"
+                            >
+                                <FlexibleImage
                                     src={image}
-                                    alt={`${hotel.name} in ${hotel.city} - ${labels.image} ${index + 1}`}
+                                    alt=""
                                     fill
-                                    sizes="(max-width: 1280px) 50vw, 33vw"
-                                    className="object-cover transition-transform duration-500 hover:scale-105"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
-                            </div>
+                            </button>
                         </ScrollReveal>
                     ))}
                 </div>
@@ -583,6 +609,18 @@ function HotelGallery({
                 <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-6 py-10 text-center text-sm text-[#64748b]">
                     {labels.image}
                 </div>
+            )}
+
+            {selectedPhotoIndex >= 0 && (
+                <HotelPhotoViewer
+                    photos={galleryImages}
+                    index={selectedPhotoIndex}
+                    hotelName={hotel.name}
+                    isAr={isAr}
+                    labels={labels}
+                    onSelect={setSelectedPhoto}
+                    onClose={() => setSelectedPhoto(null)}
+                />
             )}
         </section>
     );
@@ -628,6 +666,10 @@ export default function HotelDetailClient() {
         hotelGallery: isAr ? "صور الفندق" : "Hotel gallery",
         hotelVideo: isAr ? "فيديو الفندق" : "Hotel video",
         image: isAr ? "صورة" : "Image",
+        openPhoto: isAr ? "تكبير الصورة" : "Enlarge photo",
+        previousPhoto: isAr ? "الصورة السابقة" : "Previous photo",
+        nextPhoto: isAr ? "الصورة التالية" : "Next photo",
+        closePhotos: isAr ? "إغلاق عرض الصور" : "Close photo viewer",
         noRooms: isAr ? "لا توجد غرف متاحة لهذا الفندق حاليًا." : "No rooms are available for this hotel right now.",
         noAddOns: isAr ? "لا توجد ترقيات غرف متاحة حاليًا." : "No room upgrades are available right now.",
     };
@@ -1050,8 +1092,8 @@ export default function HotelDetailClient() {
                                                     aria-label={addon.name}
                                                     className={`relative rounded-2xl border-2 p-4 text-start transition-all ${
                                                         isSelected
-                                                            ? "border-[#F59E0B] bg-[#F59E0B]/5"
-                                                            : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"
+                                                            ? "border-[#F59E0B] bg-transparent"
+                                                            : "border-[#e2e8f0] bg-transparent hover:border-[#F59E0B]/40"
                                                     }`}
                                                 >
                                                     <button
@@ -1253,7 +1295,8 @@ export default function HotelDetailClient() {
 
                 <HotelGallery
                     hotel={hotel}
-                    labels={{ hotelGallery: labels.hotelGallery, hotelVideo: labels.hotelVideo, image: labels.image }}
+                    isAr={isAr}
+                    labels={labels}
                 />
             </div>
         </main>

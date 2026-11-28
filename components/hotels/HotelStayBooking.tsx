@@ -215,7 +215,7 @@ function RoomSelection({ hotel, criteria, category, initial, reload }: BookingPr
         const selected = current > 0;
         const price = resolvePrice(addon.price, addon.priceEgp);
         const setCount = (value: number) => setAddonCounts(previous => ({ ...previous, [addon.id]: value }));
-        return <div key={addon.id} role="group" aria-label={name} className={`relative mt-3 rounded-2xl border-2 p-4 text-start transition-all ${selected ? "border-[#F59E0B] bg-[#F59E0B]/5" : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#F59E0B]/40"}`}>
+        return <div key={addon.id} role="group" aria-label={name} className={`relative mt-3 rounded-2xl border-2 p-4 text-start transition-all ${selected ? "border-[#F59E0B] bg-transparent" : "border-[#e2e8f0] bg-transparent hover:border-[#F59E0B]/40"}`}>
           <button type="button" aria-label={name} aria-pressed={selected} disabled={!selected && upgrades >= count}
             onClick={() => setCount(selected ? 0 : 1)}
             className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F59E0B] disabled:cursor-not-allowed" />
